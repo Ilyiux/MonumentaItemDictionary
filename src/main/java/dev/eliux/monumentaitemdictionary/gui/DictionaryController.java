@@ -168,8 +168,6 @@ public class DictionaryController {
     }
 
     public ArrayList<DictionaryItem> getItems() {
-        System.out.println("Got Total Items: " + items.size());
-        System.out.println("Got Sorted Items: " + validItems.size());
         return validItems;
     }
 }
