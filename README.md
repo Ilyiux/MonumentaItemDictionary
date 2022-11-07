@@ -1,9 +1,11 @@
-# Fabric Example Mod
+# Monumenta Item Dictionary (MID)
+Developed by Eliux
 
-## Setup
+A completely in-game item dictionary for monumenta
 
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
-
-## License
-
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+## Item Dictionary
+#### Menu accessible by pressing H (changable in Minecraft control settings)
+- Items pulled from the Oh the misery API
+- Item highlighting by tier
+- Search for names
+- Search for region, location, function, tier, and stat
