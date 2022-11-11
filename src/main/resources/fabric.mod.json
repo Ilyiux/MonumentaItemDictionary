@@ -19,7 +19,7 @@
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "monumentaitemdictionary.mixins.json"
   ],
 
   "depends": {

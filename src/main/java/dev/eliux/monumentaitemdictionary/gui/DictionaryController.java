@@ -5,7 +5,13 @@ import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.LiteralText;
+import org.apache.commons.io.FileUtils;
 
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class DictionaryController {
@@ -39,10 +45,44 @@ public class DictionaryController {
         gui.postInit();
     }
 
+    private String readItemData() {
+        try {
+            return Files.readString(Path.of("config/mid/items.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return "{}";
+    }
+
+    private void writeItemData(String writeData) {
+        try {
+            File targetFile = new File("config/mid/items.json");
+
+            targetFile.getParentFile().mkdirs();
+            targetFile.createNewFile();
+
+            FileUtils.writeStringToFile(targetFile, writeData, Charset.defaultCharset());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void requestItemsAndUpdate() {
+        try {
+            String data = WebManager.getRequest("https://www.ohthemisery.tk/api/items");
+
+            writeItemData(data);
+            loadItems();
+            gui.buildItemList();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void loadItems() {
         try {
-            String rawData = "";
-            rawData = WebManager.getRequest("https://www.ohthemisery.tk/api/items");
+            String rawData = readItemData();
 
             JsonObject data = new Gson().fromJson(rawData, JsonObject.class);
             for (String key : data.keySet()) {

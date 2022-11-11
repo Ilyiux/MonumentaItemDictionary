@@ -25,9 +25,10 @@ public class ItemDictionaryGui extends Screen {
 
     private final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
-    private ArrayList<ItemButton> itemButtons = new ArrayList<>();
+    private ArrayList<ItemButtonWidget> itemButtons = new ArrayList<>();
 
     private TextFieldWidget searchBar;
+    private ReloadButtonWidget reloadItemsButton;
 
     private final DictionaryController controller;
 
@@ -47,6 +48,12 @@ public class ItemDictionaryGui extends Screen {
 
             buildItemList();
             updateScrollLimits();
+        });
+
+        reloadItemsButton = new ReloadButtonWidget(5, 5, 20, 20, new LiteralText(""), (button) -> {
+            controller.requestItemsAndUpdate();
+        }, (button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, new LiteralText("Reload Item Data"), mouseX, mouseY);
         });
     }
 
@@ -86,9 +93,11 @@ public class ItemDictionaryGui extends Screen {
         drawCenteredText(matrices, textRenderer, new LiteralText("Monumenta Item Dictionary").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFFFFAA00);
         matrices.pop();
 
+        // draw gui elements
         matrices.push();
-        matrices.translate(0, 0, 150);
+        matrices.translate(0, 0, 110);
         searchBar.render(matrices, mouseX, mouseY, delta);
+        reloadItemsButton.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
 
         try {
@@ -98,7 +107,7 @@ public class ItemDictionaryGui extends Screen {
         }
     }
 
-    private void buildItemList() {
+    public void buildItemList() {
         controller.refreshItems();
         ArrayList<DictionaryItem> toBuildItems = controller.getItems();
 
@@ -114,7 +123,7 @@ public class ItemDictionaryGui extends Screen {
             ButtonWidget.TooltipSupplier tooltip = (button, matrices, mouseX, mouseY) -> {
                 renderTooltip(matrices, generateItemLoreText(item), mouseX, mouseY);
             };
-            ItemButton button = new ItemButton(x, y, itemSize, index, new LiteralText(item.name), i -> {}, item, tooltip, this);
+            ItemButtonWidget button = new ItemButtonWidget(x, y, itemSize, index, new LiteralText(item.name), i -> {}, item, tooltip, this);
 
             itemButtons.add(button);
         }
@@ -143,6 +152,7 @@ public class ItemDictionaryGui extends Screen {
         super.mouseClicked(mouseX, mouseY, button);
 
         searchBar.mouseClicked(mouseX, mouseY, button);
+        reloadItemsButton.mouseClicked(mouseX, mouseY, button);
 
         return true;
     }

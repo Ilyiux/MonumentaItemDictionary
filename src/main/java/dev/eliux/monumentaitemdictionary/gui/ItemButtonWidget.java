@@ -11,7 +11,7 @@ import net.minecraft.nbt.NbtCompound;
 
 import net.minecraft.text.Text;
 
-public class ItemButton extends ButtonWidget {
+public class ItemButtonWidget extends ButtonWidget {
     private final int itemSize;
     private final DictionaryItem item;
     private final ItemStack builtItem;
@@ -19,7 +19,7 @@ public class ItemButton extends ButtonWidget {
 
     private ItemDictionaryGui gui;
 
-    public ItemButton(int x, int y, int itemSize, int index, Text message, PressAction onPress, DictionaryItem item, TooltipSupplier tooltipSupplier, ItemDictionaryGui gui) {
+    public ItemButtonWidget(int x, int y, int itemSize, int index, Text message, PressAction onPress, DictionaryItem item, TooltipSupplier tooltipSupplier, ItemDictionaryGui gui) {
         super(x, y, itemSize, itemSize, message, onPress, tooltipSupplier);
         this.itemSize = itemSize;
         this.item = item;
