@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ItemDictionaryGui extends Screen {
-    private final int sortMenuWidth = 50;
+    private final int sortMenuWidth = 40;
     private final int labelMenuHeight = 30;
     private final int itemPadding = 7;
     private final int itemSize = 25;
@@ -28,7 +28,9 @@ public class ItemDictionaryGui extends Screen {
     private ArrayList<ItemButtonWidget> itemButtons = new ArrayList<>();
 
     private TextFieldWidget searchBar;
-    private ReloadButtonWidget reloadItemsButton;
+    private ItemIconButtonWidget reloadItemsButton;
+    private ItemIconButtonWidget showItemsButton;
+    private ItemIconButtonWidget showCharmsButton;
 
     private final DictionaryController controller;
 
@@ -50,11 +52,23 @@ public class ItemDictionaryGui extends Screen {
             updateScrollLimits();
         });
 
-        reloadItemsButton = new ReloadButtonWidget(5, 5, 20, 20, new LiteralText(""), (button) -> {
+        reloadItemsButton = new ItemIconButtonWidget(5, 5, 20, 20, new LiteralText(""), (button) -> {
             controller.requestItemsAndUpdate();
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, new LiteralText("Reload Item Data"), mouseX, mouseY);
-        });
+        }, "globe_banner_pattern");
+
+        showItemsButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, labelMenuHeight + 10, 20, 20, new LiteralText(""), (button) -> {
+            // do stuff
+        }, ((button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, new LiteralText("Item Data"), mouseX, mouseY);
+        }), "iron_chestplate");
+
+        showCharmsButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, labelMenuHeight + 40, 20, 20, new LiteralText(""), (button) -> {
+            // do stuff
+        }, ((button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, new LiteralText("Charm Data"), mouseX, mouseY);
+        }), "glowstone_dust");
     }
 
     @Override
@@ -98,6 +112,8 @@ public class ItemDictionaryGui extends Screen {
         matrices.translate(0, 0, 110);
         searchBar.render(matrices, mouseX, mouseY, delta);
         reloadItemsButton.render(matrices, mouseX, mouseY, delta);
+        showItemsButton.render(matrices, mouseX, mouseY, delta);
+        showCharmsButton.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
 
         try {
@@ -153,6 +169,8 @@ public class ItemDictionaryGui extends Screen {
 
         searchBar.mouseClicked(mouseX, mouseY, button);
         reloadItemsButton.mouseClicked(mouseX, mouseY, button);
+        showItemsButton.mouseClicked(mouseX, mouseY, button);
+        showCharmsButton.mouseClicked(mouseX, mouseY, button);
 
         return true;
     }
@@ -222,6 +240,11 @@ public class ItemDictionaryGui extends Screen {
 
         searchBar.setX(width / 2 + 90);
         searchBar.setWidth(width / 2 - 100);
+
+        showItemsButton.x = width - sortMenuWidth + 15;
+        showCharmsButton.x = width - sortMenuWidth + 15;
+        showItemsButton.y = labelMenuHeight + 15;
+        showCharmsButton.y = labelMenuHeight + 20;
     }
 
     @Override
