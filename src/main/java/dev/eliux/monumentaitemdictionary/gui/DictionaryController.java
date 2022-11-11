@@ -84,6 +84,7 @@ public class DictionaryController {
         try {
             String rawData = readItemData();
 
+            items.clear();
             JsonObject data = new Gson().fromJson(rawData, JsonObject.class);
             for (String key : data.keySet()) {
                 JsonObject itemData = data.getAsJsonObject(key);
