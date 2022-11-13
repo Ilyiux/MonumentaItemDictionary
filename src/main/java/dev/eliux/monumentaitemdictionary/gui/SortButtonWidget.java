@@ -6,10 +6,13 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.VertexConsumers;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SortButtonWidget extends ButtonWidget {
     public boolean enabled;
@@ -96,7 +99,10 @@ public class SortButtonWidget extends ButtonWidget {
         this.drawTexture(matrices, this.x + this.width / 2, this.y - verticalOffset, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
         this.renderBackground(matrices, MinecraftClient.getInstance(), mouseX, mouseY);
 
-        drawTextWithShadow(matrices, textRenderer, message, x + width + 5, y + 2 - verticalOffset, 0xFFFFFFFF);
+        List<OrderedText> texts = textRenderer.wrapLines(message, gui.width / 8);
+        for (OrderedText text : texts) {
+            textRenderer.drawWithShadow(matrices, text, x + width + 5, y - verticalOffset + 2 + textRenderer.fontHeight * texts.indexOf(text), 0xFFFFFFFF);
+        }
 
         if (enabled) {
             MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(enabledIcon, x + 2, y + 2 - verticalOffset);
