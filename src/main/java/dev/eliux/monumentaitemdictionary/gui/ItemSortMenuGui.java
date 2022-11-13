@@ -122,6 +122,34 @@ public class ItemSortMenuGui extends Screen {
         drawVerticalLine(matrices, width / 5 * 3, labelMenuHeight, height, 0xFFFFFFFF);
         drawVerticalLine(matrices, width / 5 * 4, labelMenuHeight, height, 0xFFFFFFFF);
 
+        // draw scroll indicators
+        fill(matrices, width / 5 - 2, labelMenuHeight, width / 5, height, 0x77AAAAAA);
+        fill(matrices, width / 5 * 2 - 2, labelMenuHeight, width / 5 * 2, height, 0x77AAAAAA);
+        fill(matrices, width / 5 * 3 - 2, labelMenuHeight, width / 5 * 3, height, 0x77AAAAAA);
+        fill(matrices, width / 5 * 4 - 2, labelMenuHeight, width / 5 * 4, height, 0x77AAAAAA);
+        fill(matrices, width - 2, labelMenuHeight, width, height, 0x77AAAAAA);
+
+        int typeTotalPixelHeight = typeButtons.size() * 20 + (typeButtons.size() + 1) * 5;
+        double typeBottomPercent = (double)getSortScrollOffset(SortType.TYPE) / typeTotalPixelHeight;
+        double typeScreenPercent = (double)(height - labelMenuHeight) / typeTotalPixelHeight;
+        fill(matrices, width / 5 - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * typeBottomPercent), width / 5, (int) (labelMenuHeight + (height - labelMenuHeight) * (typeBottomPercent + typeScreenPercent)), 0xFFC3C3C3);
+        int regionTotalPixelHeight = regionButtons.size() * 20 + (regionButtons.size() + 1) * 5;
+        double regionBottomPercent = (double)getSortScrollOffset(SortType.REGION) / regionTotalPixelHeight;
+        double regionScreenPercent = (double)(height - labelMenuHeight) / regionTotalPixelHeight;
+        fill(matrices, width / 5 * 2 - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * regionBottomPercent), width / 5 * 2, (int) (labelMenuHeight + (height - labelMenuHeight) * (regionBottomPercent + regionScreenPercent)), 0xFFC3C3C3);
+        int tierTotalPixelHeight = tierButtons.size() * 20 + (tierButtons.size() + 1) * 5;
+        double tierBottomPercent = (double)getSortScrollOffset(SortType.TIER) / tierTotalPixelHeight;
+        double tierScreenPercent = (double)(height - labelMenuHeight) / tierTotalPixelHeight;
+        fill(matrices, width / 5 * 3 - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * tierBottomPercent), width / 5 * 3, (int) (labelMenuHeight + (height - labelMenuHeight) * (tierBottomPercent + tierScreenPercent)), 0xFFC3C3C3);
+        int locationTotalPixelHeight = locationButtons.size() * 20 + (locationButtons.size() + 1) * 5;
+        double locationBottomPercent = (double)getSortScrollOffset(SortType.LOCATION) / locationTotalPixelHeight;
+        double locationScreenPercent = (double)(height - labelMenuHeight) / locationTotalPixelHeight;
+        fill(matrices, width / 5 * 4 - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * locationBottomPercent), width / 5 * 4, (int) (labelMenuHeight + (height - labelMenuHeight) * (locationBottomPercent + locationScreenPercent)), 0xFFC3C3C3);
+        int statTotalPixelHeight = statButtons.size() * 20 + (statButtons.size() + 1) * 5;
+        double statBottomPercent = (double)getSortScrollOffset(SortType.STAT) / statTotalPixelHeight;
+        double statScreenPercent = (double)(height - labelMenuHeight) / statTotalPixelHeight;
+        fill(matrices, width - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * statBottomPercent), width, (int) (labelMenuHeight + (height - labelMenuHeight) * (statBottomPercent + statScreenPercent)), 0xFFC3C3C3);
+
         // draw buttons
         typeButtons.forEach((b) -> {
             b.renderButton(matrices, mouseX, mouseY, delta);
