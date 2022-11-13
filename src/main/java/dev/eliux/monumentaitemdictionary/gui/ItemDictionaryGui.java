@@ -14,6 +14,7 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ItemDictionaryGui extends Screen {
@@ -31,8 +32,10 @@ public class ItemDictionaryGui extends Screen {
     private ItemIconButtonWidget reloadItemsButton;
     private ItemIconButtonWidget showItemsButton;
     private ItemIconButtonWidget showCharmsButton;
+    private ItemIconButtonWidget sortButton;
+    private ItemIconButtonWidget resetSortButton;
 
-    private final DictionaryController controller;
+    public final DictionaryController controller;
 
     public ItemDictionaryGui(Text title, DictionaryController controller) {
         super(title);
@@ -59,16 +62,31 @@ public class ItemDictionaryGui extends Screen {
         }, "globe_banner_pattern");
 
         showItemsButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, labelMenuHeight + 10, 20, 20, new LiteralText(""), (button) -> {
-            // do stuff
+            // do nothing
         }, ((button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Item Data"), mouseX, mouseY);
+            renderTooltip(matrices, new LiteralText("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), mouseX, mouseY);
         }), "iron_chestplate");
 
         showCharmsButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, labelMenuHeight + 40, 20, 20, new LiteralText(""), (button) -> {
             // do stuff
-        }, ((button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Charm Data"), mouseX, mouseY);
-        }), "glowstone_dust");
+        }, (button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, Arrays.asList(new LiteralText("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)), new LiteralText("Coming Soon").setStyle(Style.EMPTY.withColor(0xFFAAAAAA))), mouseX, mouseY);
+        }, "glowstone_dust");
+
+        sortButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, height - 30, 20, 20, new LiteralText(""), (button) -> {
+            controller.setSortScreen();
+        }, (button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, new LiteralText("Sort"), mouseX, mouseY);
+        }, "chest");
+
+        resetSortButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, height - 60, 20, 20, new LiteralText(""), (button) -> {
+            controller.resetAllFilters();
+            buildItemList();
+            if (controller.sortGui.initialized)
+                controller.sortGui.resetButtons();
+        }, (button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, new LiteralText("Reset Sorts").setStyle(Style.EMPTY.withColor(0xFFFF0000)), mouseX, mouseY);
+        }, "barrier");
     }
 
     @Override
@@ -114,6 +132,8 @@ public class ItemDictionaryGui extends Screen {
         reloadItemsButton.render(matrices, mouseX, mouseY, delta);
         showItemsButton.render(matrices, mouseX, mouseY, delta);
         showCharmsButton.render(matrices, mouseX, mouseY, delta);
+        sortButton.render(matrices, mouseX, mouseY, delta);
+        resetSortButton.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
 
         try {
@@ -139,7 +159,9 @@ public class ItemDictionaryGui extends Screen {
             ButtonWidget.TooltipSupplier tooltip = (button, matrices, mouseX, mouseY) -> {
                 renderTooltip(matrices, generateItemLoreText(item), mouseX, mouseY);
             };
-            ItemButtonWidget button = new ItemButtonWidget(x, y, itemSize, index, new LiteralText(item.name), i -> {}, item, tooltip, this);
+            ItemButtonWidget button = new ItemButtonWidget(x, y, itemSize, index, new LiteralText(item.name), (b) -> {
+
+            }, item, tooltip, this);
 
             itemButtons.add(button);
         }
@@ -167,10 +189,14 @@ public class ItemDictionaryGui extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         super.mouseClicked(mouseX, mouseY, button);
 
+        itemButtons.forEach((b) -> b.mouseClicked(mouseX, mouseY, button));
+
         searchBar.mouseClicked(mouseX, mouseY, button);
         reloadItemsButton.mouseClicked(mouseX, mouseY, button);
         showItemsButton.mouseClicked(mouseX, mouseY, button);
         showCharmsButton.mouseClicked(mouseX, mouseY, button);
+        sortButton.mouseClicked(mouseX, mouseY, button);
+        resetSortButton.mouseClicked(mouseX, mouseY, button);
 
         return true;
     }
@@ -235,16 +261,25 @@ public class ItemDictionaryGui extends Screen {
     public void resize(MinecraftClient client, int width, int height) {
         super.resize(client, width, height);
 
+        updateGuiPositions();
+    }
+
+    public void updateGuiPositions() {
         buildItemList();
         updateScrollLimits();
 
         searchBar.setX(width / 2 + 90);
         searchBar.setWidth(width / 2 - 100);
 
-        showItemsButton.x = width - sortMenuWidth + 15;
-        showCharmsButton.x = width - sortMenuWidth + 15;
-        showItemsButton.y = labelMenuHeight + 15;
-        showCharmsButton.y = labelMenuHeight + 20;
+        showItemsButton.x = width - sortMenuWidth + 10;
+        showCharmsButton.x = width - sortMenuWidth + 10;
+        showItemsButton.y = labelMenuHeight + 10;
+        showCharmsButton.y = labelMenuHeight + 40;
+
+        sortButton.x = width - sortMenuWidth + 10;
+        sortButton.y = height - 30;
+        resetSortButton.x = width - sortMenuWidth + 10;
+        resetSortButton.y = height - 60;
     }
 
     @Override

@@ -16,23 +16,28 @@ import java.util.ArrayList;
 
 public class DictionaryController {
     private ArrayList<String> statFilters = new ArrayList<>();
-    private boolean hasNameFilter = false;
     private String nameFilter;
-    private boolean hasRegionFilter = false;
-    private String regionFilter;
-    private boolean hasTypeFilter = false;
-    private String typeFilter;
-    private boolean hasTierFilter = false;
-    private String tierFilter;
-    private boolean hasLocationFilter = false;
-    private String locationFilter;
+    private boolean hasNameFilter = false;
+    private ArrayList<String> regionFilters = new ArrayList<>();
+    private ArrayList<String> typeFilters = new ArrayList<>();
+    private ArrayList<String> tierFilters = new ArrayList<>();
+    private ArrayList<String> locationFilters = new ArrayList<>();
+
+    private ArrayList<String> allTypes;
+    private ArrayList<String> allRegions;
+    private ArrayList<String> allTiers;
+    private ArrayList<String> allLocations;
+    private ArrayList<String> allStats;
 
     private final ArrayList<DictionaryItem> items;
     private ArrayList<DictionaryItem> validItems;
 
     public boolean itemLoadFailed = false;
 
-    private ItemDictionaryGui gui;
+    public ItemDictionaryGui itemGui;
+    private boolean itemGuiPreviouslyOpened = false;
+    public ItemSortMenuGui sortGui;
+    private boolean sortGuiPreviouslyOpened = false;
 
     public DictionaryController() {
         items = new ArrayList<>();
@@ -40,9 +45,29 @@ public class DictionaryController {
 
         loadItems();
 
-        gui = new ItemDictionaryGui(new LiteralText("Monumenta Item Dictionary"), this);
-        MinecraftClient.getInstance().setScreen(gui);
-        gui.postInit();
+        itemGui = new ItemDictionaryGui(new LiteralText("Monumenta Item Dictionary"), this);
+        sortGui = new ItemSortMenuGui(new LiteralText("Item Sort Menu"), this);
+        setDictionaryScreen();
+    }
+
+    public void setDictionaryScreen() {
+        MinecraftClient.getInstance().setScreen(itemGui);
+        if (!itemGuiPreviouslyOpened) {
+            itemGui.postInit();
+            itemGuiPreviouslyOpened = true;
+        } else {
+            itemGui.updateGuiPositions();
+        }
+    }
+
+    public void setSortScreen() {
+        MinecraftClient.getInstance().setScreen(sortGui);
+        if (!sortGuiPreviouslyOpened) {
+            sortGui.postInit();
+            sortGuiPreviouslyOpened = true;
+        } else {
+            sortGui.updateGuiPositions();
+        }
     }
 
     private String readItemData() {
@@ -74,13 +99,19 @@ public class DictionaryController {
 
             writeItemData(data);
             loadItems();
-            gui.buildItemList();
+            itemGui.buildItemList();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void loadItems() {
+        allTypes = new ArrayList<>();
+        allRegions = new ArrayList<>();
+        allTiers = new ArrayList<>();
+        allLocations = new ArrayList<>();
+        allStats = new ArrayList<>();
+
         try {
             String rawData = readItemData();
 
@@ -101,10 +132,25 @@ public class DictionaryController {
                     itemOriginalItem = itemData.get("original_item").getAsString();
                 }
 
+                if (itemType.equals("Charm"))
+                    continue;
+
+                if (!allTypes.contains(itemType))
+                    allTypes.add(itemType);
+                if (!allRegions.contains(itemRegion))
+                    allRegions.add(itemRegion);
+                if (!allTiers.contains(itemTier))
+                    allTiers.add(itemTier);
+                if (!allLocations.contains(itemLocation))
+                    allLocations.add(itemLocation);
+
                 ArrayList<ItemStat> itemStats = new ArrayList<>();
                 JsonObject statObject = itemData.get("stats").getAsJsonObject();
                 for (String statKey : statObject.keySet()) {
                     itemStats.add(new ItemStat(statKey, statObject.get(statKey).getAsDouble()));
+
+                    if (!allStats.contains(statKey))
+                        allStats.add(statKey);
                 }
 
                 // Build the item
@@ -116,6 +162,26 @@ public class DictionaryController {
         }
     }
 
+    public ArrayList<String> getAllTypes() {
+        return allTypes;
+    }
+
+    public ArrayList<String> getAllRegions() {
+        return allRegions;
+    }
+
+    public ArrayList<String> getAllTiers() {
+        return allTiers;
+    }
+
+    public ArrayList<String> getAllLocations() {
+        return allLocations;
+    }
+
+    public ArrayList<String> getAllStats() {
+        return allStats;
+    }
+
     public void setNameFilter(String nameFilter) {
         this.nameFilter = nameFilter;
         hasNameFilter = true;
@@ -125,40 +191,36 @@ public class DictionaryController {
         hasNameFilter = false;
     }
 
-    public void setTypeFilter(String typeFilter) {
-        this.typeFilter = typeFilter;
-        hasTypeFilter = false;
+    public void addTypeFilter(String typeFilter) {
+        typeFilters.add(typeFilter);
     }
 
-    public void clearTypeFilter() {
-        hasTypeFilter = false;
+    public void removeTypeFilter(String typeFilter) {
+        typeFilters.remove(typeFilter);
     }
 
-    public void setRegionFilter(String regionFilter) {
-        this.regionFilter = regionFilter;
-        hasRegionFilter = true;
+    public void addRegionFilter(String regionFilter) {
+        regionFilters.add(regionFilter);
     }
 
-    public void clearRegionFilter() {
-        hasRegionFilter = false;
+    public void removeRegionFilter(String regionFilter) {
+        regionFilters.remove(regionFilter);
     }
 
-    public void setTierFilter(String tierFilter) {
-        this.tierFilter = tierFilter;
-        hasTierFilter = true;
+    public void addTierFilter(String tierFilter) {
+        tierFilters.add(tierFilter);
     }
 
-    public void clearTierFilter() {
-        hasTierFilter = false;
+    public void removeTierFilter(String tierFilter) {
+        tierFilters.remove(tierFilter);
     }
 
-    public void setLocationFilter(String locationFilter) {
-        this.locationFilter = locationFilter;
-        hasLocationFilter = true;
+    public void addLocationFilter(String locationFilter) {
+        locationFilters.add(locationFilter);
     }
 
-    public void clearLocationFilter() {
-        hasLocationFilter = false;
+    public void removeLocationFilter(String locationFilter) {
+        locationFilters.remove(locationFilter);
     }
 
     public void addStatFilter(String statFilter) {
@@ -169,25 +231,38 @@ public class DictionaryController {
         statFilters.remove(statFilter);
     }
 
+    public void resetAllFilters() {
+        typeFilters.clear();
+        regionFilters.clear();
+        tierFilters.clear();
+        locationFilters.clear();
+        statFilters.clear();
+    }
+
     public void refreshItems() {
         ArrayList<DictionaryItem> filteredItems = new ArrayList<>(items);
+
 
         if (hasNameFilter)
             filteredItems.removeIf(i -> !i.name.toLowerCase().contains(nameFilter.toLowerCase()));
 
-        if (hasTypeFilter)
-            filteredItems.removeIf(i -> !i.type.equals(typeFilter));
+        if (typeFilters.size() > 0) {
+            filteredItems.removeIf(i -> !typeFilters.contains(i.type));
+        }
 
-        if (hasRegionFilter)
-            filteredItems.removeIf(i -> !i.region.equals(regionFilter));
+        if (regionFilters.size() > 0) {
+            filteredItems.removeIf(i -> !regionFilters.contains(i.region));
+        }
 
-        if (hasTierFilter)
-            filteredItems.removeIf(i -> !i.tier.equals(tierFilter));
+        if (tierFilters.size() > 0) {
+            filteredItems.removeIf(i -> !tierFilters.contains(i.tier));
+        }
 
-        if (hasLocationFilter)
-            filteredItems.removeIf(i -> !i.location.equals(locationFilter));
+        if (locationFilters.size() > 0) {
+            filteredItems.removeIf(i -> !locationFilters.contains(i.location));
+        }
 
-        // sort by first stat and subsort for all other stats
+        // sort by first stat and sub-sort for all other stats
         for (String stat : statFilters) {
             filteredItems.removeIf(i -> !i.hasStat(stat));
         }
@@ -199,8 +274,8 @@ public class DictionaryController {
 
                 double val = o1.getStat(stat) - o2.getStat(stat);
 
-                if (val > 0) return 1;
-                if (val < 0) return -1;
+                if (val > 0) return -1;
+                if (val < 0) return 1;
             }
             return 0;
         });

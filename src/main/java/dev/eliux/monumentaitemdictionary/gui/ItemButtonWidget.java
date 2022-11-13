@@ -39,6 +39,13 @@ public class ItemButtonWidget extends ButtonWidget {
     }
 
     @Override
+    public void onClick(double mouseX, double mouseY) {
+        super.onClick(mouseX, mouseY);
+
+
+    }
+
+    @Override
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         int yPixelOffset = -gui.getScrollPixels();
 

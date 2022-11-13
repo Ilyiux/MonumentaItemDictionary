@@ -110,7 +110,7 @@ public class ItemFormatter {
             case "magic_damage_percent":
                 yield "% Magic Damage";
             case "fire_aspect_p":
-                yield "Fire Aspect ";
+                yield "Fire Aspect Ranged ";
             case "radiant":
                 yield "Radiant";
             case "melee_prot":
@@ -140,7 +140,7 @@ public class ItemFormatter {
             case "looting":
                 yield "Looting ";
             case "thunder_aspect_m":
-                yield "Thunder Aspect ";
+                yield "Thunder Aspect Melee ";
             case "attack_damage_percent":
                 yield "% Attack Damage";
             case "irreparability":
@@ -194,7 +194,7 @@ public class ItemFormatter {
             case "throw_rate_percent":
                 yield "% Throw Rate";
             case "thunder_aspect_p":
-                yield "Thunder Aspect ";
+                yield "Thunder Aspect Ranged ";
             case "adrenaline":
                 yield "Adrenaline ";
             case "projectile_damage_base":
@@ -216,11 +216,11 @@ public class ItemFormatter {
             case "blast_prot":
                 yield "Blast Protection ";
             case "ice_aspect_p":
-                yield "Ice Aspect ";
+                yield "Ice Aspect Ranged ";
             case "thorns_percent":
                 yield "% Thorns Damage";
             case "infinity_tool":
-                yield "Infinity";
+                yield "Infinity Food";
             case "regicide":
                 yield "Regicide ";
             case "multitool":
@@ -234,9 +234,9 @@ public class ItemFormatter {
             case "void_tether":
                 yield "Void Tether";
             case "fire_aspect_m":
-                yield "Fire Aspect ";
+                yield "Fire Aspect Melee ";
             case "ice_aspect_m":
-                yield "Ice Aspect ";
+                yield "Ice Aspect Melee ";
             case "attack_damage_base":
                 yield " Attack Damage";
             case "regen":
@@ -255,6 +255,36 @@ public class ItemFormatter {
                 yield "Tempo ";
             case "aqua_affinity":
                 yield "Aqua Affinity";
+            case "cloaked":
+                yield "Cloaked ";
+            case "earth_aspect_m":
+                yield "Earth Aspect Melee ";
+            case "earth_aspect_p":
+                yield "Earth Aspect Ranged ";
+            case "wind_aspect_m":
+                yield "Wind Aspect Melee ";
+            case "wind_aspect_p":
+                yield "Wind Aspect Ranged ";
+            case "excavator":
+                yield "Excavator";
+            case "fire_fragility":
+                yield "Fire Fragility ";
+            case "magic_fragility":
+                yield "Magic Fragility ";
+            case "melee_fragility":
+                yield "Melee Fragility ";
+            case "projectile_fragility":
+                yield "Projectile Fragility ";
+            case "first_strike":
+                yield "First Strike ";
+            case "guard":
+                yield "Guard ";
+            case "stamina":
+                yield "Stamina ";
+            case "trivium":
+                yield "Trivium ";
+            case "worldly_protection":
+                yield "Worldly Protection ";
             default:
                 yield inStat;
         };
@@ -282,6 +312,7 @@ public class ItemFormatter {
                 inEnchant.equals("aqua_affinity") ||
                 inEnchant.equals("ashes_of_eternity") ||
                 inEnchant.equals("void_tether") ||
+                inEnchant.equals("excavator") ||
                 inEnchant.equals("darksight");
     }
 
@@ -293,6 +324,10 @@ public class ItemFormatter {
                 inEnchant.equals("crippling") ||
                 inEnchant.equals("irreparability") ||
                 inEnchant.equals("two_handed") ||
+                inEnchant.equals("fire_fragility") ||
+                inEnchant.equals("melee_fragility") ||
+                inEnchant.equals("projectile_fragility") ||
+                inEnchant.equals("magic_fragility") ||
                 inEnchant.equals("anemia");
     }
 

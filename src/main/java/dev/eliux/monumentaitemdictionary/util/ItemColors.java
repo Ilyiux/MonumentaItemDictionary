@@ -68,6 +68,16 @@ public class ItemColors {
     public static final int CORRIDORS_COLOR = 0x890000;
     public static final int VERDANT_COLOR = 0x158115;
     public static final int KAUL_COLOR = 0x9ED292;
+    public static final int SKT_COLOR = 0xBEBEBE;
+    public static final int THEWOLFSWOOD_COLOR = 0x4B8D4C;
+    public static final int BLUE_COLOR = 0x0C2BA0;
+    public static final int PORTAL_COLOR = 0XD9E5E0;
+    public static final int PELIASKEEP_COLOR = 0xC2B9A3;
+    public static final int RUIN_COLOR = 0x316CA6;
+    public static final int SANGUINEHALLS_COLOR = 0xA90000;
+    public static final int QUESTREWARD_COLOR = 0xC6A0C6;
+    public static final int TRANSMOGRIFIER_COLOR = 0x6E2CA6;
+    public static final int ARCHITECTSRING_COLOR = 0xCDCDCD;
 
     public static int getColorForTier(String itemTier) {
         return switch (itemTier) {
@@ -190,6 +200,26 @@ public class ItemColors {
                 yield REVERIE_COLOR;
             case "Kaul":
                 yield KAUL_COLOR;
+            case "SKT":
+                yield SKT_COLOR;
+            case "The Wolfswood":
+                yield THEWOLFSWOOD_COLOR;
+            case "Blue":
+                yield BLUE_COLOR;
+            case "PORTAL":
+                yield PORTAL_COLOR;
+            case "Pelias' Keep":
+                yield PELIASKEEP_COLOR;
+            case "Ruin":
+                yield RUIN_COLOR;
+            case "Sanguine Halls":
+                yield SANGUINEHALLS_COLOR;
+            case "Quest Reward":
+                yield QUESTREWARD_COLOR;
+            case "Transmogrifier":
+                yield TRANSMOGRIFIER_COLOR;
+            case "Architect's Ring":
+                yield ARCHITECTSRING_COLOR;
             default:
                 yield DEFAULT_COLOR;
         };
