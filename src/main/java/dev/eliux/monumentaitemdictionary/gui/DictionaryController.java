@@ -1,6 +1,7 @@
 package dev.eliux.monumentaitemdictionary.gui;
 
 import com.google.gson.*;
+import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
 import net.minecraft.client.MinecraftClient;
@@ -8,6 +9,7 @@ import net.minecraft.text.LiteralText;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -154,7 +156,26 @@ public class DictionaryController {
                 }
 
                 // Build the item
-                items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, itemBaseItem, itemOriginalItem, itemStats));
+                if (itemData.has("masterwork")) {
+                    boolean hasItem = false;
+                    for (DictionaryItem dictionaryItem : items) {
+                        if (dictionaryItem.name.equals(itemName)) {
+                            hasItem = true;
+                            dictionaryItem.addMasterworkTier(itemStats, itemData.get("masterwork").getAsInt());
+                        }
+                    }
+                    if (!hasItem) {
+                        ArrayList<ArrayList<ItemStat>> totalList = new ArrayList<>();
+                        for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier) + 1; i ++)
+                            totalList.add(null);
+                        totalList.set(itemData.get("masterwork").getAsInt(), itemStats);
+                        items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, itemBaseItem, itemOriginalItem, totalList, true));
+                    }
+                } else {
+                    ArrayList<ArrayList<ItemStat>> totalList = new ArrayList<>();
+                    totalList.add(itemStats);
+                    items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, itemBaseItem, itemOriginalItem, totalList, false));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

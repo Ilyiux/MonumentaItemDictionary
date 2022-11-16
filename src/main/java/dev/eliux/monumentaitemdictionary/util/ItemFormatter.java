@@ -35,6 +35,17 @@ public class ItemFormatter {
         }
     }
 
+    public static int getMasterworkForRarity(String rarity) {
+        return switch (rarity) {
+            case "Rare":
+                yield 3;
+            case "Epic":
+                yield 6;
+            default:
+                yield 0;
+        };
+    }
+
     public static String formatStat(String inStat) {
         return switch (inStat) {
             case "aptitude":

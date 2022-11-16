@@ -10,6 +10,7 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
@@ -156,12 +157,11 @@ public class ItemDictionaryGui extends Screen {
             int x = (col + 1) * itemPadding + col * itemSize;
             int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
 
-            ButtonWidget.TooltipSupplier tooltip = (button, matrices, mouseX, mouseY) -> {
-                renderTooltip(matrices, generateItemLoreText(item), mouseX, mouseY);
-            };
             ItemButtonWidget button = new ItemButtonWidget(x, y, itemSize, index, new LiteralText(item.name), (b) -> {
 
-            }, item, tooltip, this);
+            }, item, (b, matrices, mouseX, mouseY) -> {
+                renderTooltip(matrices, generateItemLoreText(item), mouseX, mouseY);
+            }, this);
 
             itemButtons.add(button);
         }
@@ -202,6 +202,14 @@ public class ItemDictionaryGui extends Screen {
     }
 
     private List<Text> generateItemLoreText(DictionaryItem item) {
+        // this is scuffed
+        int masterworkTier = 0;
+        for (ItemButtonWidget itemButton : itemButtons) {
+            if (itemButton.isItem(item)) {
+                masterworkTier = itemButton.shownMasterworkTier;
+            }
+        }
+
         List<Text> lines = new ArrayList<>();
 
         lines.add(new LiteralText(item.name).setStyle(Style.EMPTY
@@ -215,35 +223,63 @@ public class ItemDictionaryGui extends Screen {
         lines.add(new LiteralText(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_COLOR)));
 
+        if (item.hasMasterwork) {
+            MutableText baseText = new LiteralText("Masterwork: ").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
+            for (int i = 0; i < ItemFormatter.getMasterworkForRarity(item.tier); i ++) {
+                if (i < masterworkTier) {
+                    baseText.append("★").setStyle(Style.EMPTY.withColor(0xFFFCB23D));
+                } else {
+                    baseText.append("☆").setStyle(Style.EMPTY.withColor(0xFFFCB23D));
+                }
+            }
+            lines.add(baseText);
+        }
+
         lines.add(new LiteralText(""));
 
         ArrayList<Text> enchants = new ArrayList<>();
         ArrayList<Text> basestats = new ArrayList<>();
         ArrayList<Text> stats = new ArrayList<>();
 
-        for (ItemStat stat : item.stats) {
-            Text line = new LiteralText(ItemFormatter.buildStatString(stat.statName, stat.statValue)).setStyle(Style.EMPTY
-                    .withColor(ItemColors.getColorForStat(stat.statName, stat.statValue)));
-            if (ItemFormatter.isStat(stat.statName)) {
-                if (ItemFormatter.isBaseStat(stat.statName)) {
-                    basestats.add(line);
+        ArrayList<ItemStat> showStats;
+        if (item.hasMasterwork) {
+            showStats = item.getMasterworkTier(masterworkTier);
+        } else {
+            showStats = item.getNonMasterwork();
+        }
+
+        if (showStats != null) {
+            for (ItemStat stat : showStats) {
+                Text line = new LiteralText(ItemFormatter.buildStatString(stat.statName, stat.statValue)).setStyle(Style.EMPTY
+                        .withColor(ItemColors.getColorForStat(stat.statName, stat.statValue)));
+                if (ItemFormatter.isStat(stat.statName)) {
+                    if (ItemFormatter.isBaseStat(stat.statName)) {
+                        basestats.add(line);
+                    } else {
+                        stats.add(line);
+                    }
                 } else {
-                    stats.add(line);
+                    enchants.add(line);
                 }
-            } else {
-                enchants.add(line);
+            }
+
+            lines.addAll(enchants);
+
+            if (enchants.size() > 0) lines.add(new LiteralText(""));
+            if (stats.size() > 0 || basestats.size() > 0)
+                lines.add(new LiteralText("When Used:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
+
+            lines.addAll(basestats);
+            lines.addAll(stats);
+        } else {
+            if (masterworkTier > item.getMinMasterwork()) {
+                lines.add(new LiteralText("No data exists for this masterwork tier. :(").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
+            } else if (masterworkTier < item.getMinMasterwork()) {
+                lines.add(new LiteralText("This masterwork tier does not exist.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
             }
         }
 
-        lines.addAll(enchants);
-
-        if (enchants.size() > 0) lines.add(new LiteralText(""));
-        if (stats.size() > 0 || basestats.size() > 0) lines.add(new LiteralText("When Used:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
-
-        lines.addAll(basestats);
-        lines.addAll(stats);
-
-        if (stats.size() > 0 || basestats.size() > 0) lines.add(new LiteralText(""));
+        if (stats.size() > 0 || basestats.size() > 0 || showStats == null) lines.add(new LiteralText(""));
 
         lines.add(new LiteralText(item.region + " ")
                 .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR))
@@ -286,10 +322,14 @@ public class ItemDictionaryGui extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         super.mouseScrolled(mouseX, mouseY, amount);
 
-        if (mouseX >= 0 && mouseX < width - sortMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
-            scrollPixels += -amount * 12; // scaled
+        if (Screen.hasControlDown()) {
+            itemButtons.forEach((b) -> b.scrolled(mouseX, mouseY, amount));
+        } else {
+            if (mouseX >= 0 && mouseX < width - sortMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
+                scrollPixels += -amount * 12; // scaled
 
-            updateScrollLimits();
+                updateScrollLimits();
+            }
         }
 
         return true;

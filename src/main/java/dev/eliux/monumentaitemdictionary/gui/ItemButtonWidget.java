@@ -3,6 +3,7 @@ package dev.eliux.monumentaitemdictionary.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
+import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -17,6 +18,8 @@ public class ItemButtonWidget extends ButtonWidget {
     private final ItemStack builtItem;
     public final int index;
 
+    public int shownMasterworkTier;
+
     private ItemDictionaryGui gui;
 
     public ItemButtonWidget(int x, int y, int itemSize, int index, Text message, PressAction onPress, DictionaryItem item, TooltipSupplier tooltipSupplier, ItemDictionaryGui gui) {
@@ -24,6 +27,7 @@ public class ItemButtonWidget extends ButtonWidget {
         this.itemSize = itemSize;
         this.item = item;
         this.index = index;
+        shownMasterworkTier = item.getMinMasterwork();
 
         this.gui = gui;
 
@@ -45,6 +49,18 @@ public class ItemButtonWidget extends ButtonWidget {
 
     }
 
+    public boolean isItem(DictionaryItem item) {
+        return this.item == item;
+    }
+
+    public void scrolled(double mouseX, double mouseY, double amount) {
+        if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height && item.hasMasterwork) {
+            shownMasterworkTier += amount;
+            if (shownMasterworkTier < 0) shownMasterworkTier = 0;
+            if (shownMasterworkTier > item.getMaxMasterwork() - 1) shownMasterworkTier = item.getMaxMasterwork() - 1;
+        }
+    }
+
     @Override
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         int yPixelOffset = -gui.getScrollPixels();
@@ -64,7 +80,6 @@ public class ItemButtonWidget extends ButtonWidget {
         drawVerticalLine(matrices, x + width, (y + yPixelOffset), (y + yPixelOffset) + height, outlineColor);
 
         MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(builtItem, x + (itemSize / 2) - 7, (y + yPixelOffset) + (itemSize / 2) - 7);
-
 
         if (hovered)
             renderTooltip(matrices, mouseX, mouseY);
