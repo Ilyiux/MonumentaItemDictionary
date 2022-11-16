@@ -35,6 +35,8 @@ public class ItemDictionaryGui extends Screen {
     private ItemIconButtonWidget showCharmsButton;
     private ItemIconButtonWidget sortButton;
     private ItemIconButtonWidget resetSortButton;
+    private ItemIconButtonWidget minMasterworkButton;
+    private ItemIconButtonWidget maxMasterworkButton;
 
     public final DictionaryController controller;
 
@@ -88,6 +90,18 @@ public class ItemDictionaryGui extends Screen {
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, new LiteralText("Reset Sorts").setStyle(Style.EMPTY.withColor(0xFFFF0000)), mouseX, mouseY);
         }, "barrier");
+
+        minMasterworkButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, height - 120, 20, 20, new LiteralText(""), (button) -> {
+            itemButtons.forEach(ItemButtonWidget::setMinimumMasterwork);
+        }, (button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, new LiteralText("Show Minimum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), mouseX, mouseY);
+        }, "netherite_scrap");
+
+        maxMasterworkButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, height - 90, 20, 20, new LiteralText(""), (button) -> {
+            itemButtons.forEach(ItemButtonWidget::setMaximumMasterwork);
+        }, (button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, Arrays.asList(new LiteralText("Show Maximum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), new LiteralText("(Only counts tiers with data)").setStyle(Style.EMPTY.withColor(0xFFAAAAAA))), mouseX, mouseY);
+        }, "netherite_ingot");
     }
 
     @Override
@@ -135,6 +149,8 @@ public class ItemDictionaryGui extends Screen {
         showCharmsButton.render(matrices, mouseX, mouseY, delta);
         sortButton.render(matrices, mouseX, mouseY, delta);
         resetSortButton.render(matrices, mouseX, mouseY, delta);
+        minMasterworkButton.render(matrices, mouseX, mouseY, delta);
+        maxMasterworkButton.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
 
         try {
@@ -197,6 +213,8 @@ public class ItemDictionaryGui extends Screen {
         showCharmsButton.mouseClicked(mouseX, mouseY, button);
         sortButton.mouseClicked(mouseX, mouseY, button);
         resetSortButton.mouseClicked(mouseX, mouseY, button);
+        minMasterworkButton.mouseClicked(mouseX, mouseY, button);
+        maxMasterworkButton.mouseClicked(mouseX, mouseY, button);
 
         return true;
     }
@@ -316,6 +334,11 @@ public class ItemDictionaryGui extends Screen {
         sortButton.y = height - 30;
         resetSortButton.x = width - sortMenuWidth + 10;
         resetSortButton.y = height - 60;
+
+        minMasterworkButton.x = width - sortMenuWidth + 10;
+        minMasterworkButton.y = height - 120;
+        maxMasterworkButton.x = width - sortMenuWidth + 10;
+        maxMasterworkButton.y = height - 90;
     }
 
     @Override

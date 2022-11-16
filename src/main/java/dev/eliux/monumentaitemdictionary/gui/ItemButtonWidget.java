@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
+import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -11,6 +12,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 
 import net.minecraft.text.Text;
+
+import java.util.ArrayList;
 
 public class ItemButtonWidget extends ButtonWidget {
     private final int itemSize;
@@ -51,6 +54,19 @@ public class ItemButtonWidget extends ButtonWidget {
 
     public boolean isItem(DictionaryItem item) {
         return this.item == item;
+    }
+
+    public void setMinimumMasterwork() {
+        shownMasterworkTier = item.getMinMasterwork();
+    }
+
+    public void setMaximumMasterwork() {
+        // shownMasterworkTier = item.getMaxMasterwork();
+        int max = 0;
+        for (ArrayList<ItemStat> stats : item.stats) {
+            if (stats != null) max = item.stats.indexOf(stats);
+        }
+        shownMasterworkTier = max;
     }
 
     public void scrolled(double mouseX, double mouseY, double amount) {
