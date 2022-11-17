@@ -19,10 +19,10 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ItemDictionaryGui extends Screen {
-    private final int sortMenuWidth = 40;
-    private final int labelMenuHeight = 30;
-    private final int itemPadding = 7;
-    private final int itemSize = 25;
+    public final int sortMenuWidth = 40;
+    public final int labelMenuHeight = 30;
+    public final int itemPadding = 7;
+    public final int itemSize = 25;
     private int scrollPixels = 0;
 
     private final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
