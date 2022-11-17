@@ -70,7 +70,7 @@ public class ItemButtonWidget extends ButtonWidget {
     }
 
     public void scrolled(double mouseX, double mouseY, double amount) {
-        if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height && item.hasMasterwork) {
+        if (mouseX >= x && mouseX <= x + width && mouseY >= y - gui.getScrollPixels() && mouseY <= y + height - gui.getScrollPixels() && item.hasMasterwork) {
             shownMasterworkTier += amount;
             if (shownMasterworkTier < 0) shownMasterworkTier = 0;
             if (shownMasterworkTier > item.getMaxMasterwork() - 1) shownMasterworkTier = item.getMaxMasterwork() - 1;
