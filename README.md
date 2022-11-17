@@ -1,11 +1,16 @@
 # Monumenta Item Dictionary (MID)
 Developed by Eliux
 
-A completely in-game item dictionary for monumenta
+An entirely in-game item dictionary for Monumenta
 
 ## Item Dictionary
-#### Menu accessible by pressing H (changable in Minecraft control settings)
+### Menu accessible by pressing _H_ (changeable in Minecraft control settings)
 - Items pulled from the Oh the misery API
 - Item highlighting by tier
 - Search for names
-- Search for region, location, function, tier, and stat
+- Sort by region, location, function, tier, and stat
+
+### Masterwork Compatible 
+- Change individual item's masterwork tier by _Ctrl + Scroll_
+- Toggle between showing minimum/maximum masterwork tier
+- Search for stats in any level of masterwork
