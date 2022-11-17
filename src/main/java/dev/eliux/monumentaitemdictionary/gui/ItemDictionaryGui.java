@@ -13,6 +13,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +38,7 @@ public class ItemDictionaryGui extends Screen {
     private ItemIconButtonWidget resetSortButton;
     private ItemIconButtonWidget minMasterworkButton;
     private ItemIconButtonWidget maxMasterworkButton;
+    private ItemIconButtonWidget tipsMasterworkButton;
 
     public final DictionaryController controller;
 
@@ -102,6 +104,18 @@ public class ItemDictionaryGui extends Screen {
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, Arrays.asList(new LiteralText("Show Maximum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), new LiteralText("(Only counts tiers with data)").setStyle(Style.EMPTY.withColor(0xFFAAAAAA))), mouseX, mouseY);
         }, "netherite_ingot");
+
+        tipsMasterworkButton = new ItemIconButtonWidget(30, 5, 20, 20, new LiteralText(""), (button) -> {
+            Util.getOperatingSystem().open("https://github.com/Ilyiux/MonumentaItemDictionary");
+        }, (button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, Arrays.asList(
+                    new LiteralText("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
+                    new LiteralText(""),
+                    new LiteralText("Ctrl + Scroll").setStyle(Style.EMPTY.withItalic(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to increase/decrease individual masterwork tiers").setStyle(Style.EMPTY.withItalic(false).withColor(ItemColors.TEXT_COLOR))),
+                    new LiteralText(""),
+                    new LiteralText("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
+            ), mouseX, mouseY);
+        }, "oak_sign");
     }
 
     @Override
@@ -151,6 +165,7 @@ public class ItemDictionaryGui extends Screen {
         resetSortButton.render(matrices, mouseX, mouseY, delta);
         minMasterworkButton.render(matrices, mouseX, mouseY, delta);
         maxMasterworkButton.render(matrices, mouseX, mouseY, delta);
+        tipsMasterworkButton.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
 
         try {
@@ -215,6 +230,7 @@ public class ItemDictionaryGui extends Screen {
         resetSortButton.mouseClicked(mouseX, mouseY, button);
         minMasterworkButton.mouseClicked(mouseX, mouseY, button);
         maxMasterworkButton.mouseClicked(mouseX, mouseY, button);
+        tipsMasterworkButton.mouseClicked(mouseX, mouseY, button);
 
         return true;
     }
