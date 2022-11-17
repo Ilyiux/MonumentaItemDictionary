@@ -359,8 +359,8 @@ public class ItemDictionaryGui extends Screen {
     }
 
     private void updateScrollLimits() {
-        int rows = (int) Math.ceil((double)itemButtons.size() / ((double)(width - sortMenuWidth - 5) / (itemSize + itemPadding)));
-        int maxScroll = rows * (itemPadding + itemSize) + itemPadding - (height - labelMenuHeight);
+        int rows = (int) Math.ceil((double)itemButtons.size() / (double)((width - sortMenuWidth - 5) / (itemSize + itemPadding)));
+        int maxScroll = rows * itemSize + (rows + 1) * itemPadding - height + labelMenuHeight;
         if (scrollPixels > maxScroll) scrollPixels = maxScroll;
 
         if (scrollPixels < 0) scrollPixels = 0;
