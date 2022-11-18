@@ -60,6 +60,7 @@ public class DictionaryItem {
 
     public boolean hasStat(String stat) {
         for (ArrayList<ItemStat> itemStatsList : stats) {
+            if (itemStatsList == null) continue;
             for (ItemStat itemStat : itemStatsList) {
                 if (itemStat.statName.equals(stat)) {
                     return true;
@@ -70,13 +71,15 @@ public class DictionaryItem {
     }
 
     public double getStat(String stat) {
+        double highest = -1.0;
         for (ArrayList<ItemStat> itemStatsList : stats) {
+            if (itemStatsList == null) continue;
             for (ItemStat itemStat : itemStatsList) {
-                if (itemStat.statName.equals(stat)) {
-                    return itemStat.statValue;
+                if (itemStat.statName.equals(stat) && itemStat.statValue > highest) {
+                    highest = itemStat.statValue;
                 }
             }
         }
-        return -1.0;
+        return highest;
     }
 }
