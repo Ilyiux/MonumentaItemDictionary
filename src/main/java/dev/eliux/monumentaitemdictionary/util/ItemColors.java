@@ -71,6 +71,7 @@ public class ItemColors {
     public static final int SKT_COLOR = 0xBEBEBE;
     public static final int THEWOLFSWOOD_COLOR = 0x4B8D4C;
     public static final int BLUE_COLOR = 0x0C2BA0;
+    public static final int BROWN_COLOR = 0x6F3508;
     public static final int PORTAL_COLOR = 0XD9E5E0;
     public static final int PELIASKEEP_COLOR = 0xC2B9A3;
     public static final int RUIN_COLOR = 0x316CA6;
@@ -206,6 +207,8 @@ public class ItemColors {
                 yield THEWOLFSWOOD_COLOR;
             case "Blue":
                 yield BLUE_COLOR;
+            case "Brown":
+                yield BROWN_COLOR;
             case "PORTAL":
                 yield PORTAL_COLOR;
             case "Pelias' Keep":
