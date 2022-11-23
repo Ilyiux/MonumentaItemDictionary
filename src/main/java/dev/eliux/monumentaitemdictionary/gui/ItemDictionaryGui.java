@@ -360,7 +360,6 @@ public class ItemDictionaryGui extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         super.mouseScrolled(mouseX, mouseY, amount);
-        System.out.println(amount);
 
         if (Screen.hasControlDown()) {
             itemButtons.forEach((b) -> b.scrolled(mouseX, mouseY, amount));

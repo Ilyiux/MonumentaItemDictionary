@@ -39,7 +39,7 @@ public class ItemButtonWidget extends ButtonWidget {
         NbtCompound baseNbt = builtItem.getOrCreateNbt();
         NbtCompound plain = new NbtCompound();
         NbtCompound display = new NbtCompound();
-        display.putString("Name", item.name);
+        display.putString("Name", item.name.split("\\(")[0].trim());
         plain.put("display", display);
         baseNbt.put("plain", plain);
         builtItem.setNbt(baseNbt);
