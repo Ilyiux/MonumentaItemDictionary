@@ -308,6 +308,7 @@ public class ItemDictionaryGui extends Screen {
         } else {
             if (masterworkTier > item.getMinMasterwork()) {
                 lines.add(new LiteralText("No data exists for this masterwork tier. :(").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
+                lines.add(new LiteralText("Tag FlamingoBike#6228 on discord with a screenshot of the item.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
             } else if (masterworkTier < item.getMinMasterwork()) {
                 lines.add(new LiteralText("This masterwork tier does not exist.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
             }
