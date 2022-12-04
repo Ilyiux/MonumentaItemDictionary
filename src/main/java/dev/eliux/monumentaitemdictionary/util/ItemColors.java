@@ -79,6 +79,7 @@ public class ItemColors {
     public static final int QUESTREWARD_COLOR = 0xC6A0C6;
     public static final int TRANSMOGRIFIER_COLOR = 0x6E2CA6;
     public static final int ARCHITECTSRING_COLOR = 0xCDCDCD;
+    public static final int GODSPORE_COLOR = 0x416A28;
 
     public static int getColorForTier(String itemTier) {
         return switch (itemTier) {
@@ -223,6 +224,8 @@ public class ItemColors {
                 yield TRANSMOGRIFIER_COLOR;
             case "Architect's Ring":
                 yield ARCHITECTSRING_COLOR;
+            case "Godspore":
+                yield GODSPORE_COLOR;
             default:
                 yield DEFAULT_COLOR;
         };
