@@ -1,6 +1,8 @@
-package dev.eliux.monumentaitemdictionary.gui;
+package dev.eliux.monumentaitemdictionary.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.eliux.monumentaitemdictionary.gui.DictionaryItem;
+import dev.eliux.monumentaitemdictionary.gui.ItemDictionaryGui;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;

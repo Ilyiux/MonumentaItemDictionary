@@ -1,4 +1,4 @@
-package dev.eliux.monumentaitemdictionary.gui;
+package dev.eliux.monumentaitemdictionary.gui.widgets;
 
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import net.minecraft.client.MinecraftClient;

@@ -1,6 +1,7 @@
-package dev.eliux.monumentaitemdictionary.gui;
+package dev.eliux.monumentaitemdictionary.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.eliux.monumentaitemdictionary.gui.ItemSortMenuGui;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
