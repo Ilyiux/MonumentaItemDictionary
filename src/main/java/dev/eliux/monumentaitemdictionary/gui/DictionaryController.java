@@ -40,6 +40,8 @@ public class DictionaryController {
     private boolean itemGuiPreviouslyOpened = false;
     public ItemSortMenuGui sortGui;
     private boolean sortGuiPreviouslyOpened = false;
+    public ItemFilterGui filterGui;
+    private boolean filterGuiPreviouslyOpened = false;
 
     public DictionaryController() {
         items = new ArrayList<>();
@@ -49,6 +51,7 @@ public class DictionaryController {
 
         itemGui = new ItemDictionaryGui(new LiteralText("Monumenta Item Dictionary"), this);
         sortGui = new ItemSortMenuGui(new LiteralText("Item Sort Menu"), this);
+        filterGui = new ItemFilterGui(new LiteralText("Item Filter Menu"), this);
         setDictionaryScreen();
     }
 
@@ -69,6 +72,16 @@ public class DictionaryController {
             sortGuiPreviouslyOpened = true;
         } else {
             sortGui.updateGuiPositions();
+        }
+    }
+
+    public void setFilterScreen() {
+        MinecraftClient.getInstance().setScreen(filterGui);
+        if (!filterGuiPreviouslyOpened) {
+            filterGui.postInit();
+            filterGuiPreviouslyOpened = true;
+        } else {
+            //filterGui.updateGuiPositions();
         }
     }
 

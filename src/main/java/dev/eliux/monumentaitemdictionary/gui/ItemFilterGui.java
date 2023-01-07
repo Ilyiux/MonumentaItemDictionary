@@ -1,43 +1,61 @@
 package dev.eliux.monumentaitemdictionary.gui;
 
 import dev.eliux.monumentaitemdictionary.gui.widgets.DropdownWidget;
+import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
-import java.util.ArrayList;
-
 public class ItemFilterGui extends Screen {
-    private DropdownWidget dropdownWidget;
+    private final int labelMenuHeight = 30;
 
     private final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+
+    private ItemIconButtonWidget backButton;
 
     public final DictionaryController controller;
 
     public ItemFilterGui(Text title, DictionaryController controller) {
         super(title);
         this.controller = controller;
+    }
 
-        dropdownWidget = new DropdownWidget(textRenderer, 10, 10, 120, new LiteralText("Garbage"), controller.getAllStats(), (s) -> {
-            System.out.println(s);
-        });
+    public void postInit() {
+        backButton = new ItemIconButtonWidget(5, 5, 20, 20, new LiteralText(""), (button) -> {
+            controller.setDictionaryScreen();
+        }, (button, matrices, mouseX, mouseY) -> {
+            renderTooltip(matrices, new LiteralText("Go Back"), mouseX, mouseY);
+        }, "arrow");
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
 
-        dropdownWidget.render(matrices, mouseX, mouseY, delta);
+        // draw the label at the top
+        matrices.push();
+        matrices.translate(0, 0, 110);
+        fill(matrices, 0, 0, width, labelMenuHeight, 0xFF555555);
+        drawHorizontalLine(matrices, 0, width, labelMenuHeight, 0xFFFFFFFF);
+        drawCenteredText(matrices, textRenderer, new LiteralText("Item Filters").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFFFFAA00);
+        matrices.pop();
+
+        // draw gui elements
+        matrices.push();
+        matrices.translate(0, 0, 110);
+        backButton.render(matrices, mouseX, mouseY, delta);
+        matrices.pop();
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         super.mouseClicked(mouseX, mouseY, button);
 
-        dropdownWidget.mouseClicked(mouseX, mouseY, button);
+        backButton.mouseClicked(mouseX, mouseY, button);
 
         return true;
     }
@@ -46,7 +64,7 @@ public class ItemFilterGui extends Screen {
     public boolean charTyped(char chr, int modifiers) {
         super.charTyped(chr, modifiers);
 
-        dropdownWidget.charTyped(chr, modifiers);
+
 
         return true;
     }
@@ -55,7 +73,7 @@ public class ItemFilterGui extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         super.keyPressed(keyCode, scanCode, modifiers);
 
-        dropdownWidget.keyPressed(keyCode, scanCode, modifiers);
+
 
         return true;
     }
@@ -64,14 +82,14 @@ public class ItemFilterGui extends Screen {
     public void resize(MinecraftClient client, int width, int height) {
         super.resize(client, width, height);
 
-        dropdownWidget.resize(client, width, height);
+
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         super.mouseScrolled(mouseX, mouseY, amount);
 
-        dropdownWidget.mouseScrolled(mouseX, mouseY, amount);
+
 
         return true;
     }
