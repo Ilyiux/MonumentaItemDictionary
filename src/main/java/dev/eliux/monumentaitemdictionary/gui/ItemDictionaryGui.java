@@ -252,26 +252,6 @@ public class ItemDictionaryGui extends Screen {
                 .withBold(ItemFormatter.shouldBold(item.tier))
                 .withUnderline(ItemFormatter.shouldUnderline(item.tier))));
 
-        if (!item.originalItem.equals(""))
-            lines.add(new LiteralText("Skin for " + item.originalItem).setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
-
-        lines.add(new LiteralText(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
-                .withColor(ItemColors.TEXT_COLOR)));
-
-        if (item.hasMasterwork) {
-            MutableText baseText = new LiteralText("Masterwork: ").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
-            for (int i = 0; i < ItemFormatter.getMasterworkForRarity(item.tier); i ++) {
-                if (i < masterworkTier) {
-                    baseText.append("★").setStyle(Style.EMPTY.withColor(0xFFFCB23D));
-                } else {
-                    baseText.append("☆").setStyle(Style.EMPTY.withColor(0xFFFCB23D));
-                }
-            }
-            lines.add(baseText);
-        }
-
-        lines.add(new LiteralText(""));
-
         ArrayList<Text> enchants = new ArrayList<>();
         ArrayList<Text> basestats = new ArrayList<>();
         ArrayList<Text> stats = new ArrayList<>();
@@ -281,6 +261,14 @@ public class ItemDictionaryGui extends Screen {
             showStats = item.getMasterworkTier(masterworkTier);
         } else {
             showStats = item.getNonMasterwork();
+        }
+
+        if (showStats == null) {
+            if (masterworkTier > item.getMinMasterwork()) {
+                lines.add(new LiteralText("The data for this tier is missing.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
+            } else if (masterworkTier < item.getMinMasterwork()) {
+                lines.add(new LiteralText("This masterwork tier does not exist.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
+            }
         }
 
         if (showStats != null) {
@@ -297,34 +285,63 @@ public class ItemDictionaryGui extends Screen {
                     enchants.add(line);
                 }
             }
+        }
 
+        if (showStats != null) {
             lines.addAll(enchants);
+        }
 
-            if (enchants.size() > 0) lines.add(new LiteralText(""));
-            if (stats.size() > 0 || basestats.size() > 0)
-                lines.add(new LiteralText("When Used:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
+        if (item.hasRegion || item.hasTier) {
+            MutableText regionText = new LiteralText(item.hasRegion ? ItemFormatter.formatRegion(item.region) + " : " : "")
+                    .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
+            MutableText tierText = new LiteralText(item.hasTier ? item.tier : "").setStyle(Style.EMPTY
+                    .withColor(ItemColors.getColorForTier(item.tier))
+                    .withBold(ItemFormatter.shouldUnderline(item.tier)));
 
-            lines.addAll(basestats);
-            lines.addAll(stats);
-        } else {
-            if (masterworkTier > item.getMinMasterwork()) {
-                lines.add(new LiteralText("No data exists for this masterwork tier. :(").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
-                lines.add(new LiteralText("Tag FlamingoBike#6228 on discord with a screenshot of the item.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
-            } else if (masterworkTier < item.getMinMasterwork()) {
-                lines.add(new LiteralText("This masterwork tier does not exist.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
+            lines.add(regionText.append(tierText));
+        }
+
+        if (item.hasMasterwork) {
+            MutableText baseText = new LiteralText("Masterwork: ").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
+            for (int i = 0; i < ItemFormatter.getMasterworkForRarity(item.tier); i ++) {
+                if (i < masterworkTier) {
+                    baseText.append(new LiteralText("★").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_MASTERWORK_COLOR)));
+                } else {
+                    baseText.append(new LiteralText("☆").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+                }
+            }
+            lines.add(baseText);
+        }
+
+        if (item.hasLocation) {
+            lines.add(new LiteralText(item.location).setStyle(Style.EMPTY
+                    .withColor(ItemColors.getColorForLocation(item.location))));
+        }
+
+        if (!item.lore.equals("")) {
+            if (hasShiftDown()) {
+                for (String line : item.lore.split("\n")) {
+                    lines.add(new LiteralText(line).setStyle(Style.EMPTY.withColor(ItemColors.TEXT_LORE_COLOR)));
+                }
+            } else {
+                lines.add(new LiteralText("Press [SHIFT] to show lore.").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
             }
         }
 
-        if (stats.size() > 0 || basestats.size() > 0 || showStats == null) lines.add(new LiteralText(""));
+        if (showStats != null) {
+            if (stats.size() > 0 || basestats.size() > 0) {
+                lines.add(new LiteralText(""));
+                lines.add(new LiteralText("When Used:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
+            }
 
-        lines.add(new LiteralText(item.region + " ")
-                .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR))
-                .append(new LiteralText(item.tier).setStyle(Style.EMPTY
-                        .withColor(ItemColors.getColorForTier(item.tier))
-                        .withBold(ItemFormatter.shouldUnderline(item.tier)))));
+            lines.addAll(basestats);
+            lines.addAll(stats);
+        }
 
-        lines.add(new LiteralText(item.location).setStyle(Style.EMPTY
-                .withColor(ItemColors.getColorForLocation(item.location))));
+        lines.add(new LiteralText(""));
+
+        lines.add(new LiteralText(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
+                .withColor(ItemColors.TEXT_COLOR)));
 
         return lines;
     }

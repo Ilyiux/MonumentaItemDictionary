@@ -5,25 +5,31 @@ import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import java.util.ArrayList;
 
 public class DictionaryItem {
-    public String name;
-    public String type;
+    public String name; // will exist
+    public String type; // will exist
     public String region;
+    public boolean hasRegion;
     public String tier;
+    public boolean hasTier;
     public String location;
-    public String baseItem;
-    public String originalItem;
-    public ArrayList<ArrayList<ItemStat>> stats;
+    public boolean hasLocation;
+    public String baseItem; // will exist
+    public String lore; // will exist
+    public ArrayList<ArrayList<ItemStat>> stats; // will exist
 
     public boolean hasMasterwork;
 
-    public DictionaryItem(String name, String type, String region, String tier, String location, String baseItem, String originalItem, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
+    public DictionaryItem(String name, String type, String region, boolean hasRegion, String tier, boolean hasTier, String location, boolean hasLocation, String baseItem, String lore, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
         this.name = name;
         this.type = type;
         this.region = region;
+        this.hasRegion = hasRegion;
         this.tier = tier;
+        this.hasTier = hasTier;
         this.location = location;
+        this.hasLocation = hasLocation;
         this.baseItem = baseItem;
-        this.originalItem = originalItem;
+        this.lore = lore;
         this.stats = stats;
         this.hasMasterwork = hasMasterwork;
     }

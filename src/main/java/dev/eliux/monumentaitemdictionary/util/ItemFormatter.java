@@ -1,17 +1,24 @@
 package dev.eliux.monumentaitemdictionary.util;
 
+import java.util.Locale;
+
 public class ItemFormatter {
     public static boolean shouldBold(String inTier) {
         return inTier.equals("Patron") ||
+                inTier.equals("Key") ||
+                inTier.equals("Currency") ||
+                inTier.equals("Trophy") ||
                 inTier.equals("Uncommon") ||
                 inTier.equals("Unique") ||
                 inTier.equals("Rare") ||
                 inTier.equals("Artifact") ||
-                inTier.equals("Epic");
+                inTier.equals("Epic") ||
+                inTier.equals("Legendary");
     }
 
     public static boolean shouldUnderline(String inTier) {
-        return inTier.equals("Epic");
+        return inTier.equals("Epic") ||
+                inTier.equals("Legendary");
     }
 
     public static String formatRegion(String inRegion) {
@@ -29,9 +36,9 @@ public class ItemFormatter {
 
     public static String buildStatString(String name, double value) {
         if (isStat(name)) {
-            return (value < 0 ? "" : (isBaseStat(name) ? " " : "+")) + value + formatStat(name);
+            return (value < 0 ? "" : (isBaseStat(name) ? " " : "+")) + value + (isPercentStat(name) ? "" : " ") + formatStat(name);
         } else {
-            return formatStat(name) + (isSingleEnchant(name) ? "" : (int)value);
+            return formatStat(name) + " " + (isSingleEnchant(name) ? "" : (int)value);
         }
     }
 
@@ -47,6 +54,7 @@ public class ItemFormatter {
     }
 
     public static String formatStat(String inStat) {
+        /*
         return switch (inStat) {
             case "aptitude":
                 yield "Aptitude ";
@@ -299,6 +307,26 @@ public class ItemFormatter {
             default:
                 yield inStat;
         };
+         */
+        String stat = inStat;
+        stat = stat.replace("_s_", "'s_");
+        if (stat.endsWith("_prot")) stat = stat.substring(0, stat.lastIndexOf("_prot")) + "_protection";
+        if (stat.endsWith("_base")) stat = stat.substring(0, stat.lastIndexOf("_base")) + "";
+        if (stat.endsWith("_flat")) stat = stat.substring(0, stat.lastIndexOf("_flat")) + "";
+        if (stat.endsWith("_percent")) stat = "%_" + stat.substring(0, stat.lastIndexOf("_percent"));
+        if (stat.endsWith("_bow")) stat = stat.substring(0, stat.lastIndexOf("_bow")) + "";
+        if (stat.endsWith("_tool")) stat = stat.substring(0, stat.lastIndexOf("_tool")) + "_food";
+        if (stat.endsWith("_m")) stat = stat.substring(0, stat.lastIndexOf("_m")) + "_melee";
+        if (stat.endsWith("_p")) stat = stat.substring(0, stat.lastIndexOf("_p")) + "_ranged";
+        stat = stat.replace("_", " ");
+
+        if (stat.length() > 1) stat = stat.substring(0, 1).toUpperCase() + stat.substring(1);
+        for (int i = 0; i < stat.length() - 1; i++) {
+            if (stat.charAt(i) == ' ') {
+                stat = stat.substring(0, i + 1) + stat.substring(i + 1, i + 2).toUpperCase() + stat.substring(i + 2);
+            }
+        }
+        return stat;
     }
 
     public static boolean isSingleEnchant(String inEnchant) {
@@ -320,26 +348,41 @@ public class ItemFormatter {
                 inEnchant.equals("protection_of_the_depths") ||
                 inEnchant.equals("infinity_bow") ||
                 inEnchant.equals("infinity_tool") ||
+                inEnchant.equals("infinity") ||
                 inEnchant.equals("aqua_affinity") ||
                 inEnchant.equals("ashes_of_eternity") ||
                 inEnchant.equals("void_tether") ||
                 inEnchant.equals("excavator") ||
-                inEnchant.equals("darksight");
+                inEnchant.equals("darksight") ||
+                inEnchant.equals("material") ||
+                inEnchant.equals("alchemical_utensil") ||
+                inEnchant.equals("broomstick") ||
+                inEnchant.equals("clucking") ||
+                inEnchant.equals("oinking") ||
+                inEnchant.equals("throwing_knife") ||
+                inEnchant.equals("liquid_courage") ||
+                inEnchant.equals("intoxicating_warmth") ||
+                inEnchant.equals("temporal_bender") ||
+                inEnchant.equals("curse_of_ephemerality") ||
+                inEnchant.equals("instant_drink") ||
+                inEnchant.equals("divine_aura");
     }
 
     public static boolean isCurseEnchant(String inEnchant) {
         return inEnchant.equals("ineptitude") ||
-                inEnchant.equals("shrapnel") ||
-                inEnchant.equals("vanishing") ||
-                inEnchant.equals("corruption") ||
-                inEnchant.equals("crippling") ||
-                inEnchant.equals("irreparability") ||
+                inEnchant.equals("curse_of_shrapnel") ||
+                inEnchant.equals("curse_of_vanishing") ||
+                inEnchant.equals("curse_of_corruption") ||
+                inEnchant.equals("curse_of_crippling") ||
+                inEnchant.equals("curse_of_irreparability") ||
                 inEnchant.equals("two_handed") ||
                 inEnchant.equals("fire_fragility") ||
                 inEnchant.equals("melee_fragility") ||
+                inEnchant.equals("blast_fragility") ||
                 inEnchant.equals("projectile_fragility") ||
                 inEnchant.equals("magic_fragility") ||
-                inEnchant.equals("anemia");
+                inEnchant.equals("curse_of_anemia") ||
+                inEnchant.equals("curse_of_ephemerality");
     }
 
     public static boolean isStat(String inStat) {
@@ -367,11 +410,21 @@ public class ItemFormatter {
                 inStat.equals("throw_rate_base");
     }
 
+    public static boolean isPercentStat(String inStat) {
+        return inStat.endsWith("_percent");
+    }
+
     public static boolean isBaseStat(String inStat) {
         return inStat.equals("projectile_damage_base") ||
                 inStat.equals("projectile_speed_base") ||
                 inStat.equals("attack_speed_base") ||
                 inStat.equals("attack_damage_base") ||
                 inStat.equals("throw_rate_base");
+    }
+
+    public static boolean isHiddenStat(String inStat) {
+        return inStat.equals("noglint") ||
+                inStat.equals("hideenchants") ||
+                inStat.equals("hideinfo");
     }
 }

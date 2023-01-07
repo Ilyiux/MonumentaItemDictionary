@@ -97,7 +97,7 @@ public class DictionaryController {
 
     public void requestItemsAndUpdate() {
         try {
-            String data = WebManager.getRequest("https://www.ohthemisery.tk/api/items");
+            String data = WebManager.getRequest("https://api.playmonumenta.com/items");
 
             writeItemData(data);
             loadItems();
@@ -124,31 +124,57 @@ public class DictionaryController {
 
                 // Construct item information
                 String itemName = itemData.get("name").getAsString();
-                String itemType = itemData.get("type").getAsString();
-                String itemRegion = itemData.get("region").getAsString();
-                String itemTier = itemData.get("tier").getAsString();
-                String itemLocation = itemData.get("location").getAsString();
-                String itemBaseItem = itemData.get("base_item").getAsString();
-                String itemOriginalItem = "";
-                if (itemData.has("original_item")) {
-                    itemOriginalItem = itemData.get("original_item").getAsString();
-                }
 
+                String itemType = itemData.get("type").getAsString();
+                if (!allTypes.contains(itemType))
+                    allTypes.add(itemType);
+
+                // charms are not handled yet
                 if (itemType.equals("Charm"))
                     continue;
 
-                if (!allTypes.contains(itemType))
-                    allTypes.add(itemType);
-                if (!allRegions.contains(itemRegion))
-                    allRegions.add(itemRegion);
-                if (!allTiers.contains(itemTier))
-                    allTiers.add(itemTier);
-                if (!allLocations.contains(itemLocation))
-                    allLocations.add(itemLocation);
+                String itemRegion = "";
+                boolean hasRegion = false;
+                if (itemData.has("region")) {
+                    itemRegion = itemData.get("region").getAsString();
+                    hasRegion = true;
+
+                    if (!allRegions.contains(itemRegion))
+                        allRegions.add(itemRegion);
+                }
+
+                String itemTier = "";
+                boolean hasTier = false;
+                if (itemData.has("tier")) {
+                    itemTier = itemData.get("tier").getAsString();
+                    hasTier = true;
+
+                    if (!allTiers.contains(itemTier))
+                        allTiers.add(itemTier);
+                }
+
+                String itemLocation = "";
+                boolean hasLocation = false;
+                if (itemData.has("location")) {
+                    itemLocation = itemData.get("location").getAsString();
+                    hasLocation = true;
+
+                    if (!allLocations.contains(itemLocation))
+                        allLocations.add(itemLocation);
+                }
+
+                String itemBaseItem = itemData.get("base_item").getAsString();
+
+                String itemLore = "";
+                if (itemData.has("lore")) {
+                    itemLore = itemData.get("lore").getAsString();
+                }
 
                 ArrayList<ItemStat> itemStats = new ArrayList<>();
                 JsonObject statObject = itemData.get("stats").getAsJsonObject();
                 for (String statKey : statObject.keySet()) {
+                    if (ItemFormatter.isHiddenStat(statKey)) continue;
+
                     itemStats.add(new ItemStat(statKey, statObject.get(statKey).getAsDouble()));
 
                     if (!allStats.contains(statKey))
@@ -169,12 +195,12 @@ public class DictionaryController {
                         for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier) + 1; i ++)
                             totalList.add(null);
                         totalList.set(itemData.get("masterwork").getAsInt(), itemStats);
-                        items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, itemBaseItem, itemOriginalItem, totalList, true));
+                        items.add(new DictionaryItem(itemName, itemType, itemRegion, hasRegion, itemTier, hasTier, itemLocation, hasLocation, itemBaseItem, itemLore, totalList, true));
                     }
                 } else {
                     ArrayList<ArrayList<ItemStat>> totalList = new ArrayList<>();
                     totalList.add(itemStats);
-                    items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, itemBaseItem, itemOriginalItem, totalList, false));
+                    items.add(new DictionaryItem(itemName, itemType, itemRegion, hasRegion, itemTier, hasTier, itemLocation, hasLocation, itemBaseItem, itemLore, totalList, false));
                 }
             }
         } catch (Exception e) {
