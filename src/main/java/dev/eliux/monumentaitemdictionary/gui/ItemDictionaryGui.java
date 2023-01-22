@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ItemDictionaryGui extends Screen {
-    public final int sortMenuWidth = 40;
+    public final int sideMenuWidth = 40;
     public final int labelMenuHeight = 30;
     public final int itemPadding = 7;
     public final int itemSize = 25;
@@ -35,8 +35,8 @@ public class ItemDictionaryGui extends Screen {
     private ItemIconButtonWidget reloadItemsButton;
     private ItemIconButtonWidget showItemsButton;
     private ItemIconButtonWidget showCharmsButton;
-    private ItemIconButtonWidget sortButton;
-    private ItemIconButtonWidget resetSortButton;
+    private ItemIconButtonWidget filterButton;
+    private ItemIconButtonWidget resetFilterButton;
     private ItemIconButtonWidget minMasterworkButton;
     private ItemIconButtonWidget maxMasterworkButton;
     private ItemIconButtonWidget tipsMasterworkButton;
@@ -65,46 +65,44 @@ public class ItemDictionaryGui extends Screen {
             controller.requestItemsAndUpdate();
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, new LiteralText("Reload Item Data"), mouseX, mouseY);
-        }, "globe_banner_pattern");
+        }, "globe_banner_pattern", "");
 
-        showItemsButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, labelMenuHeight + 10, 20, 20, new LiteralText(""), (button) -> {
+        showItemsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, new LiteralText(""), (button) -> {
             // do nothing
         }, ((button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, new LiteralText("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), mouseX, mouseY);
-        }), "iron_chestplate");
+        }), "iron_chestplate", "");
 
-        showCharmsButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, labelMenuHeight + 40, 20, 20, new LiteralText(""), (button) -> {
+        showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 40, 20, 20, new LiteralText(""), (button) -> {
             // do stuff
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, Arrays.asList(new LiteralText("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)), new LiteralText("Coming Soon").setStyle(Style.EMPTY.withColor(0xFFAAAAAA))), mouseX, mouseY);
-        }, "glowstone_dust");
+        }, "glowstone_dust", "");
 
-        sortButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, height - 30, 20, 20, new LiteralText(""), (button) -> {
-            controller.setSortScreen();
+        filterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 30, 20, 20, new LiteralText(""), (button) -> {
+            controller.setFilterScreen();
         }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Sort"), mouseX, mouseY);
-        }, "chest");
+            renderTooltip(matrices, new LiteralText("Filter"), mouseX, mouseY);
+        }, "chest", "");
 
-        resetSortButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, height - 60, 20, 20, new LiteralText(""), (button) -> {
-            controller.resetAllFilters();
+        resetFilterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 60, 20, 20, new LiteralText(""), (button) -> {
+            controller.filterGui.clearFilters();
             buildItemList();
-            if (controller.sortGui.initialized)
-                controller.sortGui.resetButtons();
         }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Reset Sorts").setStyle(Style.EMPTY.withColor(0xFFFF0000)), mouseX, mouseY);
-        }, "barrier");
+            renderTooltip(matrices, new LiteralText("Reset Filters").setStyle(Style.EMPTY.withColor(0xFFFF0000)), mouseX, mouseY);
+        }, "barrier", "");
 
-        minMasterworkButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, height - 120, 20, 20, new LiteralText(""), (button) -> {
+        minMasterworkButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 120, 20, 20, new LiteralText(""), (button) -> {
             itemButtons.forEach(ItemButtonWidget::setMinimumMasterwork);
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, new LiteralText("Show Minimum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), mouseX, mouseY);
-        }, "netherite_scrap");
+        }, "netherite_scrap", "");
 
-        maxMasterworkButton = new ItemIconButtonWidget(width - sortMenuWidth + 10, height - 90, 20, 20, new LiteralText(""), (button) -> {
+        maxMasterworkButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 90, 20, 20, new LiteralText(""), (button) -> {
             itemButtons.forEach(ItemButtonWidget::setMaximumMasterwork);
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, Arrays.asList(new LiteralText("Show Maximum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), new LiteralText("(Only counts tiers with data)").setStyle(Style.EMPTY.withColor(0xFFAAAAAA))), mouseX, mouseY);
-        }, "netherite_ingot");
+        }, "netherite_ingot", "");
 
         tipsMasterworkButton = new ItemIconButtonWidget(30, 5, 20, 20, new LiteralText(""), (button) -> {
             Util.getOperatingSystem().open("https://github.com/Ilyiux/MonumentaItemDictionary");
@@ -116,7 +114,7 @@ public class ItemDictionaryGui extends Screen {
                     new LiteralText(""),
                     new LiteralText("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
             ), mouseX, mouseY);
-        }, "oak_sign");
+        }, "oak_sign", "");
     }
 
     @Override
@@ -124,17 +122,17 @@ public class ItemDictionaryGui extends Screen {
         this.renderBackground(matrices);
 
         // draw the scroll bar
-        int totalRows = (int) Math.ceil((double)itemButtons.size() / (double)((width - sortMenuWidth - 5) / (itemSize + itemPadding)));
+        int totalRows = (int) Math.ceil((double)itemButtons.size() / (double)((width - sideMenuWidth - 5) / (itemSize + itemPadding)));
         int totalPixelHeight = totalRows * itemSize + (totalRows + 1) * itemPadding;
         double bottomPercent = (double)scrollPixels / totalPixelHeight;
         double screenPercent = (double)(height - labelMenuHeight) / totalPixelHeight;
-        drawVerticalLine(matrices, width - sortMenuWidth - 1, labelMenuHeight, height, 0x77AAAAAA); // called twice to make the scroll bar render wider (janky, but I don't really care)
-        drawVerticalLine(matrices, width - sortMenuWidth - 2, labelMenuHeight, height, 0x77AAAAAA);
-        drawVerticalLine(matrices, width - sortMenuWidth - 1, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
-        drawVerticalLine(matrices, width - sortMenuWidth - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
+        drawVerticalLine(matrices, width - sideMenuWidth - 1, labelMenuHeight, height, 0x77AAAAAA); // called twice to make the scroll bar render wider (janky, but I don't really care)
+        drawVerticalLine(matrices, width - sideMenuWidth - 2, labelMenuHeight, height, 0x77AAAAAA);
+        drawVerticalLine(matrices, width - sideMenuWidth - 1, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
+        drawVerticalLine(matrices, width - sideMenuWidth - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
 
         // draw the sort menu
-        drawVerticalLine(matrices, width - sortMenuWidth, labelMenuHeight, height, 0xFFFFFFFF);
+        drawVerticalLine(matrices, width - sideMenuWidth, labelMenuHeight, height, 0xFFFFFFFF);
 
         // draw item buttons
         itemButtons.forEach(b -> {
@@ -162,8 +160,8 @@ public class ItemDictionaryGui extends Screen {
         reloadItemsButton.render(matrices, mouseX, mouseY, delta);
         showItemsButton.render(matrices, mouseX, mouseY, delta);
         showCharmsButton.render(matrices, mouseX, mouseY, delta);
-        sortButton.render(matrices, mouseX, mouseY, delta);
-        resetSortButton.render(matrices, mouseX, mouseY, delta);
+        filterButton.render(matrices, mouseX, mouseY, delta);
+        resetFilterButton.render(matrices, mouseX, mouseY, delta);
         minMasterworkButton.render(matrices, mouseX, mouseY, delta);
         maxMasterworkButton.render(matrices, mouseX, mouseY, delta);
         tipsMasterworkButton.render(matrices, mouseX, mouseY, delta);
@@ -183,8 +181,8 @@ public class ItemDictionaryGui extends Screen {
         itemButtons.clear();
         for (DictionaryItem item : toBuildItems) {
             int index = toBuildItems.indexOf(item);
-            int row = index / ((width - sortMenuWidth - 5) / (itemSize + itemPadding));
-            int col = index % ((width - sortMenuWidth - 5) / (itemSize + itemPadding));
+            int row = index / ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
+            int col = index % ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
 
             int x = (col + 1) * itemPadding + col * itemSize;
             int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
@@ -227,8 +225,8 @@ public class ItemDictionaryGui extends Screen {
         reloadItemsButton.mouseClicked(mouseX, mouseY, button);
         showItemsButton.mouseClicked(mouseX, mouseY, button);
         showCharmsButton.mouseClicked(mouseX, mouseY, button);
-        sortButton.mouseClicked(mouseX, mouseY, button);
-        resetSortButton.mouseClicked(mouseX, mouseY, button);
+        filterButton.mouseClicked(mouseX, mouseY, button);
+        resetFilterButton.mouseClicked(mouseX, mouseY, button);
         minMasterworkButton.mouseClicked(mouseX, mouseY, button);
         maxMasterworkButton.mouseClicked(mouseX, mouseY, button);
         tipsMasterworkButton.mouseClicked(mouseX, mouseY, button);
@@ -360,19 +358,19 @@ public class ItemDictionaryGui extends Screen {
         searchBar.setX(width / 2 + 90);
         searchBar.setWidth(width / 2 - 100);
 
-        showItemsButton.x = width - sortMenuWidth + 10;
-        showCharmsButton.x = width - sortMenuWidth + 10;
+        showItemsButton.x = width - sideMenuWidth + 10;
+        showCharmsButton.x = width - sideMenuWidth + 10;
         showItemsButton.y = labelMenuHeight + 10;
         showCharmsButton.y = labelMenuHeight + 40;
 
-        sortButton.x = width - sortMenuWidth + 10;
-        sortButton.y = height - 30;
-        resetSortButton.x = width - sortMenuWidth + 10;
-        resetSortButton.y = height - 60;
+        filterButton.x = width - sideMenuWidth + 10;
+        filterButton.y = height - 30;
+        resetFilterButton.x = width - sideMenuWidth + 10;
+        resetFilterButton.y = height - 60;
 
-        minMasterworkButton.x = width - sortMenuWidth + 10;
+        minMasterworkButton.x = width - sideMenuWidth + 10;
         minMasterworkButton.y = height - 120;
-        maxMasterworkButton.x = width - sortMenuWidth + 10;
+        maxMasterworkButton.x = width - sideMenuWidth + 10;
         maxMasterworkButton.y = height - 90;
     }
 
@@ -383,7 +381,7 @@ public class ItemDictionaryGui extends Screen {
         if (Screen.hasControlDown()) {
             itemButtons.forEach((b) -> b.scrolled(mouseX, mouseY, amount));
         } else {
-            if (mouseX >= 0 && mouseX < width - sortMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
+            if (mouseX >= 0 && mouseX < width - sideMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
                 scrollPixels += -amount * 12; // scaled
 
                 updateScrollLimits();
@@ -394,7 +392,7 @@ public class ItemDictionaryGui extends Screen {
     }
 
     private void updateScrollLimits() {
-        int rows = (int) Math.ceil((double)itemButtons.size() / (double)((width - sortMenuWidth - 5) / (itemSize + itemPadding)));
+        int rows = (int) Math.ceil((double)itemButtons.size() / (double)((width - sideMenuWidth - 5) / (itemSize + itemPadding)));
         int maxScroll = rows * itemSize + (rows + 1) * itemPadding - height + labelMenuHeight;
         if (scrollPixels > maxScroll) scrollPixels = maxScroll;
 

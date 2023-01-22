@@ -1,6 +1,7 @@
 package dev.eliux.monumentaitemdictionary.gui;
 
 import com.google.gson.*;
+import dev.eliux.monumentaitemdictionary.util.ItemFilter;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
@@ -9,21 +10,15 @@ import net.minecraft.text.LiteralText;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class DictionaryController {
-    private ArrayList<String> statFilters = new ArrayList<>();
     private String nameFilter;
     private boolean hasNameFilter = false;
-    private ArrayList<String> regionFilters = new ArrayList<>();
-    private ArrayList<String> typeFilters = new ArrayList<>();
-    private ArrayList<String> tierFilters = new ArrayList<>();
-    private ArrayList<String> locationFilters = new ArrayList<>();
+    private ArrayList<ItemFilter> itemFilters = new ArrayList<>();
 
     private ArrayList<String> allTypes;
     private ArrayList<String> allRegions;
@@ -38,8 +33,6 @@ public class DictionaryController {
 
     public ItemDictionaryGui itemGui;
     private boolean itemGuiPreviouslyOpened = false;
-    public ItemSortMenuGui sortGui;
-    private boolean sortGuiPreviouslyOpened = false;
     public ItemFilterGui filterGui;
     private boolean filterGuiPreviouslyOpened = false;
 
@@ -50,7 +43,6 @@ public class DictionaryController {
         loadItems();
 
         itemGui = new ItemDictionaryGui(new LiteralText("Monumenta Item Dictionary"), this);
-        sortGui = new ItemSortMenuGui(new LiteralText("Item Sort Menu"), this);
         filterGui = new ItemFilterGui(new LiteralText("Item Filter Menu"), this);
         setDictionaryScreen();
     }
@@ -62,16 +54,6 @@ public class DictionaryController {
             itemGuiPreviouslyOpened = true;
         } else {
             itemGui.updateGuiPositions();
-        }
-    }
-
-    public void setSortScreen() {
-        MinecraftClient.getInstance().setScreen(sortGui);
-        if (!sortGuiPreviouslyOpened) {
-            sortGui.postInit();
-            sortGuiPreviouslyOpened = true;
-        } else {
-            sortGui.updateGuiPositions();
         }
     }
 
@@ -251,94 +233,65 @@ public class DictionaryController {
         hasNameFilter = false;
     }
 
-    public void addTypeFilter(String typeFilter) {
-        typeFilters.add(typeFilter);
+    public void updateFilters(ArrayList<ItemFilter> filters) {
+        itemFilters = new ArrayList<>(filters);
     }
 
-    public void removeTypeFilter(String typeFilter) {
-        typeFilters.remove(typeFilter);
-    }
-
-    public void addRegionFilter(String regionFilter) {
-        regionFilters.add(regionFilter);
-    }
-
-    public void removeRegionFilter(String regionFilter) {
-        regionFilters.remove(regionFilter);
-    }
-
-    public void addTierFilter(String tierFilter) {
-        tierFilters.add(tierFilter);
-    }
-
-    public void removeTierFilter(String tierFilter) {
-        tierFilters.remove(tierFilter);
-    }
-
-    public void addLocationFilter(String locationFilter) {
-        locationFilters.add(locationFilter);
-    }
-
-    public void removeLocationFilter(String locationFilter) {
-        locationFilters.remove(locationFilter);
-    }
-
-    public void addStatFilter(String statFilter) {
-        statFilters.add(statFilter);
-    }
-
-    public void removeStatFilter(String statFilter) {
-        statFilters.remove(statFilter);
-    }
-
-    public void resetAllFilters() {
-        typeFilters.clear();
-        regionFilters.clear();
-        tierFilters.clear();
-        locationFilters.clear();
-        statFilters.clear();
+    public void resetFilters() {
+        itemFilters = new ArrayList<>();
     }
 
     public void refreshItems() {
         ArrayList<DictionaryItem> filteredItems = new ArrayList<>(items);
 
+        for (ItemFilter filter : itemFilters) {
+            if (filter != null) {
+                if (filter.option.equals("Stat")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredItems.removeIf(i -> !i.hasStat(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.hasStat(filter.value));
+                            case 2 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
+                            case 3 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
+                            case 4 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
+                            case 5 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
+                            case 6 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                        }
+                    }
+                } else if (filter.option.equals("Tier")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredItems.removeIf(i -> !i.hasTier || !i.tier.equals(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.hasTier && i.tier.equals(filter.value));
+                        }
+                    }
+                } else if (filter.option.equals("Region")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredItems.removeIf(i -> !i.hasRegion || !i.region.equals(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.hasRegion && i.region.equals(filter.value));
+                        }
+                    }
+                } else if (filter.option.equals("Type")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredItems.removeIf(i -> !i.type.equals(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.type.equals(filter.value));
+                        }
+                    }
+                } else if (filter.option.equals("Location")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredItems.removeIf(i -> !i.hasLocation || !i.location.equals(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.hasLocation && i.location.equals(filter.value));
+                        }
+                    }
+                }
+            }
+        }
 
         if (hasNameFilter)
             filteredItems.removeIf(i -> !i.name.toLowerCase().contains(nameFilter.toLowerCase()));
-
-        if (typeFilters.size() > 0) {
-            filteredItems.removeIf(i -> !typeFilters.contains(i.type));
-        }
-
-        if (regionFilters.size() > 0) {
-            filteredItems.removeIf(i -> !regionFilters.contains(i.region));
-        }
-
-        if (tierFilters.size() > 0) {
-            filteredItems.removeIf(i -> !tierFilters.contains(i.tier));
-        }
-
-        if (locationFilters.size() > 0) {
-            filteredItems.removeIf(i -> !locationFilters.contains(i.location));
-        }
-
-        // sort by first stat and sub-sort for all other stats
-        for (String stat : statFilters) {
-            filteredItems.removeIf(i -> !i.hasStat(stat));
-        }
-
-        filteredItems.sort((o1, o2) -> {
-            for (String stat : statFilters) {
-                if (o1.getStat(stat) == o2.getStat(stat))
-                    continue;
-
-                double val = o1.getStat(stat) - o2.getStat(stat);
-
-                if (val > 0) return -1;
-                if (val < 0) return 1;
-            }
-            return 0;
-        });
 
         validItems = filteredItems;
     }
