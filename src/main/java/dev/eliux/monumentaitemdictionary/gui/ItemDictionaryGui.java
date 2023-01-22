@@ -319,7 +319,7 @@ public class ItemDictionaryGui extends Screen {
         if (!item.lore.equals("")) {
             if (hasShiftDown()) {
                 for (String line : item.lore.split("\n")) {
-                    lines.add(new LiteralText(line).setStyle(Style.EMPTY.withColor(ItemColors.TEXT_LORE_COLOR)));
+                    lines.add(new LiteralText(line).setStyle(Style.EMPTY.withColor(ItemColors.mixHexes(ItemColors.TEXT_COLOR, ItemColors.getColorForLocation(item.location), 0.67))));
                 }
             } else {
                 lines.add(new LiteralText("Press [SHIFT] to show lore.").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));

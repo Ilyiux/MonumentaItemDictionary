@@ -341,4 +341,20 @@ public class ItemColors {
 
         return TEXT_ENCHANT_COLOR;
     }
+
+    public static int mixHexes(int h1, int h2, double p) {
+        int h1r = h1 / (256 * 256);
+        int h1g = (h1 / 256) % 256;
+        int h1b = h1 % 256;
+
+        int h2r = h2 / (256 * 256);
+        int h2g = (h2 / 256) % 256;
+        int h2b = h2 % 256;
+
+        int or = (int)(h1r * p) + (int)(h2r * (1 - p));
+        int og = (int)(h1g * p) + (int)(h2g * (1 - p));
+        int ob = (int)(h1b * p) + (int)(h2b * (1 - p));
+
+        return (or * (256 * 256)) + (og * 256) + (ob);
+    }
 }
