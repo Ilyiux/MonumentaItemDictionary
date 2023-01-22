@@ -341,10 +341,10 @@ public class ItemFormatter {
                 inEnchant.equals("radiant") ||
                 inEnchant.equals("resurrection") ||
                 inEnchant.equals("two_handed") ||
-                inEnchant.equals("irreparability") ||
+                inEnchant.equals("curse_of_irreparability") ||
                 inEnchant.equals("mending") ||
                 inEnchant.equals("silk_touch") ||
-                inEnchant.equals("corruption") ||
+                inEnchant.equals("curse_of_corruption") ||
                 inEnchant.equals("protection_of_the_depths") ||
                 inEnchant.equals("infinity_bow") ||
                 inEnchant.equals("infinity_tool") ||
@@ -365,7 +365,8 @@ public class ItemFormatter {
                 inEnchant.equals("temporal_bender") ||
                 inEnchant.equals("curse_of_ephemerality") ||
                 inEnchant.equals("instant_drink") ||
-                inEnchant.equals("divine_aura");
+                inEnchant.equals("divine_aura") ||
+                inEnchant.equals("persistence");
     }
 
     public static boolean isCurseEnchant(String inEnchant) {
