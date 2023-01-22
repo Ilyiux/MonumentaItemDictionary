@@ -290,7 +290,7 @@ public class ItemDictionaryGui extends Screen {
         }
 
         if (item.hasRegion || item.hasTier) {
-            MutableText regionText = new LiteralText(item.hasRegion ? ItemFormatter.formatRegion(item.region) + " : " : "")
+            MutableText regionText = new LiteralText(item.hasRegion ? ItemFormatter.formatRegion(item.region) + (item.hasTier ? " : " : "") : "")
                     .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
             MutableText tierText = new LiteralText(item.hasTier ? item.tier : "").setStyle(Style.EMPTY
                     .withColor(ItemColors.getColorForTier(item.tier))
