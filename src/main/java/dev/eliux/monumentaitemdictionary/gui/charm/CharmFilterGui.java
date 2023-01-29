@@ -211,7 +211,7 @@ public class CharmFilterGui extends Screen {
                 v.renderMain(matrices, mouseX, mouseY, delta);
         }
         for (TextFieldWidget c : filterListConstant) {
-            if (filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Stat") && !filterListComparator.get(filterListConstant.indexOf(c)).getMessage().asString().contains("Matches") || filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Charm Power"))
+            if (filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Stat") && !(charmFilters.get(filterListConstant.indexOf(c)).comparator < 2) || filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Charm Power"))
                 c.render(matrices, mouseX, mouseY, delta);
         }
         for (ButtonWidget c : filterListComparator) {
@@ -277,7 +277,7 @@ public class CharmFilterGui extends Screen {
                 c.mouseClicked(mouseX, mouseY, button);
         }
         for (TextFieldWidget c : filterListConstant) {
-            if (filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Stat") && !filterListComparator.get(filterListConstant.indexOf(c)).getMessage().asString().contains("Matches") || filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Charm Power"))
+            if (filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Stat") && !(charmFilters.get(filterListConstant.indexOf(c)).comparator < 2) || filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Charm Power"))
                 c.mouseClicked(mouseX, mouseY, button);
         }
         filterListDelete.forEach(i -> i.mouseClicked(mouseX, mouseY, button));

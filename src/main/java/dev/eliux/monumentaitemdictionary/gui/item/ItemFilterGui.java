@@ -206,7 +206,7 @@ public class ItemFilterGui extends Screen {
                 v.renderMain(matrices, mouseX, mouseY, delta);
         }
         for (TextFieldWidget c : filterListConstant) {
-            if (filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Stat") && !filterListComparator.get(filterListConstant.indexOf(c)).getMessage().asString().contains("Matches"))
+            if (filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Stat") && !(itemFilters.get(filterListConstant.indexOf(c)).comparator < 2))
                 c.render(matrices, mouseX, mouseY, delta);
         }
         for (ButtonWidget c : filterListComparator) {
@@ -272,7 +272,7 @@ public class ItemFilterGui extends Screen {
                 c.mouseClicked(mouseX, mouseY, button);
         }
         for (TextFieldWidget c : filterListConstant) {
-            if (filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Stat") && !filterListComparator.get(filterListConstant.indexOf(c)).getMessage().asString().contains("Matches"))
+            if (filterListOption.get(filterListConstant.indexOf(c)).getLastChoice().equals("Stat") && !(itemFilters.get(filterListConstant.indexOf(c)).comparator < 2))
                 c.mouseClicked(mouseX, mouseY, button);
         }
         filterListDelete.forEach(i -> i.mouseClicked(mouseX, mouseY, button));
