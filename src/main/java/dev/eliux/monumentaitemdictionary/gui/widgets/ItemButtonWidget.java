@@ -1,11 +1,10 @@
 package dev.eliux.monumentaitemdictionary.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.eliux.monumentaitemdictionary.gui.DictionaryItem;
-import dev.eliux.monumentaitemdictionary.gui.ItemDictionaryGui;
+import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
+import dev.eliux.monumentaitemdictionary.gui.item.ItemDictionaryGui;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
-import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;

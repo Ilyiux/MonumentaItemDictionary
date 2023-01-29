@@ -62,6 +62,7 @@ public class DropdownWidget extends TextFieldWidget {
         visualChoices = newChoices;
         lastChoice = "";
         visualLastChoice = "";
+        setText(visualLastChoice);
         // crashes when changing after a value is selected
     }
 
@@ -70,6 +71,7 @@ public class DropdownWidget extends TextFieldWidget {
         visualChoices = newVisualChoices;
         lastChoice = "";
         visualLastChoice = "";
+        setText(visualLastChoice);
         // crashes when changing after a value is selected
     }
 
@@ -89,10 +91,10 @@ public class DropdownWidget extends TextFieldWidget {
                 validChoices = new ArrayList<>(choices);
                 visualValidChoices = new ArrayList<>(visualChoices);
             } else {
-                for (String choice : choices) {
+                for (String choice : visualChoices) {
                     if (choice.toLowerCase().contains(getText().toLowerCase())) {
-                        validChoices.add(choice);
-                        visualValidChoices.add(visualChoices.get(choices.indexOf(choice)));
+                        validChoices.add(choices.get(visualChoices.indexOf(choice)));
+                        visualValidChoices.add(choice);
                     }
                 }
             }

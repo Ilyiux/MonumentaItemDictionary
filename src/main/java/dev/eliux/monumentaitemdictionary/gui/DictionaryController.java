@@ -1,7 +1,14 @@
 package dev.eliux.monumentaitemdictionary.gui;
 
 import com.google.gson.*;
-import dev.eliux.monumentaitemdictionary.util.ItemFilter;
+import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
+import dev.eliux.monumentaitemdictionary.gui.charm.CharmFilterGui;
+import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
+import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
+import dev.eliux.monumentaitemdictionary.gui.item.ItemDictionaryGui;
+import dev.eliux.monumentaitemdictionary.gui.item.ItemFilterGui;
+import dev.eliux.monumentaitemdictionary.util.CharmStat;
+import dev.eliux.monumentaitemdictionary.util.Filter;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
@@ -16,38 +23,60 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class DictionaryController {
-    private String nameFilter;
-    private boolean hasNameFilter = false;
-    private ArrayList<ItemFilter> itemFilters = new ArrayList<>();
+    private String itemNameFilter;
+    private boolean hasItemNameFilter = false;
+    private String charmNameFilter;
+    private boolean hasCharmNameFilter = false;
+    private ArrayList<Filter> itemFilters = new ArrayList<>();
+    private ArrayList<Filter> charmFilters = new ArrayList<>();
 
-    private ArrayList<String> allTypes;
-    private ArrayList<String> allRegions;
-    private ArrayList<String> allTiers;
-    private ArrayList<String> allLocations;
-    private ArrayList<String> allStats;
+    private ArrayList<String> allItemTypes;
+    private ArrayList<String> allItemRegions;
+    private ArrayList<String> allItemTiers;
+    private ArrayList<String> allItemLocations;
+    private ArrayList<String> allItemStats;
+
+    private ArrayList<String> allCharmRegions;
+    private ArrayList<String> allCharmTiers;
+    private ArrayList<String> allCharmLocations;
+    private ArrayList<String> allCharmSkillMods;
+    private ArrayList<String> allCharmClasses;
+    private ArrayList<String> allCharmStats;
 
     private final ArrayList<DictionaryItem> items;
     private ArrayList<DictionaryItem> validItems;
+    private final ArrayList<DictionaryCharm> charms;
+    private ArrayList<DictionaryCharm> validCharms;
 
     public boolean itemLoadFailed = false;
+    public boolean charmLoadFailed = false;
 
     public ItemDictionaryGui itemGui;
-    private boolean itemGuiPreviouslyOpened = false;
-    public ItemFilterGui filterGui;
-    private boolean filterGuiPreviouslyOpened = false;
+    public boolean itemGuiPreviouslyOpened = false;
+    public ItemFilterGui itemFilterGui;
+    public boolean itemFilterGuiPreviouslyOpened = false;
+    public CharmDictionaryGui charmGui;
+    public boolean charmGuiPreviouslyOpened = false;
+    public CharmFilterGui charmFilterGui;
+    public boolean charmFilterGuiPreviouslyOpened = false;
 
     public DictionaryController() {
         items = new ArrayList<>();
         validItems = new ArrayList<>();
+        charms = new ArrayList<>();
+        validCharms = new ArrayList<>();
 
         loadItems();
+        loadCharms();
 
         itemGui = new ItemDictionaryGui(new LiteralText("Monumenta Item Dictionary"), this);
-        filterGui = new ItemFilterGui(new LiteralText("Item Filter Menu"), this);
-        setDictionaryScreen();
+        itemFilterGui = new ItemFilterGui(new LiteralText("Item Filter Menu"), this);
+        charmGui = new CharmDictionaryGui(new LiteralText("Monumenta Charm Dictionary"), this);
+        charmFilterGui = new CharmFilterGui(new LiteralText("Charm Filter Menu"), this);
+        setItemDictionaryScreen();
     }
 
-    public void setDictionaryScreen() {
+    public void setItemDictionaryScreen() {
         MinecraftClient.getInstance().setScreen(itemGui);
         if (!itemGuiPreviouslyOpened) {
             itemGui.postInit();
@@ -57,13 +86,33 @@ public class DictionaryController {
         }
     }
 
-    public void setFilterScreen() {
-        MinecraftClient.getInstance().setScreen(filterGui);
-        if (!filterGuiPreviouslyOpened) {
-            filterGui.postInit();
-            filterGuiPreviouslyOpened = true;
+    public void setItemFilterScreen() {
+        MinecraftClient.getInstance().setScreen(itemFilterGui);
+        if (!itemFilterGuiPreviouslyOpened) {
+            itemFilterGui.postInit();
+            itemFilterGuiPreviouslyOpened = true;
         } else {
             //filterGui.updateGuiPositions();
+        }
+    }
+
+    public void setCharmDictionaryScreen() {
+        MinecraftClient.getInstance().setScreen(charmGui);
+        if (!charmGuiPreviouslyOpened) {
+            charmGui.postInit();
+            charmGuiPreviouslyOpened = true;
+        } else {
+            charmGui.updateGuiPositions();
+        }
+    }
+
+    public void setCharmFilterScreen() {
+        MinecraftClient.getInstance().setScreen(charmFilterGui);
+        if (!charmFilterGuiPreviouslyOpened) {
+            charmFilterGui.postInit();
+            charmFilterGuiPreviouslyOpened = true;
+        } else {
+            //charmFilterGui.updateGuiPositions();
         }
     }
 
@@ -90,24 +139,26 @@ public class DictionaryController {
         }
     }
 
-    public void requestItemsAndUpdate() {
+    public void requestAndUpdate() {
         try {
             String data = WebManager.getRequest("https://api.playmonumenta.com/items");
 
             writeItemData(data);
             loadItems();
             itemGui.buildItemList();
+            loadCharms();
+            charmGui.buildCharmList();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void loadItems() {
-        allTypes = new ArrayList<>();
-        allRegions = new ArrayList<>();
-        allTiers = new ArrayList<>();
-        allLocations = new ArrayList<>();
-        allStats = new ArrayList<>();
+        allItemTypes = new ArrayList<>();
+        allItemRegions = new ArrayList<>();
+        allItemTiers = new ArrayList<>();
+        allItemLocations = new ArrayList<>();
+        allItemStats = new ArrayList<>();
 
         try {
             String rawData = readItemData();
@@ -118,15 +169,14 @@ public class DictionaryController {
                 JsonObject itemData = data.getAsJsonObject(key);
 
                 // Construct item information
+                if (itemData.get("type").getAsString().equals("Charm"))
+                    continue;
+
                 String itemName = itemData.get("name").getAsString();
 
                 String itemType = itemData.get("type").getAsString();
-                if (!allTypes.contains(itemType))
-                    allTypes.add(itemType);
-
-                // charms are not handled yet
-                if (itemType.equals("Charm"))
-                    continue;
+                if (!allItemTypes.contains(itemType))
+                    allItemTypes.add(itemType);
 
                 String itemRegion = "";
                 boolean hasRegion = false;
@@ -134,8 +184,8 @@ public class DictionaryController {
                     itemRegion = itemData.get("region").getAsString();
                     hasRegion = true;
 
-                    if (!allRegions.contains(itemRegion))
-                        allRegions.add(itemRegion);
+                    if (!allItemRegions.contains(itemRegion))
+                        allItemRegions.add(itemRegion);
                 }
 
                 String itemTier = "";
@@ -144,8 +194,8 @@ public class DictionaryController {
                     itemTier = itemData.get("tier").getAsString();
                     hasTier = true;
 
-                    if (!allTiers.contains(itemTier))
-                        allTiers.add(itemTier);
+                    if (!allItemTiers.contains(itemTier))
+                        allItemTiers.add(itemTier);
                 }
 
                 String itemLocation = "";
@@ -154,8 +204,8 @@ public class DictionaryController {
                     itemLocation = itemData.get("location").getAsString();
                     hasLocation = true;
 
-                    if (!allLocations.contains(itemLocation))
-                        allLocations.add(itemLocation);
+                    if (!allItemLocations.contains(itemLocation))
+                        allItemLocations.add(itemLocation);
                 }
 
                 String itemBaseItem = itemData.get("base_item").getAsString();
@@ -172,8 +222,8 @@ public class DictionaryController {
 
                     itemStats.add(new ItemStat(statKey, statObject.get(statKey).getAsDouble()));
 
-                    if (!allStats.contains(statKey))
-                        allStats.add(statKey);
+                    if (!allItemStats.contains(statKey))
+                        allItemStats.add(statKey);
                 }
 
                 // Build the item
@@ -204,49 +254,153 @@ public class DictionaryController {
         }
     }
 
-    public ArrayList<String> getAllTypes() {
-        return allTypes;
+    public void loadCharms() {
+        allCharmRegions = new ArrayList<>();
+        allCharmTiers = new ArrayList<>();
+        allCharmLocations = new ArrayList<>();
+        allCharmSkillMods = new ArrayList<>();
+        allCharmClasses = new ArrayList<>();
+        allCharmStats = new ArrayList<>();
+
+        try {
+            String rawData = readItemData();
+
+            charms.clear();
+            JsonObject data = new Gson().fromJson(rawData, JsonObject.class);
+            for (String key : data.keySet()) {
+                JsonObject charmData = data.getAsJsonObject(key);
+
+                // Construct charm information
+                if (!charmData.get("type").getAsString().equals("Charm"))
+                    continue;
+
+                String charmName = charmData.get("name").getAsString();
+
+                String charmRegion = "Architect's Ring";
+                if (!allCharmRegions.contains(charmRegion))
+                    allCharmRegions.add(charmRegion);
+
+                String charmLocation = charmData.get("location").getAsString();
+                if (!allCharmLocations.contains(charmLocation))
+                    allCharmLocations.add(charmLocation);
+
+                String charmTier = charmData.get("tier").getAsString();
+                if (!allCharmTiers.contains(charmTier))
+                    allCharmTiers.add(charmTier);
+
+                int charmPower = charmData.get("power").getAsInt();
+
+                String charmClass = charmData.get("class_name").getAsString();
+                if (!allCharmClasses.contains(charmClass))
+                    allCharmClasses.add(charmClass);
+
+                String baseItem = charmData.get("base_item").getAsString();
+
+                ArrayList<CharmStat> charmStats = new ArrayList<>();
+                JsonObject statObject = charmData.get("stats").getAsJsonObject();
+                for (String statKey : statObject.keySet()) {
+                    String skillMod = ItemFormatter.getSkillFromCharmStat(statKey);
+                    if (!allCharmSkillMods.contains(skillMod))
+                        allCharmSkillMods.add(skillMod);
+
+                    charmStats.add(new CharmStat(statKey, skillMod, statObject.get(statKey).getAsDouble()));
+
+                    if (!allCharmStats.contains(statKey))
+                        allCharmStats.add(statKey);
+                }
+
+                charms.add(new DictionaryCharm(charmName, charmRegion, charmLocation, charmTier, charmPower, charmClass, baseItem, charmStats));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            charmLoadFailed = true;
+        }
     }
 
-    public ArrayList<String> getAllRegions() {
-        return allRegions;
+    public ArrayList<String> getAllItemTypes() {
+        return allItemTypes;
     }
 
-    public ArrayList<String> getAllTiers() {
-        return allTiers;
+    public ArrayList<String> getAllItemRegions() {
+        return allItemRegions;
     }
 
-    public ArrayList<String> getAllLocations() {
-        return allLocations;
+    public ArrayList<String> getAllItemTiers() {
+        return allItemTiers;
     }
 
-    public ArrayList<String> getAllStats() {
-        return allStats;
+    public ArrayList<String> getAllItemLocations() {
+        return allItemLocations;
     }
 
-    public void setNameFilter(String nameFilter) {
-        this.nameFilter = nameFilter;
-        hasNameFilter = true;
+    public ArrayList<String> getAllItemStats() {
+        return allItemStats;
     }
 
-    public void clearNameFilter() {
-        hasNameFilter = false;
+    public void setItemNameFilter(String nameFilter) {
+        this.itemNameFilter = nameFilter;
+        hasItemNameFilter = true;
     }
 
-    public void updateFilters(ArrayList<ItemFilter> filters) {
+    public void clearItemNameFilter() {
+        hasItemNameFilter = false;
+    }
+
+    public void updateItemFilters(ArrayList<Filter> filters) {
         itemFilters = new ArrayList<>(filters);
     }
 
-    public void resetFilters() {
+    public void resetItemFilters() {
         itemFilters = new ArrayList<>();
+    }
+
+    public ArrayList<String> getAllCharmRegions() {
+        return allCharmRegions;
+    }
+
+    public ArrayList<String> getAllCharmTiers() {
+        return allCharmTiers;
+    }
+
+    public ArrayList<String> getAllCharmLocations() {
+        return allCharmLocations;
+    }
+
+    public ArrayList<String> getAllCharmSkillMods() {
+        return allCharmSkillMods;
+    }
+
+    public ArrayList<String> getAllCharmClasses() {
+        return allCharmClasses;
+    }
+
+    public ArrayList<String> getAllCharmStats() {
+        return allCharmStats;
+    }
+
+    public void setCharmNameFilter(String nameFilter) {
+        this.charmNameFilter = nameFilter;
+        hasCharmNameFilter = true;
+    }
+
+    public void clearCharmNameFilter() {
+        hasItemNameFilter = false;
+    }
+
+    public void updateCharmFilters(ArrayList<Filter> filters) {
+        charmFilters = new ArrayList<>(filters);
+    }
+
+    public void resetCharmFilters() {
+        charmFilters = new ArrayList<>();
     }
 
     public void refreshItems() {
         ArrayList<DictionaryItem> filteredItems = new ArrayList<>(items);
 
-        for (ItemFilter filter : itemFilters) {
+        for (Filter filter : itemFilters) {
             if (filter != null) {
-                if (filter.option.equals("Stat")) {
+                if (filter.getOption().equals("Stat")) {
                     if (!filter.value.equals("")) {
                         switch (filter.comparator) {
                             case 0 -> filteredItems.removeIf(i -> !i.hasStat(filter.value));
@@ -258,28 +412,28 @@ public class DictionaryController {
                             case 6 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
                         }
                     }
-                } else if (filter.option.equals("Tier")) {
+                } else if (filter.getOption().equals("Tier")) {
                     if (!filter.value.equals("")) {
                         switch (filter.comparator) {
                             case 0 -> filteredItems.removeIf(i -> !i.hasTier || !i.tier.equals(filter.value));
                             case 1 -> filteredItems.removeIf(i -> i.hasTier && i.tier.equals(filter.value));
                         }
                     }
-                } else if (filter.option.equals("Region")) {
+                } else if (filter.getOption().equals("Region")) {
                     if (!filter.value.equals("")) {
                         switch (filter.comparator) {
                             case 0 -> filteredItems.removeIf(i -> !i.hasRegion || !i.region.equals(filter.value));
                             case 1 -> filteredItems.removeIf(i -> i.hasRegion && i.region.equals(filter.value));
                         }
                     }
-                } else if (filter.option.equals("Type")) {
+                } else if (filter.getOption().equals("Type")) {
                     if (!filter.value.equals("")) {
                         switch (filter.comparator) {
                             case 0 -> filteredItems.removeIf(i -> !i.type.equals(filter.value));
                             case 1 -> filteredItems.removeIf(i -> i.type.equals(filter.value));
                         }
                     }
-                } else if (filter.option.equals("Location")) {
+                } else if (filter.getOption().equals("Location")) {
                     if (!filter.value.equals("")) {
                         switch (filter.comparator) {
                             case 0 -> filteredItems.removeIf(i -> !i.hasLocation || !i.location.equals(filter.value));
@@ -290,13 +444,80 @@ public class DictionaryController {
             }
         }
 
-        if (hasNameFilter)
-            filteredItems.removeIf(i -> !i.name.toLowerCase().contains(nameFilter.toLowerCase()));
+        if (hasItemNameFilter)
+            filteredItems.removeIf(i -> !i.name.toLowerCase().contains(itemNameFilter.toLowerCase()));
 
         validItems = filteredItems;
     }
 
+    public void refreshCharms() {
+        ArrayList<DictionaryCharm> filteredCharms = new ArrayList<>(charms);
+
+        for (Filter filter : charmFilters) {
+            if (filter != null) {
+                if (filter.getOption().equals("Stat")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value));
+                            case 1 -> filteredCharms.removeIf(i -> i.hasStat(filter.value));
+                            case 2 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
+                            case 3 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
+                            case 4 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
+                            case 5 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
+                            case 6 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                        }
+                    }
+                } else if (filter.getOption().equals("Tier")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredCharms.removeIf(i -> !i.tier.equals(filter.value));
+                            case 1 -> filteredCharms.removeIf(i -> i.tier.equals(filter.value));
+                        }
+                    }
+                } else if (filter.getOption().equals("Class")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredCharms.removeIf(i -> !i.className.equals(filter.value));
+                            case 1 -> filteredCharms.removeIf(i -> i.className.equals(filter.value));
+                        }
+                    }
+                } else if (filter.getOption().equals("Skill Modifier")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredCharms.removeIf(i -> !i.hasStatModifier(filter.value));
+                            case 1 -> filteredCharms.removeIf(i -> i.hasStatModifier(filter.value));
+                        }
+                    }
+                } else if (filter.getOption().equals("Charm Power")) {
+                    switch (filter.comparator) {
+                        case 2 -> filteredCharms.removeIf(i -> !(i.power >= filter.constant));
+                        case 3 -> filteredCharms.removeIf(i -> !(i.power > filter.constant));
+                        case 4 -> filteredCharms.removeIf(i -> !(i.power == filter.constant));
+                        case 5 -> filteredCharms.removeIf(i -> !(i.power < filter.constant));
+                        case 6 -> filteredCharms.removeIf(i -> !(i.power <= filter.constant));
+                    }
+                } else if (filter.getOption().equals("Location")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredCharms.removeIf(i -> !i.location.equals(filter.value));
+                            case 1 -> filteredCharms.removeIf(i -> i.location.equals(filter.value));
+                        }
+                    }
+                }
+            }
+        }
+
+        if (hasCharmNameFilter)
+            filteredCharms.removeIf(i -> !i.name.toLowerCase().contains(charmNameFilter.toLowerCase()));
+
+        validCharms = filteredCharms;
+    }
+
     public ArrayList<DictionaryItem> getItems() {
         return validItems;
+    }
+
+    public ArrayList<DictionaryCharm> getCharms() {
+        return validCharms;
     }
 }

@@ -1,7 +1,7 @@
 package dev.eliux.monumentaitemdictionary.util;
 
-public class ItemFilter {
-    public String option;
+public class Filter {
+    private String option;
     public String value;
     public int comparator;
     public double constant;
@@ -15,26 +15,39 @@ public class ItemFilter {
     // 5 -> <=
     // 6 -> <
 
-    public ItemFilter() {
+    public Filter() {
         this.option = "";
         this.value = "";
         this.comparator = 0;
         this.constant = 0.0;
     }
 
-    public ItemFilter(String option, String value, int comparator, double constant) {
+    public Filter(String option, String value, int comparator, double constant) {
         this.option = option;
         this.value = value;
         this.comparator = comparator;
         this.constant = constant;
     }
 
+    public void setOption(String option) {
+        this.option = option;
+        if (option.equals("Charm Power") && comparator < 2) comparator = 2;
+        else comparator = 0;
+    }
+
+    public String getOption() {
+        return option;
+    }
+
     public void incrementComparator() {
         comparator ++;
         if (option.equals("Stat")) {
-            if (comparator >= 7) comparator = 0;
+            if (comparator > 6) comparator = 0;
+        } else if (option.equals("Charm Power")) {
+            if (comparator > 6) comparator = 0;
+            if (comparator < 2) comparator = 2;
         } else {
-            if (comparator >= 2) comparator = 0;
+            if (comparator > 1) comparator = 0;
         }
     }
 }

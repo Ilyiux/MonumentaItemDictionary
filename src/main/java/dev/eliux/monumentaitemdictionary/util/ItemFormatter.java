@@ -3,6 +3,15 @@ package dev.eliux.monumentaitemdictionary.util;
 import java.util.Locale;
 
 public class ItemFormatter {
+    public static String[] modifiableSkills = {"alchemist_potion", "gruesome_alchemy", "iron_tincture", "empowering_odor", "energizing_elixir", "brutal_alchemy", "alchemical_artillery", "unstable_amalgam", "bezoar", "taboo", "scorched_earth", "esoteric_enhancements", "panacea", "transmutation_ring", "warding_remedy",
+            "rejuvenation", "celestial_blessing", "divine_justice", "heavenly_boon", "sacred_provisions", "cleansing_rain", "hand_of_light", "crusade", "sanctified_armor", "holy_javelin", "choir_bells", "luminous_infusion", "enchanted_prayer", "thurible_procession", "hallowed_beam",
+            "arcane_strike", "frost_nova", "mana_lance", "thunder_step", "elemental_arrows", "magma_shield", "spellshock", "prismatic_shield", "astral_omen", "cosmic_moonblade", "sage's_insight", "blizzard", "elemental_spirits", "starfall",
+            "advancing_shadows", "dagger_throw", "escape_death", "smokescreen", "by_my_blade", "dodging", "skirmisher", "vicious_combos", "blade_dance", "deadly_ronde", "wind_walk", "bodkin_blitz", "cloak_and_dagger", "coup_de_grace",
+            "agility", "eagle_eye", "sharpshooter", "swiftness", "hunting_companion", "wind_bomb", "swift_cuts", "volley", "quickdraw", "whirling_blade", "tactical_maneuver", "pinning_shot", "split_arrow", "predator_strike",
+            "amplifying_hex", "choleric_flames", "melancholic_lament", "sanguine_harvest", "phlegmatic_resolve", "cursed_wound", "grasping_claws", "soul_rend", "dark_pact", "judgement_chain", "voodoo_bonds", "haunting_shades", "restless_souls", "withering_gaze",
+            "brute_force", "defensive_line", "riposte", "toughness", "counter_strike", "frenzy", "shield_bash", "weapon_mastery", "glorious_battle", "meteor_slam", "rampage", "bodyguard", "challenge", "shield_wall",
+            "decay", "inferno", "recoil", "jungle's_nourishment", "rage_of_the_keter", "hex_eater", "sapper", "life_drain", "regicide", "quake", "eruption", "smite", "slayer", "duelist", "regeneration", "thunder_aspect"};
+
     public static boolean shouldBold(String inTier) {
         return inTier.equals("Patron") ||
                 inTier.equals("Key") ||
@@ -327,6 +336,49 @@ public class ItemFormatter {
             }
         }
         return stat;
+    }
+
+    public static String getSkillFromCharmStat(String stat) {
+        for (String s : modifiableSkills) {
+            if (stat.startsWith(s)) return s;
+        }
+        return "ERR";
+    }
+
+    public static String formatCharmTier(String tier) {
+        return (tier.equals("Base") ? "" : tier + " ") + "Charm";
+    }
+
+    public static String formatCharmStat(String inStat) {
+        String stat = inStat;
+
+        if (stat.endsWith("_flat")) stat = stat.substring(0, stat.lastIndexOf("_flat")) + "";
+        if (stat.endsWith("_percent")) stat = "%_" + stat.substring(0, stat.lastIndexOf("_percent"));
+        stat = stat.replace("_", " ");
+
+        if (stat.length() > 1) stat = stat.substring(0, 1).toUpperCase() + stat.substring(1);
+        for (int i = 0; i < stat.length() - 1; i++) {
+            if (stat.charAt(i) == ' ') {
+                stat = stat.substring(0, i + 1) + stat.substring(i + 1, i + 2).toUpperCase() + stat.substring(i + 2);
+            }
+        }
+
+        return stat;
+    }
+
+    public static String formatCharmSkill(String inSkill) {
+        String skill = inSkill;
+
+        skill = skill.replace("_", " ");
+
+        if (skill.length() > 1) skill = skill.substring(0, 1).toUpperCase() + skill.substring(1);
+        for (int i = 0; i < skill.length() - 1; i++) {
+            if (skill.charAt(i) == ' ') {
+                skill = skill.substring(0, i + 1) + skill.substring(i + 1, i + 2).toUpperCase() + skill.substring(i + 2);
+            }
+        }
+
+        return skill;
     }
 
     public static boolean isSingleEnchant(String inEnchant) {

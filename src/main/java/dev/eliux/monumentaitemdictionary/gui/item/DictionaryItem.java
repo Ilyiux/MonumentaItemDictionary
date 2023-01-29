@@ -1,4 +1,4 @@
-package dev.eliux.monumentaitemdictionary.gui;
+package dev.eliux.monumentaitemdictionary.gui.item;
 
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 

@@ -10,12 +10,16 @@ public class ItemColors {
     public static final int TEXT_DEFENSE_COLOR = 0x32cafc;
     public static final int TEXT_NEGATIVE_COLOR = 0xfc5454;
     public static final int TEXT_MASTERWORK_COLOR = 0xfcb23d;
+    public static final int TEXT_CHARM_POWER_COLOR = 0xfcf774;
     public static final int TEXT_LORE_COLOR = 0x895287;
+    public static final int TEXT_POSITIVE_CHARM_COLOR = 0x49c0e2;
+    public static final int TEXT_NEGATIVE_CHARM_COLOR = 0xce2d27;
 
     public static final int LEGENDARY_COLOR = 0xfcd400;
     public static final int EPIC_COLOR = 0xb114e0;
     public static final int ARTIFACT_COLOR = 0xce2d27;
     public static final int RARE_COLOR = 0x49c0e2;
+    public static final int BASE_COLOR = 0xfcf774;
     public static final int UNIQUE_COLOR = 0xc6a0c6;
     public static final int PATRON_COLOR = 0x80D817;
     public static final int EVENT_COLOR = 0x7DFCD1;
@@ -32,6 +36,15 @@ public class ItemColors {
     public static final int TIER2_COLOR = 0x545454;
     public static final int TIER1_COLOR = 0x545454;
     public static final int TIER0_COLOR = 0x808690;
+
+    public static final int ALCHEMIST_COLOR = 0x5ea819;
+    public static final int WARRIOR_COLOR = 0xdb2445;
+    public static final int CLERIC_COLOR = 0xfcc443;
+    public static final int ROGUE_COLOR = 0x35383c;
+    public static final int MAGE_COLOR = 0xa11ecc;
+    public static final int SCOUT_COLOR = 0x2488c6;
+    public static final int WARLOCK_COLOR = 0xc524b7;
+    public static final int GENERALIST_COLOR = 0x9d8d8f;
 
     public static final int WHITE_COLOR = 0xFCFCFC;
     public static final int ORANGE_COLOR = 0xFCA800;
@@ -124,6 +137,8 @@ public class ItemColors {
                 yield ARTIFACT_COLOR;
             case "Rare":
                 yield RARE_COLOR;
+            case "Base":
+                yield BASE_COLOR;
             case "Unique":
                 yield UNIQUE_COLOR;
             case "Event":
@@ -157,6 +172,35 @@ public class ItemColors {
             default:
                 yield DEFAULT_COLOR;
         };
+    }
+
+    public static int getColorForClass(String charmClass) {
+        return switch(charmClass) {
+            case "Alchemist":
+                yield ALCHEMIST_COLOR;
+            case "Warrior":
+                yield WARRIOR_COLOR;
+            case "Cleric":
+                yield CLERIC_COLOR;
+            case "Rogue":
+                yield ROGUE_COLOR;
+            case "Mage":
+                yield MAGE_COLOR;
+            case "Scout":
+                yield SCOUT_COLOR;
+            case "Warlock":
+                yield WARLOCK_COLOR;
+            case "Generalist":
+                yield GENERALIST_COLOR;
+            default:
+                yield DEFAULT_COLOR;
+        };
+    }
+
+    public static int getColorForCharmStat(CharmStat charmStat) {
+        boolean positive = charmStat.statValue >= 0;
+        boolean inverted = (charmStat.statNameFull.contains("cooldown") && !charmStat.statNameFull.contains("cooldown_reduction")) || charmStat.statNameFull.contains("self_damage") || charmStat.statNameFull.contains("requirement");
+        return (positive ^ inverted) ? TEXT_POSITIVE_CHARM_COLOR : TEXT_NEGATIVE_CHARM_COLOR;
     }
 
     public static int getColorForLocation(String itemLocation) {

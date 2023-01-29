@@ -1,5 +1,7 @@
-package dev.eliux.monumentaitemdictionary.gui;
+package dev.eliux.monumentaitemdictionary.gui.item;
 
+import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
+import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
@@ -33,7 +35,6 @@ public class ItemDictionaryGui extends Screen {
 
     private TextFieldWidget searchBar;
     private ItemIconButtonWidget reloadItemsButton;
-    private ItemIconButtonWidget showItemsButton;
     private ItemIconButtonWidget showCharmsButton;
     private ItemIconButtonWidget filterButton;
     private ItemIconButtonWidget resetFilterButton;
@@ -53,40 +54,34 @@ public class ItemDictionaryGui extends Screen {
 
         searchBar = new TextFieldWidget(textRenderer, width / 2 + 90, 7, width / 2 - 100, 15, new LiteralText("Search"));
         searchBar.setChangedListener(t -> {
-            controller.setNameFilter(searchBar.getText());
+            controller.setItemNameFilter(searchBar.getText());
             if (searchBar.getText().equals(""))
-                controller.clearNameFilter();
+                controller.clearItemNameFilter();
 
             buildItemList();
             updateScrollLimits();
         });
 
         reloadItemsButton = new ItemIconButtonWidget(5, 5, 20, 20, new LiteralText(""), (button) -> {
-            controller.requestItemsAndUpdate();
+            controller.requestAndUpdate();
         }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Reload Item Data"), mouseX, mouseY);
+            renderTooltip(matrices, new LiteralText("Reload All Data"), mouseX, mouseY);
         }, "globe_banner_pattern", "");
 
-        showItemsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, new LiteralText(""), (button) -> {
-            // do nothing
-        }, ((button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), mouseX, mouseY);
-        }), "iron_chestplate", "");
-
-        showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 40, 20, 20, new LiteralText(""), (button) -> {
-            // do stuff
+        showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, new LiteralText(""), (button) -> {
+            controller.setCharmDictionaryScreen();
         }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, Arrays.asList(new LiteralText("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)), new LiteralText("Coming Soon").setStyle(Style.EMPTY.withColor(0xFFAAAAAA))), mouseX, mouseY);
+            renderTooltip(matrices, new LiteralText("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)), mouseX, mouseY);
         }, "glowstone_dust", "");
 
         filterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 30, 20, 20, new LiteralText(""), (button) -> {
-            controller.setFilterScreen();
+            controller.setItemFilterScreen();
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, new LiteralText("Filter"), mouseX, mouseY);
         }, "chest", "");
 
         resetFilterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 60, 20, 20, new LiteralText(""), (button) -> {
-            controller.filterGui.clearFilters();
+            controller.itemFilterGui.clearFilters();
             buildItemList();
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, new LiteralText("Reset Filters").setStyle(Style.EMPTY.withColor(0xFFFF0000)), mouseX, mouseY);
@@ -150,7 +145,7 @@ public class ItemDictionaryGui extends Screen {
         matrices.translate(0, 0, 110);
         fill(matrices, 0, 0, width, labelMenuHeight, 0xFF555555);
         drawHorizontalLine(matrices, 0, width, labelMenuHeight, 0xFFFFFFFF);
-        drawCenteredText(matrices, textRenderer, new LiteralText("Monumenta Item Dictionary").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFFFFAA00);
+        drawCenteredText(matrices, textRenderer, new LiteralText("Monumenta Item Dictionary").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFF2ca9d3);
         matrices.pop();
 
         // draw gui elements
@@ -158,7 +153,6 @@ public class ItemDictionaryGui extends Screen {
         matrices.translate(0, 0, 110);
         searchBar.render(matrices, mouseX, mouseY, delta);
         reloadItemsButton.render(matrices, mouseX, mouseY, delta);
-        showItemsButton.render(matrices, mouseX, mouseY, delta);
         showCharmsButton.render(matrices, mouseX, mouseY, delta);
         filterButton.render(matrices, mouseX, mouseY, delta);
         resetFilterButton.render(matrices, mouseX, mouseY, delta);
@@ -223,7 +217,6 @@ public class ItemDictionaryGui extends Screen {
 
         searchBar.mouseClicked(mouseX, mouseY, button);
         reloadItemsButton.mouseClicked(mouseX, mouseY, button);
-        showItemsButton.mouseClicked(mouseX, mouseY, button);
         showCharmsButton.mouseClicked(mouseX, mouseY, button);
         filterButton.mouseClicked(mouseX, mouseY, button);
         resetFilterButton.mouseClicked(mouseX, mouseY, button);
@@ -358,10 +351,8 @@ public class ItemDictionaryGui extends Screen {
         searchBar.setX(width / 2 + 90);
         searchBar.setWidth(width / 2 - 100);
 
-        showItemsButton.x = width - sideMenuWidth + 10;
         showCharmsButton.x = width - sideMenuWidth + 10;
-        showItemsButton.y = labelMenuHeight + 10;
-        showCharmsButton.y = labelMenuHeight + 40;
+        showCharmsButton.y = labelMenuHeight + 10;
 
         filterButton.x = width - sideMenuWidth + 10;
         filterButton.y = height - 30;

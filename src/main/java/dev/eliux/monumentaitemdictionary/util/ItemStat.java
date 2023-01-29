@@ -1,7 +1,5 @@
 package dev.eliux.monumentaitemdictionary.util;
 
-import dev.eliux.monumentaitemdictionary.gui.DictionaryItem;
-
 public class ItemStat {
     public String statName;
     public double statValue;
