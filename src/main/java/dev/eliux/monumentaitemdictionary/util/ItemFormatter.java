@@ -62,6 +62,40 @@ public class ItemFormatter {
         };
     }
 
+    public static int getNumberForTier(String inTier) {
+        return switch (inTier) {
+            case "Legendary": yield 19;
+            case "Epic": yield 18;
+            case "Artifact": yield 17;
+            case "Rare": yield 16;
+            case "Base": yield 15;
+            case "Unique": yield 14;
+            case "Patron": yield 13;
+            case "Uncommon": yield 12;
+            case "Tier 5": yield 11;
+            case "Tier 4": yield 10;
+            case "Tier 3": yield 9;
+            case "Tier 2": yield 8;
+            case "Tier 1": yield 7;
+            case "Tier 0": yield 6;
+            case "Obfuscated": yield 5;
+            case "Currency": yield 4;
+            case "Key": yield 3;
+            case "Event": yield 2;
+            case "Trophy": yield 1;
+            default: yield 0;
+        };
+    }
+
+    public static int getNumberForRegion(String inRegion) {
+        return switch (inRegion) {
+            case "Ring": yield 3;
+            case "Isles": yield 2;
+            case "Valley": yield 1;
+            default: yield 0;
+        };
+    }
+
     public static String formatStat(String inStat) {
         /*
         return switch (inStat) {

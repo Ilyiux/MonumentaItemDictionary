@@ -252,6 +252,15 @@ public class DictionaryController {
             e.printStackTrace();
             itemLoadFailed = true;
         }
+
+        items.sort((o1, o2) -> {
+            if (!o1.region.equals(o2.region)) {
+                return -(ItemFormatter.getNumberForRegion(o1.region) - ItemFormatter.getNumberForRegion(o2.region));
+            } else if (!o1.tier.equals(o2.tier)) {
+                return -(ItemFormatter.getNumberForTier(o1.tier) - ItemFormatter.getNumberForTier(o2.tier));
+            }
+            return 0;
+        });
     }
 
     public void loadCharms() {
@@ -315,6 +324,13 @@ public class DictionaryController {
             e.printStackTrace();
             charmLoadFailed = true;
         }
+
+        charms.sort((o1, o2) -> {
+            if (!o1.tier.equals(o2.tier)) {
+                return -(ItemFormatter.getNumberForTier(o1.tier) - ItemFormatter.getNumberForTier(o2.tier));
+            }
+            return 0;
+        });
     }
 
     public ArrayList<String> getAllItemTypes() {
