@@ -58,6 +58,7 @@ public class CharmDictionaryGui extends Screen {
             buildCharmList();
             updateScrollLimits();
         });
+        searchBar.setTextFieldFocused(true);
 
         reloadCharmsButton = new ItemIconButtonWidget(5, 5, 20, 20, new LiteralText(""), (button) -> {
             controller.requestAndUpdate();
@@ -177,6 +178,9 @@ public class CharmDictionaryGui extends Screen {
         super.keyPressed(keyCode, scanCode, modifiers);
 
         searchBar.keyPressed(keyCode, scanCode, modifiers);
+        if (keyCode == 258) { // tab key pressed
+            searchBar.setTextFieldFocused(!searchBar.isFocused());
+        }
 
         return true;
     }
