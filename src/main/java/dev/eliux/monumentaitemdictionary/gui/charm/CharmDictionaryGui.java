@@ -285,7 +285,7 @@ public class CharmDictionaryGui extends Screen {
             charmButtons.forEach((b) -> b.scrolled(mouseX, mouseY, amount));
         } else {
             if (mouseX >= 0 && mouseX < width - sideMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
-                scrollPixels += -amount * 12; // scaled
+                scrollPixels += -amount * 22; // scaled
 
                 updateScrollLimits();
             }
