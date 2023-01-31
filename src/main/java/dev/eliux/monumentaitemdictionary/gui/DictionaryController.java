@@ -463,6 +463,21 @@ public class DictionaryController {
         if (hasItemNameFilter)
             filteredItems.removeIf(i -> !i.name.toLowerCase().contains(itemNameFilter.toLowerCase()));
 
+        filteredItems.sort((o1, o2) -> {
+            for (Filter f : itemFilters) {
+                if (f.getOption().equals("Stat")) {
+                    if (o1.getStat(f.value) == o2.getStat(f.value))
+                        continue;
+
+                    double val = o1.getStat(f.value) - o2.getStat(f.value);
+
+                    if (val > 0) return -1;
+                    if (val < 0) return 1;
+                }
+            }
+            return 0;
+        });
+
         validItems = filteredItems;
     }
 
@@ -525,6 +540,21 @@ public class DictionaryController {
 
         if (hasCharmNameFilter)
             filteredCharms.removeIf(i -> !i.name.toLowerCase().contains(charmNameFilter.toLowerCase()));
+
+        filteredCharms.sort((o1, o2) -> {
+            for (Filter f : charmFilters) {
+                if (f.getOption().equals("Stat")) {
+                    if (o1.getStat(f.value) == o2.getStat(f.value))
+                        continue;
+
+                    double val = o1.getStat(f.value) - o2.getStat(f.value);
+
+                    if (val > 0) return -1;
+                    if (val < 0) return 1;
+                }
+            }
+            return 0;
+        });
 
         validCharms = filteredCharms;
     }
