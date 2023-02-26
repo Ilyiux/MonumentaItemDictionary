@@ -21,6 +21,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class DictionaryController {
     private String itemNameFilter;
@@ -191,7 +193,15 @@ public class DictionaryController {
                 String itemTier = "";
                 boolean hasTier = false;
                 if (itemData.has("tier")) {
-                    itemTier = itemData.get("tier").getAsString();
+                    List<String> plainSplit = Arrays.asList(itemData.get("tier").getAsString().replace("_", " ").split(" ")); // janky code to patch Event Currency appearing as Event_currency and other future similar events
+                    String formattedSplit = "";
+                    for (String s : plainSplit) {
+                        if (s.length() > 0)
+                            formattedSplit = formattedSplit + s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
+                        if (plainSplit.indexOf(s) != plainSplit.size() - 1)
+                            formattedSplit += " ";
+                    }
+                    itemTier = formattedSplit;
                     hasTier = true;
 
                     if (!allItemTiers.contains(itemTier))
@@ -293,7 +303,7 @@ public class DictionaryController {
                 if (!allCharmLocations.contains(charmLocation))
                     allCharmLocations.add(charmLocation);
 
-                String charmTier = charmData.get("tier").getAsString();
+                String charmTier = charmData.get("tier").getAsString().replace("_", " ");
                 if (!allCharmTiers.contains(charmTier))
                     allCharmTiers.add(charmTier);
 

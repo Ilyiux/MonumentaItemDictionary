@@ -23,6 +23,7 @@ public class ItemColors {
     public static final int UNIQUE_COLOR = 0xc6a0c6;
     public static final int PATRON_COLOR = 0x80D817;
     public static final int EVENT_COLOR = 0x7DFCD1;
+    public static final int EVENT_CURRENCY_COLOR = 0xd9ac31;
     public static final int CURRENCY_COLOR = 0xd9ac31;
     public static final int TROPHY_COLOR = 0xc8fcfa;
     public static final int KEY_COLOR = 0x46b4b3;
@@ -145,8 +146,10 @@ public class ItemColors {
                 yield EVENT_COLOR;
             case "Patron":
                 yield PATRON_COLOR;
-            case "Currency":
+            case "Event Currency":
                 yield CURRENCY_COLOR;
+            case "Currency":
+                yield EVENT_CURRENCY_COLOR;
             case "Trophy":
                 yield TROPHY_COLOR;
             case "Key":

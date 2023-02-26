@@ -64,22 +64,23 @@ public class ItemFormatter {
 
     public static int getNumberForTier(String inTier) {
         return switch (inTier) {
-            case "Legendary": yield 19;
-            case "Epic": yield 18;
-            case "Artifact": yield 17;
-            case "Rare": yield 16;
-            case "Base": yield 15;
-            case "Unique": yield 14;
-            case "Patron": yield 13;
-            case "Uncommon": yield 12;
-            case "Tier 5": yield 11;
-            case "Tier 4": yield 10;
-            case "Tier 3": yield 9;
-            case "Tier 2": yield 8;
-            case "Tier 1": yield 7;
-            case "Tier 0": yield 6;
-            case "Obfuscated": yield 5;
-            case "Currency": yield 4;
+            case "Legendary": yield 20;
+            case "Epic": yield 19;
+            case "Artifact": yield 18;
+            case "Rare": yield 17;
+            case "Base": yield 16;
+            case "Unique": yield 15;
+            case "Patron": yield 14;
+            case "Uncommon": yield 13;
+            case "Tier 5": yield 12;
+            case "Tier 4": yield 11;
+            case "Tier 3": yield 10;
+            case "Tier 2": yield 9;
+            case "Tier 1": yield 8;
+            case "Tier 0": yield 7;
+            case "Obfuscated": yield 6;
+            case "Currency": yield 5;
+            case "Event Currency": yield 4;
             case "Key": yield 3;
             case "Event": yield 2;
             case "Trophy": yield 1;
@@ -494,6 +495,8 @@ public class ItemFormatter {
                 inStat.equals("speed_flat") ||
                 inStat.equals("speed_percent") ||
                 inStat.equals("attack_speed_base") ||
+                inStat.equals("potion_damage_flat") ||
+                inStat.equals("potion_radius_flat") ||
                 inStat.equals("throw_rate_base");
     }
 
@@ -504,6 +507,8 @@ public class ItemFormatter {
     public static boolean isBaseStat(String inStat) {
         return inStat.equals("projectile_damage_base") ||
                 inStat.equals("projectile_speed_base") ||
+                inStat.equals("potion_damage_flat") ||
+                inStat.equals("potion_radius_flat") ||
                 inStat.equals("attack_speed_base") ||
                 inStat.equals("attack_damage_base") ||
                 inStat.equals("throw_rate_base");
