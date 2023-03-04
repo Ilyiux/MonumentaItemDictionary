@@ -5,7 +5,7 @@ An entirely in-game item dictionary for Monumenta
 
 ## Item Dictionary
 ### Menu accessible by pressing _H_ (changeable in Minecraft control settings)
-- Items pulled from the Oh the misery API
+- Items pulled from the Monumenta API
 - Item highlighting by tier
 - Search for names
 - Sort by region, location, function, tier, and stat
