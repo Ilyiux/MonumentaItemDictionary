@@ -1,7 +1,6 @@
 package dev.eliux.monumentaitemdictionary.gui.item;
 
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
-import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
@@ -29,7 +28,7 @@ public class ItemDictionaryGui extends Screen {
     public final int itemSize = 25;
     private int scrollPixels = 0;
 
-    private long lastShiftPressed = 0;
+    private long lastAltPressed = 0;
 
     private final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
@@ -109,11 +108,11 @@ public class ItemDictionaryGui extends Screen {
             renderTooltip(matrices, Arrays.asList(
                     new LiteralText("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
                     new LiteralText(""),
-                    new LiteralText("Ctrl + Scroll").setStyle(Style.EMPTY.withItalic(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to increase/decrease individual masterwork tiers").setStyle(Style.EMPTY.withItalic(false).withColor(ItemColors.TEXT_COLOR))),
+                    new LiteralText("Ctrl + Scroll").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to increase/decrease individual masterwork tiers").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     new LiteralText(""),
-                    new LiteralText("Shift").setStyle(Style.EMPTY.withItalic(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to show an item's lore").setStyle(Style.EMPTY.withItalic(false).withColor(ItemColors.TEXT_COLOR))),
+                    new LiteralText("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     new LiteralText(""),
-                    new LiteralText("Double Tap Ctrl").setStyle(Style.EMPTY.withItalic(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to quickly reset search and filters").setStyle(Style.EMPTY.withItalic(false).withColor(ItemColors.TEXT_COLOR))),
+                    new LiteralText("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     new LiteralText(""),
                     new LiteralText("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
             ), mouseX, mouseY);
@@ -209,13 +208,24 @@ public class ItemDictionaryGui extends Screen {
         }
 
         // reset filters shortcut
-        if (keyCode == 341 || keyCode == 345) { // left or right control pressed
-            if (System.currentTimeMillis() - lastShiftPressed < 1000) {
+        if (keyCode == 342 || keyCode == 346) { // left or right alt pressed
+            System.out.println(System.currentTimeMillis() - lastAltPressed);
+            if (System.currentTimeMillis() - lastAltPressed < 1000) {
                 controller.itemFilterGui.clearFilters();
                 searchBar.setText("");
                 buildItemList();
             }
-            lastShiftPressed = System.currentTimeMillis();
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        super.keyReleased(keyCode, scanCode, modifiers);
+
+        if (keyCode == 342 || keyCode == 346) { // left or right alt pressed
+            lastAltPressed = System.currentTimeMillis();
         }
 
         return true;
