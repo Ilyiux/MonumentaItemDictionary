@@ -28,6 +28,8 @@ public class CharmDictionaryGui extends Screen {
     public final int itemSize = 25;
     private int scrollPixels = 0;
 
+    private long lastShiftPressed = 0;
+
     private final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
     private ArrayList<CharmButtonWidget> charmButtons = new ArrayList<>();
@@ -80,6 +82,7 @@ public class CharmDictionaryGui extends Screen {
 
         resetFilterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 60, 20, 20, new LiteralText(""), (button) -> {
             controller.charmFilterGui.clearFilters();
+            searchBar.setText("");
             buildCharmList();
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, new LiteralText("Reset Filters").setStyle(Style.EMPTY.withColor(0xFFFF0000)), mouseX, mouseY);
@@ -90,6 +93,10 @@ public class CharmDictionaryGui extends Screen {
         }, (button, matrices, mouseX, mouseY) -> {
             renderTooltip(matrices, Arrays.asList(
                     new LiteralText("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
+                    new LiteralText(""),
+                    new LiteralText("Shift").setStyle(Style.EMPTY.withItalic(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to show an item's lore").setStyle(Style.EMPTY.withItalic(false).withColor(ItemColors.TEXT_COLOR))),
+                    new LiteralText(""),
+                    new LiteralText("Double Tap Ctrl").setStyle(Style.EMPTY.withItalic(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to quickly reset search and filters").setStyle(Style.EMPTY.withItalic(false).withColor(ItemColors.TEXT_COLOR))),
                     new LiteralText(""),
                     new LiteralText("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
             ), mouseX, mouseY);
@@ -180,6 +187,16 @@ public class CharmDictionaryGui extends Screen {
         searchBar.keyPressed(keyCode, scanCode, modifiers);
         if (keyCode == 258) { // tab key pressed
             searchBar.setTextFieldFocused(!searchBar.isFocused());
+        }
+
+        // reset filters shortcut
+        if (keyCode == 341 || keyCode == 345) { // left or right control pressed
+            if (System.currentTimeMillis() - lastShiftPressed < 1000) {
+                controller.itemFilterGui.clearFilters();
+                searchBar.setText("");
+                buildCharmList();
+            }
+            lastShiftPressed = System.currentTimeMillis();
         }
 
         return true;

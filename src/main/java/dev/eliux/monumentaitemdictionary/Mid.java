@@ -14,7 +14,7 @@ public class Mid implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger("modid");
 	private static KeyBinding openMenuKey;
 
-	public DictionaryController controller;
+	public DictionaryController controller = null;
 
 	@Override
 	public void onInitialize() {
@@ -25,7 +25,10 @@ public class Mid implements ModInitializer {
 				if (client.player == null) return;
 
 				// open the item dictionary menu
-				controller = new DictionaryController();
+				if (controller == null)
+					controller = new DictionaryController();
+
+				controller.open();
 			}
 		});
 	}

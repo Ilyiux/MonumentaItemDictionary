@@ -75,6 +75,9 @@ public class DictionaryController {
         itemFilterGui = new ItemFilterGui(new LiteralText("Item Filter Menu"), this);
         charmGui = new CharmDictionaryGui(new LiteralText("Monumenta Charm Dictionary"), this);
         charmFilterGui = new CharmFilterGui(new LiteralText("Charm Filter Menu"), this);
+    }
+
+    public void open() {
         setItemDictionaryScreen();
     }
 
