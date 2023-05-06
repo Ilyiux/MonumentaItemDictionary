@@ -413,7 +413,7 @@ public class DictionaryController {
     }
 
     public void clearCharmNameFilter() {
-        hasItemNameFilter = false;
+        hasCharmNameFilter = false;
     }
 
     public void updateCharmFilters(ArrayList<Filter> filters) {
