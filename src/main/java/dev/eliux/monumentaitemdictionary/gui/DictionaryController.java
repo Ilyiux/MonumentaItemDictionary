@@ -225,7 +225,6 @@ public class DictionaryController {
                 }
 
                 String itemBaseItem = itemData.get("base_item").getAsString();
-                System.out.println(itemBaseItem + " | " + (!allItemBaseItems.contains(itemBaseItem) ? "Added" : ""));
                 if (!allItemBaseItems.contains(itemBaseItem))
                     allItemBaseItems.add(itemBaseItem);
 
