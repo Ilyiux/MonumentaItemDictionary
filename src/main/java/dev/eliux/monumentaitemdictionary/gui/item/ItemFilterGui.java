@@ -96,7 +96,7 @@ public class ItemFilterGui extends Screen {
                 }
                 updateFilterOutput();
             });
-            DropdownWidget options = new DropdownWidget(textRenderer, 30, labelMenuHeight + 7 + index * 25, 90, new LiteralText(""), "Select Sort Type", Arrays.asList("Tier", "Region", "Location", "Type", "Stat"), (v) -> {
+            DropdownWidget options = new DropdownWidget(textRenderer, 30, labelMenuHeight + 7 + index * 25, 90, new LiteralText(""), "Select Sort Type", Arrays.asList("Tier", "Region", "Location", "Type", "Stat", "Base Item"), (v) -> {
                 filter.setOption(v);
 
                 switch (v) {
@@ -125,6 +125,11 @@ public class ItemFilterGui extends Screen {
                         for (String s : controller.getAllItemStats()) vc.add(ItemFormatter.formatStat(s));
                         value.setChoices(controller.getAllItemStats(), vc);
                         value.setDefaultText("Select Stat");
+                        comparator.setMessage(new LiteralText("Matches"));
+                    }
+                    case "Base Item" -> {
+                        value.setChoices(controller.getAllItemBaseItems());
+                        value.setDefaultText("Select Base Item");
                         comparator.setMessage(new LiteralText("Matches"));
                     }
                 }

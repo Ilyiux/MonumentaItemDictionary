@@ -37,6 +37,7 @@ public class DictionaryController {
     private ArrayList<String> allItemTiers;
     private ArrayList<String> allItemLocations;
     private ArrayList<String> allItemStats;
+    private ArrayList<String> allItemBaseItems;
 
     private ArrayList<String> allCharmRegions;
     private ArrayList<String> allCharmTiers;
@@ -44,6 +45,7 @@ public class DictionaryController {
     private ArrayList<String> allCharmSkillMods;
     private ArrayList<String> allCharmClasses;
     private ArrayList<String> allCharmStats;
+    private ArrayList<String> allCharmBaseItems;
 
     private final ArrayList<DictionaryItem> items;
     private ArrayList<DictionaryItem> validItems;
@@ -164,6 +166,7 @@ public class DictionaryController {
         allItemTiers = new ArrayList<>();
         allItemLocations = new ArrayList<>();
         allItemStats = new ArrayList<>();
+        allItemBaseItems = new ArrayList<>();
 
         try {
             String rawData = readItemData();
@@ -222,6 +225,9 @@ public class DictionaryController {
                 }
 
                 String itemBaseItem = itemData.get("base_item").getAsString();
+                System.out.println(itemBaseItem + " | " + (!allItemBaseItems.contains(itemBaseItem) ? "Added" : ""));
+                if (!allItemBaseItems.contains(itemBaseItem))
+                    allItemBaseItems.add(itemBaseItem);
 
                 String itemLore = "";
                 if (itemData.has("lore")) {
@@ -283,6 +289,7 @@ public class DictionaryController {
         allCharmSkillMods = new ArrayList<>();
         allCharmClasses = new ArrayList<>();
         allCharmStats = new ArrayList<>();
+        allCharmBaseItems = new ArrayList<>();
 
         try {
             String rawData = readItemData();
@@ -316,7 +323,9 @@ public class DictionaryController {
                 if (!allCharmClasses.contains(charmClass))
                     allCharmClasses.add(charmClass);
 
-                String baseItem = charmData.get("base_item").getAsString();
+                String charmBaseItem = charmData.get("base_item").getAsString();
+                if (!allCharmBaseItems.contains(charmBaseItem))
+                    allCharmBaseItems.add(charmBaseItem);
 
                 ArrayList<CharmStat> charmStats = new ArrayList<>();
                 JsonObject statObject = charmData.get("stats").getAsJsonObject();
@@ -331,7 +340,7 @@ public class DictionaryController {
                         allCharmStats.add(statKey);
                 }
 
-                charms.add(new DictionaryCharm(charmName, charmRegion, charmLocation, charmTier, charmPower, charmClass, baseItem, charmStats));
+                charms.add(new DictionaryCharm(charmName, charmRegion, charmLocation, charmTier, charmPower, charmClass, charmBaseItem, charmStats));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -364,6 +373,10 @@ public class DictionaryController {
 
     public ArrayList<String> getAllItemStats() {
         return allItemStats;
+    }
+
+    public ArrayList<String> getAllItemBaseItems() {
+        return allItemBaseItems;
     }
 
     public void setItemNameFilter(String nameFilter) {
@@ -405,6 +418,10 @@ public class DictionaryController {
 
     public ArrayList<String> getAllCharmStats() {
         return allCharmStats;
+    }
+
+    public ArrayList<String> getAllCharmBaseItems() {
+        return allCharmBaseItems;
     }
 
     public void setCharmNameFilter(String nameFilter) {
@@ -467,6 +484,13 @@ public class DictionaryController {
                         switch (filter.comparator) {
                             case 0 -> filteredItems.removeIf(i -> !i.hasLocation || !i.location.equals(filter.value));
                             case 1 -> filteredItems.removeIf(i -> i.hasLocation && i.location.equals(filter.value));
+                        }
+                    }
+                } else if (filter.getOption().equals("Base Item")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredItems.removeIf(i -> !i.baseItem.equals(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.baseItem.equals(filter.value));
                         }
                     }
                 }
@@ -545,6 +569,13 @@ public class DictionaryController {
                         switch (filter.comparator) {
                             case 0 -> filteredCharms.removeIf(i -> !i.location.equals(filter.value));
                             case 1 -> filteredCharms.removeIf(i -> i.location.equals(filter.value));
+                        }
+                    }
+                } else if (filter.getOption().equals("Base Item")) {
+                    if (!filter.value.equals("")) {
+                        switch (filter.comparator) {
+                            case 0 -> filteredCharms.removeIf(i -> !i.baseItem.equals(filter.value));
+                            case 1 -> filteredCharms.removeIf(i -> i.baseItem.equals(filter.value));
                         }
                     }
                 }

@@ -96,7 +96,7 @@ public class CharmFilterGui extends Screen {
                 }
                 updateFilterOutput();
             });
-            DropdownWidget options = new DropdownWidget(textRenderer, 30, labelMenuHeight + 7 + index * 25, 90, new LiteralText(""), "Select Sort Type", Arrays.asList("Tier", "Location", "Skill Modifier", "Class", "Charm Power", "Stat"), (v) -> {
+            DropdownWidget options = new DropdownWidget(textRenderer, 30, labelMenuHeight + 7 + index * 25, 90, new LiteralText(""), "Select Sort Type", Arrays.asList("Tier", "Location", "Skill Modifier", "Class", "Charm Power", "Stat", "Base Item"), (v) -> {
                 filter.setOption(v);
 
                 switch (v) {
@@ -130,6 +130,11 @@ public class CharmFilterGui extends Screen {
                         for (String s : controller.getAllCharmStats()) vc.add(ItemFormatter.formatCharmStat(s));
                         value.setChoices(controller.getAllCharmStats(), vc);
                         value.setDefaultText("Select Stat");
+                        comparator.setMessage(new LiteralText("Matches"));
+                    }
+                    case "Base Item" -> {
+                        value.setChoices(controller.getAllCharmBaseItems());
+                        value.setDefaultText("Select Base Item");
                         comparator.setMessage(new LiteralText("Matches"));
                     }
                 }
