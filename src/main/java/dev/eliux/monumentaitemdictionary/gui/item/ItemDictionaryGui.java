@@ -114,6 +114,8 @@ public class ItemDictionaryGui extends Screen {
                     new LiteralText(""),
                     new LiteralText("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     new LiteralText(""),
+                    new LiteralText("Ctrl Shift + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to open an item in the wiki").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
+                    new LiteralText(""),
                     new LiteralText("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
             ), mouseX, mouseY);
         }, "oak_sign", "");
@@ -189,7 +191,10 @@ public class ItemDictionaryGui extends Screen {
             int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
 
             ItemButtonWidget button = new ItemButtonWidget(x, y, itemSize, index, new LiteralText(item.name), (b) -> {
-
+                if (hasShiftDown() && hasControlDown()) {
+                    String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
+                    Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+                }
             }, item, (b, matrices, mouseX, mouseY) -> {
                 renderTooltip(matrices, generateItemLoreText(item), mouseX, mouseY);
             }, this);
@@ -362,6 +367,7 @@ public class ItemDictionaryGui extends Screen {
 
         lines.add(new LiteralText(""));
 
+        lines.add(new LiteralText("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
         lines.add(new LiteralText(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_COLOR)));
 
