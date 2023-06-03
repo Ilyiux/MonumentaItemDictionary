@@ -453,6 +453,7 @@ public class ItemFormatter {
                 inEnchant.equals("curse_of_ephemerality") ||
                 inEnchant.equals("instant_drink") ||
                 inEnchant.equals("divine_aura") ||
+                inEnchant.equals("cumbersome") ||
                 inEnchant.equals("persistence");
     }
 
@@ -470,6 +471,7 @@ public class ItemFormatter {
                 inEnchant.equals("projectile_fragility") ||
                 inEnchant.equals("magic_fragility") ||
                 inEnchant.equals("curse_of_anemia") ||
+                inEnchant.equals("cumbersome") ||
                 inEnchant.equals("curse_of_ephemerality");
     }
 
