@@ -609,4 +609,12 @@ public class DictionaryController {
     public ArrayList<DictionaryCharm> getCharms() {
         return validCharms;
     }
+
+    public boolean anyItems() {
+        return items.size() == 0;
+    }
+
+    public boolean anyCharms() {
+        return charms.size() == 0;
+    }
 }

@@ -147,6 +147,11 @@ public class ItemDictionaryGui extends Screen {
 
         if (itemButtons.size() == 0) {
             drawCenteredText(matrices, textRenderer, "Found No Items", width / 2, labelMenuHeight + 10, 0xFF2222);
+
+            if (controller.anyItems()) {
+                drawCenteredText(matrices, textRenderer, "It seems like there were no items to begin with...", width / 2, labelMenuHeight + 30, 0xFF2222);
+                drawCenteredText(matrices, textRenderer, "Try clicking the Reload All Data button in the top left", width / 2, labelMenuHeight + 45, 0xFF2222);
+            }
         }
 
         // draw the label at the top

@@ -131,6 +131,11 @@ public class CharmDictionaryGui extends Screen {
 
         if (charmButtons.size() == 0) {
             drawCenteredText(matrices, textRenderer, "Found No Charms", width / 2, labelMenuHeight + 10, 0xFF2222);
+
+            if (controller.anyCharms()) {
+                drawCenteredText(matrices, textRenderer, "It seems like there were no charms to begin with...", width / 2, labelMenuHeight + 30, 0xFF2222);
+                drawCenteredText(matrices, textRenderer, "Try clicking the Reload All Data button in the top left", width / 2, labelMenuHeight + 45, 0xFF2222);
+            }
         }
 
         // draw the label at the top
