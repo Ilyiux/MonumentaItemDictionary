@@ -13,7 +13,7 @@ import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -73,10 +73,10 @@ public class DictionaryController {
         loadItems();
         loadCharms();
 
-        itemGui = new ItemDictionaryGui(new LiteralText("Monumenta Item Dictionary"), this);
-        itemFilterGui = new ItemFilterGui(new LiteralText("Item Filter Menu"), this);
-        charmGui = new CharmDictionaryGui(new LiteralText("Monumenta Charm Dictionary"), this);
-        charmFilterGui = new CharmFilterGui(new LiteralText("Charm Filter Menu"), this);
+        itemGui = new ItemDictionaryGui(Text.literal("Monumenta Item Dictionary"), this);
+        itemFilterGui = new ItemFilterGui(Text.literal("Item Filter Menu"), this);
+        charmGui = new CharmDictionaryGui(Text.literal("Monumenta Charm Dictionary"), this);
+        charmFilterGui = new CharmFilterGui(Text.literal("Charm Filter Menu"), this);
     }
 
     public void open() {
@@ -224,6 +224,15 @@ public class DictionaryController {
                         allItemLocations.add(itemLocation);
                 }
 
+                int fishTier = -1;
+                boolean isFish = false;
+                if (itemData.has("fish_quality")) {
+                    fishTier = itemData.get("fish_quality").getAsInt();
+                    isFish = true;
+
+
+                }
+
                 String itemBaseItem = itemData.get("base_item").getAsString();
                 if (!allItemBaseItems.contains(itemBaseItem))
                     allItemBaseItems.add(itemBaseItem);
@@ -258,12 +267,12 @@ public class DictionaryController {
                         for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier) + 1; i ++)
                             totalList.add(null);
                         totalList.set(itemData.get("masterwork").getAsInt(), itemStats);
-                        items.add(new DictionaryItem(itemName, itemType, itemRegion, hasRegion, itemTier, hasTier, itemLocation, hasLocation, itemBaseItem, itemLore, totalList, true));
+                        items.add(new DictionaryItem(itemName, itemType, itemRegion, hasRegion, itemTier, hasTier, itemLocation, hasLocation, fishTier, isFish, itemBaseItem, itemLore, totalList, true));
                     }
                 } else {
                     ArrayList<ArrayList<ItemStat>> totalList = new ArrayList<>();
                     totalList.add(itemStats);
-                    items.add(new DictionaryItem(itemName, itemType, itemRegion, hasRegion, itemTier, hasTier, itemLocation, hasLocation, itemBaseItem, itemLore, totalList, false));
+                    items.add(new DictionaryItem(itemName, itemType, itemRegion, hasRegion, itemTier, hasTier, itemLocation, hasLocation, fishTier, isFish, itemBaseItem, itemLore, totalList, false));
                 }
             }
         } catch (Exception e) {

@@ -9,9 +9,9 @@ import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -51,7 +51,7 @@ public class CharmDictionaryGui extends Screen {
     public void postInit() {
         buildCharmList();
 
-        searchBar = new TextFieldWidget(textRenderer, width / 2 + 90, 7, width / 2 - 100, 15, new LiteralText("Search"));
+        searchBar = new TextFieldWidget(textRenderer, width / 2 + 90, 7, width / 2 - 100, 15, Text.literal("Search"));
         searchBar.setChangedListener(t -> {
             controller.setCharmNameFilter(searchBar.getText());
             if (searchBar.getText().equals(""))
@@ -60,49 +60,39 @@ public class CharmDictionaryGui extends Screen {
             buildCharmList();
             updateScrollLimits();
         });
-        searchBar.setTextFieldFocused(true);
+        searchBar.setFocused(true);
 
-        reloadCharmsButton = new ItemIconButtonWidget(5, 5, 20, 20, new LiteralText(""), (button) -> {
+        reloadCharmsButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> {
             controller.requestAndUpdate();
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Reload All Data"), mouseX, mouseY);
-        }, "globe_banner_pattern", "");
+        }, Text.literal("Reload All Data"), "globe_banner_pattern", "");
 
-        showItemsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, new LiteralText(""), (button) -> {
+        showItemsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, Text.literal(""), (button) -> {
             controller.setItemDictionaryScreen();
-        }, ((button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), mouseX, mouseY);
-        }), "iron_chestplate", "");
+        }, Text.literal("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), "iron_chestplate", "");
 
-        filterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 30, 20, 20, new LiteralText(""), (button) -> {
+        filterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 30, 20, 20, Text.literal(""), (button) -> {
             controller.setCharmFilterScreen();
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Filter"), mouseX, mouseY);
-        }, "chest", "");
+        }, Text.literal("Filter"), "chest", "");
 
-        resetFilterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 60, 20, 20, new LiteralText(""), (button) -> {
+        resetFilterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 60, 20, 20, Text.literal(""), (button) -> {
             controller.charmFilterGui.clearFilters();
             searchBar.setText("");
             buildCharmList();
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Reset Filters").setStyle(Style.EMPTY.withColor(0xFFFF0000)), mouseX, mouseY);
-        }, "barrier", "");
+        }, Text.literal("Reset Filters").setStyle(Style.EMPTY.withColor(0xFFFF0000)), "barrier", "");
 
-        tipsMasterworkButton = new ItemIconButtonWidget(30, 5, 20, 20, new LiteralText(""), (button) -> {
+        tipsMasterworkButton = new ItemIconButtonWidget(30, 5, 20, 20, Text.literal(""), (button) -> {
             Util.getOperatingSystem().open("https://github.com/Ilyiux/MonumentaItemDictionary");
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, Arrays.asList(
-                    new LiteralText("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
-                    new LiteralText(""),
-                    new LiteralText("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
-                    new LiteralText(""),
-                    new LiteralText("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
-                    new LiteralText(""),
-                    new LiteralText("Ctrl Shift + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to open an item in the wiki").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
-                    new LiteralText(""),
-                    new LiteralText("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
-            ), mouseX, mouseY);
-        }, "oak_sign", "");
+        }, Arrays.asList(
+                    Text.literal("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
+                    Text.literal(""),
+                    Text.literal("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
+                    Text.literal(""),
+                    Text.literal("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
+                    Text.literal(""),
+                    Text.literal("Ctrl Shift + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to open an item in the wiki").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
+                    Text.literal(""),
+                    Text.literal("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
+            ), "oak_sign", "");
     }
 
     @Override
@@ -124,17 +114,17 @@ public class CharmDictionaryGui extends Screen {
 
         // draw item buttons
         charmButtons.forEach(b -> {
-            if (b.y - scrollPixels + itemSize >= labelMenuHeight && b.y - scrollPixels <= height) {
+            if (b.getY() - scrollPixels + itemSize >= labelMenuHeight && b.getY() - scrollPixels <= height) {
                 b.renderButton(matrices, mouseX, mouseY, delta);
             }
         });
 
         if (charmButtons.size() == 0) {
-            drawCenteredText(matrices, textRenderer, "Found No Charms", width / 2, labelMenuHeight + 10, 0xFF2222);
+            drawCenteredTextWithShadow(matrices, textRenderer, "Found No Charms", width / 2, labelMenuHeight + 10, 0xFF2222);
 
             if (controller.anyCharms()) {
-                drawCenteredText(matrices, textRenderer, "It seems like there were no charms to begin with...", width / 2, labelMenuHeight + 30, 0xFF2222);
-                drawCenteredText(matrices, textRenderer, "Try clicking the Reload All Data button in the top left", width / 2, labelMenuHeight + 45, 0xFF2222);
+                drawCenteredTextWithShadow(matrices, textRenderer, "It seems like there were no charms to begin with...", width / 2, labelMenuHeight + 30, 0xFF2222);
+                drawCenteredTextWithShadow(matrices, textRenderer, "Try clicking the Reload All Data button in the top left", width / 2, labelMenuHeight + 45, 0xFF2222);
             }
         }
 
@@ -143,7 +133,7 @@ public class CharmDictionaryGui extends Screen {
         matrices.translate(0, 0, 110);
         fill(matrices, 0, 0, width, labelMenuHeight, 0xFF555555);
         drawHorizontalLine(matrices, 0, width, labelMenuHeight, 0xFFFFFFFF);
-        drawCenteredText(matrices, textRenderer, new LiteralText("Monumenta Charm Dictionary").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFFd8b427);
+        drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Monumenta Charm Dictionary").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFFd8b427);
         matrices.pop();
 
         // draw gui elements
@@ -177,14 +167,13 @@ public class CharmDictionaryGui extends Screen {
             int x = (col + 1) * itemPadding + col * itemSize;
             int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
 
-            CharmButtonWidget button = new CharmButtonWidget(x, y, itemSize, index, new LiteralText(charm.name), (b) -> {
+            CharmButtonWidget button = new CharmButtonWidget(x, y, itemSize, index, Text.literal(charm.name), (b) -> {
                 if (hasShiftDown() && hasControlDown()) {
                     String wikiFormatted = charm.name.replace(" ", "_").replace("'", "%27");
                     Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
                 }
-            }, charm, (b, matrices, mouseX, mouseY) -> {
-                renderTooltip(matrices, generateCharmLoreText(charm), mouseX, mouseY);
-            }, this);
+            }, charm, () -> generateCharmLoreText(charm), this);
+            // REMOVING LAMBDA RESULTED IN FUNCTION NOT BEING CALLED AGAIN, RESULTING IN NO UPDATES
 
             charmButtons.add(button);
         }
@@ -196,7 +185,7 @@ public class CharmDictionaryGui extends Screen {
 
         searchBar.keyPressed(keyCode, scanCode, modifiers);
         if (keyCode == 258) { // tab key pressed
-            searchBar.setTextFieldFocused(!searchBar.isFocused());
+            searchBar.setFocused(!searchBar.isFocused());
         }
 
         // reset filters shortcut
@@ -250,43 +239,43 @@ public class CharmDictionaryGui extends Screen {
     private List<Text> generateCharmLoreText(DictionaryCharm charm) {
         List<Text> lines = new ArrayList<>();
 
-        lines.add(new LiteralText(charm.name).setStyle(Style.EMPTY
+        lines.add(Text.literal(charm.name).setStyle(Style.EMPTY
                 .withColor(0xFF000000 + ItemColors.getColorForLocation(charm.location))
                 .withBold(ItemFormatter.shouldBold(charm.tier))
                 .withUnderline(ItemFormatter.shouldUnderline(charm.tier))));
 
-        MutableText region = new LiteralText(charm.region + " : ").setStyle(Style.EMPTY
+        MutableText region = Text.literal(charm.region + " : ").setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_COLOR));
-        MutableText tier = new LiteralText(ItemFormatter.formatCharmTier(charm.tier)).setStyle(Style.EMPTY
+        MutableText tier = Text.literal(ItemFormatter.formatCharmTier(charm.tier)).setStyle(Style.EMPTY
                 .withColor(ItemColors.getColorForTier(charm.tier))
                 .withBold(ItemFormatter.shouldUnderline(charm.tier)));
         lines.add(region.append(tier));
 
-        MutableText charmPowerDesc = new LiteralText("Charm Power : ").setStyle(Style.EMPTY
+        MutableText charmPowerDesc = Text.literal("Charm Power : ").setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_COLOR));
-        MutableText charmPower = new LiteralText("").setStyle(Style.EMPTY
+        MutableText charmPower = Text.literal("").setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_CHARM_POWER_COLOR));
         for (int i = 0; i < charm.power; i++) charmPower.append("★");
-        MutableText divider = new LiteralText(" - ").setStyle(Style.EMPTY
+        MutableText divider = Text.literal(" - ").setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_COLOR));
-        MutableText classText = new LiteralText(charm.className).setStyle(Style.EMPTY
+        MutableText classText = Text.literal(charm.className).setStyle(Style.EMPTY
                         .withColor(ItemColors.getColorForClass(charm.className)));
         lines.add(charmPowerDesc.append(charmPower).append(divider).append(classText));
 
-        lines.add(new LiteralText(charm.location).setStyle(Style.EMPTY.withColor(ItemColors.getColorForLocation(charm.location))));
+        lines.add(Text.literal(charm.location).setStyle(Style.EMPTY.withColor(ItemColors.getColorForLocation(charm.location))));
 
-        lines.add(new LiteralText(""));
+        lines.add(Text.literal(""));
 
-        lines.add(new LiteralText("When in Charm Slot:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
+        lines.add(Text.literal("When in Charm Slot:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
         for (CharmStat stat : charm.stats) {
-            lines.add(new LiteralText((stat.statValue >= 0 ? "+" : "") + stat.statValue + (stat.statNameFull.endsWith("percent") ? "" : " ") + ItemFormatter.formatCharmStat(stat.statNameFull)).setStyle(Style.EMPTY
+            lines.add(Text.literal((stat.statValue >= 0 ? "+" : "") + stat.statValue + (stat.statNameFull.endsWith("percent") ? "" : " ") + ItemFormatter.formatCharmStat(stat.statNameFull)).setStyle(Style.EMPTY
                     .withColor(ItemColors.getColorForCharmStat(stat))));
         }
 
-        lines.add(new LiteralText(""));
+        lines.add(Text.literal(""));
 
-        lines.add(new LiteralText("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
-        lines.add(new LiteralText(charm.baseItem).setStyle(Style.EMPTY
+        lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+        lines.add(Text.literal(charm.baseItem).setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_COLOR)));
 
         return lines;
@@ -306,13 +295,13 @@ public class CharmDictionaryGui extends Screen {
         searchBar.setX(width / 2 + 90);
         searchBar.setWidth(width / 2 - 100);
 
-        showItemsButton.x = width - sideMenuWidth + 10;
-        showItemsButton.y = labelMenuHeight + 10;
+        showItemsButton.setX(width - sideMenuWidth + 10);
+        showItemsButton.setY(labelMenuHeight + 10);
 
-        filterButton.x = width - sideMenuWidth + 10;
-        filterButton.y = height - 30;
-        resetFilterButton.x = width - sideMenuWidth + 10;
-        resetFilterButton.y = height - 60;
+        filterButton.setX(width - sideMenuWidth + 10);
+        filterButton.setY(height - 30);
+        resetFilterButton.setX(width - sideMenuWidth + 10);
+        resetFilterButton.setY(height - 60);
     }
 
     @Override

@@ -13,13 +13,15 @@ public class DictionaryItem {
     public boolean hasTier;
     public String location;
     public boolean hasLocation;
+    public int fishTier;
+    public boolean isFish;
     public String baseItem; // will exist
     public String lore; // will exist
     public ArrayList<ArrayList<ItemStat>> stats; // will exist
 
     public boolean hasMasterwork;
 
-    public DictionaryItem(String name, String type, String region, boolean hasRegion, String tier, boolean hasTier, String location, boolean hasLocation, String baseItem, String lore, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
+    public DictionaryItem(String name, String type, String region, boolean hasRegion, String tier, boolean hasTier, String location, boolean hasLocation, int fishTier, boolean isFish, String baseItem, String lore, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
         this.name = name;
         this.type = type;
         this.region = region;
@@ -28,6 +30,8 @@ public class DictionaryItem {
         this.hasTier = hasTier;
         this.location = location;
         this.hasLocation = hasLocation;
+        this.fishTier = fishTier;
+        this.isFish = isFish;
         this.baseItem = baseItem;
         this.lore = lore;
         this.stats = stats;

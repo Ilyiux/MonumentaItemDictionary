@@ -104,7 +104,7 @@ public class DropdownWidget extends TextFieldWidget {
 
     private void updateMaxShown() {
         if (MinecraftClient.getInstance().currentScreen == null) return;
-        maxShown = (int) ((double) (MinecraftClient.getInstance().currentScreen.height - (this.y + this.height)) / (double) (this.height + 1));
+        maxShown = (int) ((double) (MinecraftClient.getInstance().currentScreen.height - (this.getY() + this.height)) / (double) (this.height + 1));
     }
 
     private void updateScrollLimits() {
@@ -117,7 +117,7 @@ public class DropdownWidget extends TextFieldWidget {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isFocused()) {
             for (int i = 0; i < Math.min(validChoices.size(), maxShown); i ++) {
-                if (mouseX >= this.x && mouseX <= this.x + this.width && mouseY >= this.y + this.height + ((this.height + 1) * i) && mouseY < this.y + this.height + ((this.height + 1) * (i + 1))) {
+                if (mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() + this.height + ((this.height + 1) * i) && mouseY < this.getY() + this.height + ((this.height + 1) * (i + 1))) {
                     lastChoice = validChoices.get(i + scrollAmount);
                     visualLastChoice = visualValidChoices.get(i + scrollAmount);
                     onUpdate.accept(lastChoice);
@@ -127,7 +127,7 @@ public class DropdownWidget extends TextFieldWidget {
             }
         }
 
-        if (isFocused() && mouseX >= this.x && mouseX <= this.x + this.width && mouseY >= this.y && mouseY <= this.y + this.height) {
+        if (isFocused() && mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() && mouseY <= this.getY() + this.height) {
             setFocused(false);
         } else {
             super.mouseClicked(mouseX, mouseY, button);
@@ -145,7 +145,7 @@ public class DropdownWidget extends TextFieldWidget {
     }
 
     public boolean willClick(double mouseX, double mouseY) {
-        return isFocused() && (mouseX >= this.x && mouseX <= this.x + this.width && mouseY >= this.y + this.height) && mouseY < this.y + this.height + ((this.height + 1) * (validChoices.size() + 1));
+        return isFocused() && (mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getX() + this.height) && mouseY < this.getY() + this.height + ((this.height + 1) * (validChoices.size() + 1));
     }
 
     // must be called manually
@@ -169,7 +169,7 @@ public class DropdownWidget extends TextFieldWidget {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         super.mouseScrolled(mouseX, mouseY, amount);
 
-        if (mouseX >= this.x && mouseX <= this.x + this.width && mouseY >= this.y && mouseY <= this.y + ((this.height + 1) * (Math.min(validChoices.size(), maxShown) + 1))) {
+        if (mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() && mouseY <= this.getY() + ((this.height + 1) * (Math.min(validChoices.size(), maxShown) + 1))) {
             // mouse is in scroll area
             if (validChoices.size() > maxShown) {
                 // should be able to scroll
@@ -192,7 +192,7 @@ public class DropdownWidget extends TextFieldWidget {
     public void renderMain(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
 
-        if (lastChoice.equals("") && !isFocused()) textRenderer.drawWithShadow(matrices, defaultText, this.x + 3, this.y + 3, 0x666666);
+        if (lastChoice.equals("") && !isFocused()) textRenderer.drawWithShadow(matrices, defaultText, this.getX() + 3, this.getY() + 3, 0x666666);
     }
 
     // must be called manually
@@ -201,19 +201,19 @@ public class DropdownWidget extends TextFieldWidget {
         matrices.push();
         matrices.translate(0, 0, 200);
         if (this.isFocused() && validChoices.size() > 0) {
-            fill(matrices, this.x - 1, this.y + this.height, this.x + this.width + 1, this.y + this.height + ((this.height + 1) * Math.min(validChoices.size(), maxShown)) + 1, 0xFFA0A0A0);
-            fill(matrices, this.x, this.y + this.height + 1, this.x + this.width, this.y + this.height + ((this.height + 1) * Math.min(validChoices.size(), maxShown)), 0xFF000000);
+            fill(matrices, this.getX() - 1, this.getY() + this.height, this.getX() + this.width + 1, this.getY() + this.height + ((this.height + 1) * Math.min(validChoices.size(), maxShown)) + 1, 0xFFA0A0A0);
+            fill(matrices, this.getX(), this.getY() + this.height + 1, this.getX() + this.width, this.getY() + this.height + ((this.height + 1) * Math.min(validChoices.size(), maxShown)), 0xFF000000);
 
             // draw highlight under mouse
             for (int i = 0; i < Math.min(validChoices.size(), maxShown); i ++) {
-                if (mouseX >= this.x && mouseX <= this.x + this.width && mouseY >= this.y + this.height + ((this.height + 1) * i) && mouseY < this.y + this.height + ((this.height + 1) * (i + 1))) {
-                    fill(matrices, this.x, this.y + this.height + ((this.height + 1) * i) + 1, this.x + this.width, this.y + this.height + ((this.height + 1) * (i + 1)), 0xFF212121);
+                if (mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() + this.height + ((this.height + 1) * i) && mouseY < this.getY() + this.height + ((this.height + 1) * (i + 1))) {
+                    fill(matrices, this.getX(), this.getY() + this.height + ((this.height + 1) * i) + 1, this.getX() + this.width, this.getY() + this.height + ((this.height + 1) * (i + 1)), 0xFF212121);
                 }
             }
 
             // draw dividing lines
             for (int i = 0; i < Math.min(validChoices.size(), maxShown) - 1; i ++) {
-                drawHorizontalLine(matrices, this.x + 3, this.x + this.width - 4, this.y + this.height + ((this.height + 1) * (i + 1)), 0xFFA0A0A0);
+                drawHorizontalLine(matrices, this.getX() + 3, this.getX() + this.width - 4, this.getY() + this.height + ((this.height + 1) * (i + 1)), 0xFFA0A0A0);
             }
 
             // draw choice text
@@ -225,14 +225,14 @@ public class DropdownWidget extends TextFieldWidget {
                     finalText = visualValidChoices.get(i + scrollAmount);
                 }
                 //String finalText = textRenderer.trimToWidth(validChoices.get(i), this.width - 8);
-                textRenderer.drawWithShadow(matrices, finalText, this.x + 4, this.y + this.height + ((this.height + 1) * i) + 4, 0xFFFFFFFF);
+                textRenderer.drawWithShadow(matrices, finalText, this.getX() + 4, this.getY() + this.height + ((this.height + 1) * i) + 4, 0xFFFFFFFF);
             }
 
             // draw scroll bar if needed
             if (validChoices.size() > maxShown) {
-                drawVerticalLine(matrices, this.x + this.width - 1, this.y + this.height,  this.y + ((this.height + 1) * (maxShown + 1)) - 1, 0xFF303030);
+                drawVerticalLine(matrices, this.getX() + this.width - 1, this.getY() + this.height,  this.getY() + ((this.height + 1) * (maxShown + 1)) - 1, 0xFF303030);
                 int scrollBarPixels = ((this.height + 1) * (maxShown + 1)) - 1 - this.height;
-                drawVerticalLine(matrices, this.x + this.width - 1, this.y + this.height + (int)(scrollBarPixels * ((double)scrollAmount / validChoices.size())), this.y + this.height + (int)(scrollBarPixels * ((double)(scrollAmount + maxShown) / validChoices.size())), 0xFF505050);
+                drawVerticalLine(matrices, this.getX() + this.width - 1, this.getY() + this.height + (int)(scrollBarPixels * ((double)scrollAmount / validChoices.size())), this.getY() + this.height + (int)(scrollBarPixels * ((double)(scrollAmount + maxShown) / validChoices.size())), 0xFF505050);
             }
         }
         matrices.pop();

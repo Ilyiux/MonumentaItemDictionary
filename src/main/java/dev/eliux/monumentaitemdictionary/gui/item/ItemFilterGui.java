@@ -8,10 +8,10 @@ import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
@@ -51,21 +51,19 @@ public class ItemFilterGui extends Screen {
     }
 
     public void postInit() {
-        backButton = new ItemIconButtonWidget(5, 5, 20, 20, new LiteralText(""), (button) -> {
+        backButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> {
             controller.setItemDictionaryScreen();
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Go Back"), mouseX, mouseY);
-        }, "arrow", "");
+        }, Text.literal("Go Back"), "arrow", "");
 
-        addFilterButton = new ButtonWidget(5, labelMenuHeight + 5, 80, 20, new LiteralText("Add New Filter"), (button) -> {
+        addFilterButton = ButtonWidget.builder(Text.literal("Add New Filter"), (button) -> {
             int index = filterListOption.size();
 
             Filter filter = new Filter();
             itemFilters.add(filter);
 
-            ButtonWidget comparator = new ButtonWidget(280, labelMenuHeight + 5 + index * 25, 60, 20, new LiteralText("Matches"), b -> {
+            ButtonWidget comparator = ButtonWidget.builder(Text.literal("Matches"), b -> {
                 filter.incrementComparator();
-                b.setMessage(new LiteralText(
+                b.setMessage(Text.literal(
                         switch (filter.comparator) {
                             case 0: yield "Matches";
                             case 1: yield "Excludes";
@@ -76,17 +74,16 @@ public class ItemFilterGui extends Screen {
                             case 6: yield "<";
                             default: yield "Error";
                         }
-                    ));
+                ));
 
                 updateFilterOutput();
-            }, (button1, matrices, mouseX, mouseY) -> {
-                renderTooltip(matrices, new LiteralText("Click to cycle"), mouseX, mouseY);
-            });
-            DropdownWidget value = new DropdownWidget(textRenderer, 125, labelMenuHeight + 7 + index * 25, 150, new LiteralText(""), "", Arrays.asList(), (v) -> {
+            }).position(280, labelMenuHeight + 5 + index * 25).size(60, 20).tooltip(Tooltip.of(Text.literal("Click to cycle"))).build();
+
+            DropdownWidget value = new DropdownWidget(textRenderer, 125, labelMenuHeight + 7 + index * 25, 150, Text.literal(""), "", Arrays.asList(), (v) -> {
                 filter.value = v;
                 updateFilterOutput();
             });
-            TextFieldWidget constant = new TextFieldWidget(textRenderer, 345, labelMenuHeight + 8 + index * 25, 30, 14, new LiteralText(""));
+            TextFieldWidget constant = new TextFieldWidget(textRenderer, 345, labelMenuHeight + 8 + index * 25, 30, 14, Text.literal(""));
             constant.setText("0");
             constant.setChangedListener(c -> {
                 try {
@@ -96,56 +93,54 @@ public class ItemFilterGui extends Screen {
                 }
                 updateFilterOutput();
             });
-            DropdownWidget options = new DropdownWidget(textRenderer, 30, labelMenuHeight + 7 + index * 25, 90, new LiteralText(""), "Select Sort Type", Arrays.asList("Tier", "Region", "Location", "Type", "Stat", "Base Item"), (v) -> {
+            DropdownWidget options = new DropdownWidget(textRenderer, 30, labelMenuHeight + 7 + index * 25, 90, Text.literal(""), "Select Sort Type", Arrays.asList("Tier", "Region", "Location", "Type", "Stat", "Base Item"), (v) -> {
                 filter.setOption(v);
 
                 switch (v) {
                     case "Tier" -> {
                         value.setChoices(controller.getAllItemTiers());
                         value.setDefaultText("Select Tier");
-                        comparator.setMessage(new LiteralText("Matches"));
+                        comparator.setMessage(Text.literal("Matches"));
                     }
                     case "Region" -> {
                         value.setChoices(controller.getAllItemRegions());
                         value.setDefaultText("Select Region");
-                        comparator.setMessage(new LiteralText("Matches"));
+                        comparator.setMessage(Text.literal("Matches"));
                     }
                     case "Location" -> {
                         value.setChoices(controller.getAllItemLocations());
                         value.setDefaultText("Select Location");
-                        comparator.setMessage(new LiteralText("Matches"));
+                        comparator.setMessage(Text.literal("Matches"));
                     }
                     case "Type" -> {
                         value.setChoices(controller.getAllItemTypes());
                         value.setDefaultText("Select Type");
-                        comparator.setMessage(new LiteralText("Matches"));
+                        comparator.setMessage(Text.literal("Matches"));
                     }
                     case "Stat" -> {
                         ArrayList<String> vc = new ArrayList<>();
                         for (String s : controller.getAllItemStats()) vc.add(ItemFormatter.formatStat(s));
                         value.setChoices(controller.getAllItemStats(), vc);
                         value.setDefaultText("Select Stat");
-                        comparator.setMessage(new LiteralText("Matches"));
+                        comparator.setMessage(Text.literal("Matches"));
                     }
                     case "Base Item" -> {
                         value.setChoices(controller.getAllItemBaseItems());
                         value.setDefaultText("Select Base Item");
-                        comparator.setMessage(new LiteralText("Matches"));
+                        comparator.setMessage(Text.literal("Matches"));
                     }
                 }
 
                 updateFilterOutput();
             });
-            ItemIconButtonWidget delete = new ItemIconButtonWidget(5, labelMenuHeight + 5 + index * 25, 20, 20, new LiteralText(""), b -> {
+            ItemIconButtonWidget delete = new ItemIconButtonWidget(5, labelMenuHeight + 5 + index * 25, 20, 20, Text.literal(""), b -> {
                 removeIndex = filterListOption.indexOf(options);
-            }, ((button1, matrices, mouseX, mouseY) -> {
-                renderTooltip(matrices, new LiteralText("Delete").setStyle(Style.EMPTY.withColor(0xFF0000)), mouseX, mouseY);
-            }), "orange_stained_glass_pane", "Cancel");
+            }, Text.literal("Delete").setStyle(Style.EMPTY.withColor(0xFF0000)), "orange_stained_glass_pane", "Cancel");
             /*
-            ItemIconButtonWidget duplicate = new ItemIconButtonWidget(30, labelMenuHeight + 5 + index * 25, 20, 20, new LiteralText(""), b -> {
+            ItemIconButtonWidget duplicate = new ItemIconButtonWidget(30, labelMenuHeight + 5 + index * 25, 20, 20, Text.literal(""), b -> {
 
             }, ((button1, matrices, mouseX, mouseY) -> {
-                renderTooltip(matrices, new LiteralText("Duplicate").setStyle(Style.EMPTY.withColor(0x4444FF)), mouseX, mouseY);
+                renderTooltip(matrices, Text.literal("Duplicate").setStyle(Style.EMPTY.withColor(0x4444FF)), mouseX, mouseY);
             }), "blue_stained_glass_pane", "");
              */
 
@@ -157,7 +152,7 @@ public class ItemFilterGui extends Screen {
             //filterListDuplicate.add(duplicate);
 
             updateFilterListPositions();
-        });
+        }).position(5, labelMenuHeight + 5).size(80, 20).build();
     }
 
     public void clearFilters() {
@@ -175,13 +170,13 @@ public class ItemFilterGui extends Screen {
 
     private void updateFilterListPositions() {
         if (controller.itemFilterGuiPreviouslyOpened) {
-            addFilterButton.y = labelMenuHeight + 5 + filterListOption.size() * 25;
+            addFilterButton.setY(labelMenuHeight + 5 + filterListOption.size() * 25);
 
-            filterListOption.forEach(i -> i.y = labelMenuHeight + 8 + filterListOption.indexOf(i) * 25);
-            filterListValue.forEach(i -> i.y = labelMenuHeight + 8 + filterListValue.indexOf(i) * 25);
-            filterListComparator.forEach(i -> i.y = labelMenuHeight + 5 + filterListComparator.indexOf(i) * 25);
-            filterListConstant.forEach(i -> i.y = labelMenuHeight + 8 + filterListConstant.indexOf(i) * 25);
-            filterListDelete.forEach(i -> i.y = labelMenuHeight + 5 + filterListDelete.indexOf(i) * 25);
+            filterListOption.forEach(i -> i.setY(labelMenuHeight + 8 + filterListOption.indexOf(i) * 25));
+            filterListValue.forEach(i -> i.setY(labelMenuHeight + 8 + filterListValue.indexOf(i) * 25));
+            filterListComparator.forEach(i -> i.setY(labelMenuHeight + 5 + filterListComparator.indexOf(i) * 25));
+            filterListConstant.forEach(i -> i.setY(labelMenuHeight + 8 + filterListConstant.indexOf(i) * 25));
+            filterListDelete.forEach(i -> i.setY(labelMenuHeight + 5 + filterListDelete.indexOf(i) * 25));
             //filterListDuplicate.forEach(i -> i.y = labelMenuHeight + 5 + filterListDuplicate.indexOf(i) * 25);
         }
     }
@@ -234,7 +229,7 @@ public class ItemFilterGui extends Screen {
         matrices.translate(0, 0, 110);
         fill(matrices, 0, 0, width, labelMenuHeight, 0xFF555555);
         drawHorizontalLine(matrices, 0, width, labelMenuHeight, 0xFFFFFFFF);
-        drawCenteredText(matrices, textRenderer, new LiteralText("Item Filters").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFFFFAA00);
+        drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Item Filters").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFFFFAA00);
         matrices.pop();
 
         // draw gui elements

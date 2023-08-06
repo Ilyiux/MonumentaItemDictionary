@@ -6,6 +6,7 @@ import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
@@ -14,16 +15,21 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 public class CharmButtonWidget extends ButtonWidget {
     private final int charmSize;
     private final DictionaryCharm charm;
     private final ItemStack builtItem;
     public final int index;
+    private final Supplier<List<Text>> tooltipTextSupplier;
 
     private CharmDictionaryGui gui;
 
-    public CharmButtonWidget(int x, int y, int charmSize, int index, Text message, PressAction onPress, DictionaryCharm charm, TooltipSupplier tooltipSupplier, CharmDictionaryGui gui) {
-        super(x, y, charmSize, charmSize, message, onPress, tooltipSupplier);
+    public CharmButtonWidget(int x, int y, int charmSize, int index, Text message, PressAction onPress, DictionaryCharm charm, Supplier<List<Text>> tooltipTextSupplier, CharmDictionaryGui gui) {
+        super(x, y, charmSize, charmSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
+        this.tooltipTextSupplier = tooltipTextSupplier;
         this.charmSize = charmSize;
         this.charm = charm;
         this.index = index;
@@ -79,20 +85,21 @@ public class CharmButtonWidget extends ButtonWidget {
         // rendering breaks if I do not use this, what is this, why do I have to use this, I don't know
         RenderSystem.enableDepthTest();
 
-        boolean hovered = (mouseX >= x) && (mouseX <= x + charmSize) && (mouseY >= (y + yPixelOffset)) && (mouseY <= (y + yPixelOffset) + charmSize) && (mouseY > gui.labelMenuHeight);
+        boolean hovered = (mouseX >= getX()) && (mouseX <= getX() + charmSize) && (mouseY >= (getY() + yPixelOffset)) && (mouseY <= (getY() + yPixelOffset) + charmSize) && (mouseY > gui.labelMenuHeight);
 
         int outlineColor = hovered ? 0xFFC6C6C6 : 0xFFFFFFFF;
         int fillOpacity = hovered ? 0x6B000000 : 0x88000000;
 
-        fill(matrices, x, (y + yPixelOffset), x + width, (y + yPixelOffset) + width, fillOpacity + ItemColors.getColorForTier(charm.tier));
-        drawHorizontalLine(matrices, x, x + width, (y + yPixelOffset), outlineColor);
-        drawHorizontalLine(matrices, x, x + width, (y + yPixelOffset) + height, outlineColor);
-        drawVerticalLine(matrices, x, (y + yPixelOffset), (y + yPixelOffset) + height, outlineColor);
-        drawVerticalLine(matrices, x + width, (y + yPixelOffset), (y + yPixelOffset) + height, outlineColor);
+        fill(matrices, getX(), (getY() + yPixelOffset), getX() + width, (getY() + yPixelOffset) + width, fillOpacity + ItemColors.getColorForTier(charm.tier));
+        drawHorizontalLine(matrices, getX(), getX() + width, (getY() + yPixelOffset), outlineColor);
+        drawHorizontalLine(matrices, getX(), getX() + width, (getY() + yPixelOffset) + height, outlineColor);
+        drawVerticalLine(matrices, getX(), (getY() + yPixelOffset), (getY() + yPixelOffset) + height, outlineColor);
+        drawVerticalLine(matrices, getX() + width, (getY() + yPixelOffset), (getY() + yPixelOffset) + height, outlineColor);
 
-        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(builtItem, x + (charmSize / 2) - 7, (y + yPixelOffset) + (charmSize / 2) - 7);
+        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, getX() + (charmSize / 2) - 7, (getY() + yPixelOffset) + (charmSize / 2) - 7);
 
-        if (hovered)
-            renderTooltip(matrices, mouseX, mouseY);
+        if (hovered) {
+            gui.renderTooltip(matrices, tooltipTextSupplier.get(), mouseX, mouseY);
+        }
     }
 }

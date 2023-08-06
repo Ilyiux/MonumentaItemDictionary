@@ -9,9 +9,9 @@ import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -53,7 +53,7 @@ public class ItemDictionaryGui extends Screen {
     public void postInit() {
         buildItemList();
 
-        searchBar = new TextFieldWidget(textRenderer, width / 2 + 90, 7, width / 2 - 100, 15, new LiteralText("Search"));
+        searchBar = new TextFieldWidget(textRenderer, width / 2 + 90, 7, width / 2 - 100, 15, Text.literal("Search"));
         searchBar.setChangedListener(t -> {
             controller.setItemNameFilter(searchBar.getText());
             if (searchBar.getText().equals(""))
@@ -62,63 +62,49 @@ public class ItemDictionaryGui extends Screen {
             buildItemList();
             updateScrollLimits();
         });
-        searchBar.setTextFieldFocused(true);
+        searchBar.setFocused(true);
 
-        reloadItemsButton = new ItemIconButtonWidget(5, 5, 20, 20, new LiteralText(""), (button) -> {
+        reloadItemsButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> {
             controller.requestAndUpdate();
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Reload All Data"), mouseX, mouseY);
-        }, "globe_banner_pattern", "");
+        }, Text.literal("Reload All Data"), "globe_banner_pattern", "");
 
-        showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, new LiteralText(""), (button) -> {
+        showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, Text.literal(""), (button) -> {
             controller.setCharmDictionaryScreen();
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)), mouseX, mouseY);
-        }, "glowstone_dust", "");
+        }, Text.literal("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)), "glowstone_dust", "");
 
-        filterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 30, 20, 20, new LiteralText(""), (button) -> {
+        filterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 30, 20, 20, Text.literal(""), (button) -> {
             controller.setItemFilterScreen();
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Filter"), mouseX, mouseY);
-        }, "chest", "");
+        }, Text.literal("Filter"), "chest", "");
 
-        resetFilterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 60, 20, 20, new LiteralText(""), (button) -> {
+        resetFilterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 60, 20, 20, Text.literal(""), (button) -> {
             controller.itemFilterGui.clearFilters();
             searchBar.setText("");
             buildItemList();
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Reset Filters").setStyle(Style.EMPTY.withColor(0xFFFF0000)), mouseX, mouseY);
-        }, "barrier", "");
+        }, Text.literal("Reset Filters").setStyle(Style.EMPTY.withColor(0xFFFF0000)), "barrier", "");
 
-        minMasterworkButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 120, 20, 20, new LiteralText(""), (button) -> {
+        minMasterworkButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 120, 20, 20, Text.literal(""), (button) -> {
             itemButtons.forEach(ItemButtonWidget::setMinimumMasterwork);
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, new LiteralText("Show Minimum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), mouseX, mouseY);
-        }, "netherite_scrap", "");
+        }, Text.literal("Show Minimum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), "netherite_scrap", "");
 
-        maxMasterworkButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 90, 20, 20, new LiteralText(""), (button) -> {
+        maxMasterworkButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 90, 20, 20, Text.literal(""), (button) -> {
             itemButtons.forEach(ItemButtonWidget::setMaximumMasterwork);
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, Arrays.asList(new LiteralText("Show Maximum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), new LiteralText("(Only counts tiers with data)").setStyle(Style.EMPTY.withColor(0xFFAAAAAA))), mouseX, mouseY);
-        }, "netherite_ingot", "");
+        }, Arrays.asList(Text.literal("Show Maximum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), Text.literal("(Only counts tiers with data)").setStyle(Style.EMPTY.withColor(0xFFAAAAAA))), "netherite_ingot", "");
 
-        tipsMasterworkButton = new ItemIconButtonWidget(30, 5, 20, 20, new LiteralText(""), (button) -> {
+        tipsMasterworkButton = new ItemIconButtonWidget(30, 5, 20, 20, Text.literal(""), (button) -> {
             Util.getOperatingSystem().open("https://github.com/Ilyiux/MonumentaItemDictionary");
-        }, (button, matrices, mouseX, mouseY) -> {
-            renderTooltip(matrices, Arrays.asList(
-                    new LiteralText("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
-                    new LiteralText(""),
-                    new LiteralText("Ctrl + Scroll").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to increase/decrease individual masterwork tiers").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
-                    new LiteralText(""),
-                    new LiteralText("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
-                    new LiteralText(""),
-                    new LiteralText("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
-                    new LiteralText(""),
-                    new LiteralText("Ctrl Shift + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(new LiteralText(" to open an item in the wiki").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
-                    new LiteralText(""),
-                    new LiteralText("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
-            ), mouseX, mouseY);
-        }, "oak_sign", "");
+        }, Arrays.asList(
+                    Text.literal("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
+                    Text.literal(""),
+                    Text.literal("Ctrl + Scroll").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to increase/decrease individual masterwork tiers").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
+                    Text.literal(""),
+                    Text.literal("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
+                    Text.literal(""),
+                    Text.literal("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
+                    Text.literal(""),
+                    Text.literal("Ctrl Shift + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to open an item in the wiki").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
+                    Text.literal(""),
+                    Text.literal("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
+            ), "oak_sign", "");
     }
 
     @Override
@@ -140,17 +126,17 @@ public class ItemDictionaryGui extends Screen {
 
         // draw item buttons
         itemButtons.forEach(b -> {
-            if (b.y - scrollPixels + itemSize >= labelMenuHeight && b.y - scrollPixels <= height) {
+            if (b.getY() - scrollPixels + itemSize >= labelMenuHeight && b.getY() - scrollPixels <= height) {
                 b.renderButton(matrices, mouseX, mouseY, delta);
             }
         });
 
         if (itemButtons.size() == 0) {
-            drawCenteredText(matrices, textRenderer, "Found No Items", width / 2, labelMenuHeight + 10, 0xFF2222);
+            drawCenteredTextWithShadow(matrices, textRenderer, "Found No Items", width / 2, labelMenuHeight + 10, 0xFF2222);
 
             if (controller.anyItems()) {
-                drawCenteredText(matrices, textRenderer, "It seems like there were no items to begin with...", width / 2, labelMenuHeight + 30, 0xFF2222);
-                drawCenteredText(matrices, textRenderer, "Try clicking the Reload All Data button in the top left", width / 2, labelMenuHeight + 45, 0xFF2222);
+                drawCenteredTextWithShadow(matrices, textRenderer, "It seems like there were no items to begin with...", width / 2, labelMenuHeight + 30, 0xFF2222);
+                drawCenteredTextWithShadow(matrices, textRenderer, "Try clicking the Reload All Data button in the top left", width / 2, labelMenuHeight + 45, 0xFF2222);
             }
         }
 
@@ -159,7 +145,7 @@ public class ItemDictionaryGui extends Screen {
         matrices.translate(0, 0, 110);
         fill(matrices, 0, 0, width, labelMenuHeight, 0xFF555555);
         drawHorizontalLine(matrices, 0, width, labelMenuHeight, 0xFFFFFFFF);
-        drawCenteredText(matrices, textRenderer, new LiteralText("Monumenta Item Dictionary").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFF2ca9d3);
+        drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Monumenta Item Dictionary").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFF2ca9d3);
         matrices.pop();
 
         // draw gui elements
@@ -195,14 +181,13 @@ public class ItemDictionaryGui extends Screen {
             int x = (col + 1) * itemPadding + col * itemSize;
             int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
 
-            ItemButtonWidget button = new ItemButtonWidget(x, y, itemSize, index, new LiteralText(item.name), (b) -> {
+            ItemButtonWidget button = new ItemButtonWidget(x, y, itemSize, index, Text.literal(item.name), (b) -> {
                 if (hasShiftDown() && hasControlDown()) {
                     String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
                     Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
                 }
-            }, item, (b, matrices, mouseX, mouseY) -> {
-                renderTooltip(matrices, generateItemLoreText(item), mouseX, mouseY);
-            }, this);
+            }, item, () -> generateItemLoreText(item), this);
+            // REMOVING LAMBDA RESULTED IN FUNCTION NOT BEING CALLED AGAIN, RESULTING IN NO UPDATES
 
             itemButtons.add(button);
         }
@@ -214,7 +199,7 @@ public class ItemDictionaryGui extends Screen {
 
         searchBar.keyPressed(keyCode, scanCode, modifiers);
         if (keyCode == 258) { // tab key pressed
-            searchBar.setTextFieldFocused(!searchBar.isFocused());
+            searchBar.setFocused(!searchBar.isFocused());
         }
 
         // reset filters shortcut
@@ -278,10 +263,10 @@ public class ItemDictionaryGui extends Screen {
 
         List<Text> lines = new ArrayList<>();
 
-        lines.add(new LiteralText(item.name).setStyle(Style.EMPTY
+        lines.add(Text.literal(item.name).setStyle(Style.EMPTY
                 .withColor(0xFF000000 + ItemColors.getColorForLocation(item.location))
-                .withBold(ItemFormatter.shouldBold(item.tier))
-                .withUnderline(ItemFormatter.shouldUnderline(item.tier))));
+                .withBold(!item.isFish ? ItemFormatter.shouldBold(item.tier) : ItemFormatter.shouldBoldFish(item.fishTier))
+                .withUnderline(!item.isFish ? ItemFormatter.shouldUnderline(item.tier) : ItemFormatter.shouldUnderlineFish(item.fishTier))));
 
         ArrayList<Text> enchants = new ArrayList<>();
         ArrayList<Text> basestats = new ArrayList<>();
@@ -296,15 +281,15 @@ public class ItemDictionaryGui extends Screen {
 
         if (showStats == null) {
             if (masterworkTier > item.getMinMasterwork()) {
-                lines.add(new LiteralText("The data for this tier is missing.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
+                lines.add(Text.literal("The data for this tier is missing.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
             } else if (masterworkTier < item.getMinMasterwork()) {
-                lines.add(new LiteralText("This masterwork tier does not exist.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
+                lines.add(Text.literal("This masterwork tier does not exist.").setStyle(Style.EMPTY.withColor(0xFFFF0000)));
             }
         }
 
         if (showStats != null) {
             for (ItemStat stat : showStats) {
-                Text line = new LiteralText(ItemFormatter.buildStatString(stat.statName, stat.statValue)).setStyle(Style.EMPTY
+                Text line = Text.literal(ItemFormatter.buildStatString(stat.statName, stat.statValue)).setStyle(Style.EMPTY
                         .withColor(ItemColors.getColorForStat(stat.statName, stat.statValue)));
                 if (ItemFormatter.isStat(stat.statName)) {
                     if (ItemFormatter.isBaseStat(stat.statName)) {
@@ -323,9 +308,9 @@ public class ItemDictionaryGui extends Screen {
         }
 
         if (item.hasRegion || item.hasTier) {
-            MutableText regionText = new LiteralText(item.hasRegion ? ItemFormatter.formatRegion(item.region) + (item.hasTier ? " : " : "") : "")
+            MutableText regionText = Text.literal(item.hasRegion ? ItemFormatter.formatRegion(item.region) + (item.hasTier ? " : " : "") : "")
                     .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
-            MutableText tierText = new LiteralText(item.hasTier ? item.tier : "").setStyle(Style.EMPTY
+            MutableText tierText = Text.literal(item.hasTier ? item.tier : "").setStyle(Style.EMPTY
                     .withColor(ItemColors.getColorForTier(item.tier))
                     .withBold(ItemFormatter.shouldUnderline(item.tier)));
 
@@ -333,46 +318,58 @@ public class ItemDictionaryGui extends Screen {
         }
 
         if (item.hasMasterwork) {
-            MutableText baseText = new LiteralText("Masterwork: ").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
+            MutableText baseText = Text.literal("Masterwork : ").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
             for (int i = 0; i < ItemFormatter.getMasterworkForRarity(item.tier); i ++) {
                 if (i < masterworkTier) {
-                    baseText.append(new LiteralText("★").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_MASTERWORK_COLOR)));
+                    baseText.append(Text.literal("★").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_MASTERWORK_COLOR)));
                 } else {
-                    baseText.append(new LiteralText("☆").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+                    baseText.append(Text.literal("☆").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+                }
+            }
+            lines.add(baseText);
+        }
+
+        if (item.isFish) {
+            MutableText baseText = Text.literal("Fish Quality : ").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
+            for (int i = 0; i < ItemFormatter.getMaxFishTier(); i ++) {
+                if (i < item.fishTier) {
+                    baseText.append(Text.literal("★").setStyle(Style.EMPTY.withColor(ItemColors.FISH_COLOR)));
+                } else {
+                    baseText.append(Text.literal("☆").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
                 }
             }
             lines.add(baseText);
         }
 
         if (item.hasLocation) {
-            lines.add(new LiteralText(item.location).setStyle(Style.EMPTY
+            lines.add(Text.literal(item.location).setStyle(Style.EMPTY
                     .withColor(ItemColors.getColorForLocation(item.location))));
         }
 
         if (!item.lore.equals("")) {
             if (hasShiftDown()) {
                 for (String line : item.lore.split("\n")) {
-                    lines.add(new LiteralText(line).setStyle(Style.EMPTY.withColor(ItemColors.mixHexes(ItemColors.TEXT_COLOR, ItemColors.getColorForLocation(item.location), 0.67))));
+                    lines.add(Text.literal(line).setStyle(Style.EMPTY.withColor(ItemColors.mixHexes(ItemColors.TEXT_COLOR, ItemColors.getColorForLocation(item.location), 0.67))));
                 }
             } else {
-                lines.add(new LiteralText("Press [SHIFT] to show lore.").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+                lines.add(Text.literal("Press [SHIFT] to show lore.").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
             }
         }
 
         if (showStats != null) {
             if (stats.size() > 0 || basestats.size() > 0) {
-                lines.add(new LiteralText(""));
-                lines.add(new LiteralText("When Used:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
+                lines.add(Text.literal(""));
+                lines.add(Text.literal("When Used:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
             }
 
             lines.addAll(basestats);
             lines.addAll(stats);
         }
 
-        lines.add(new LiteralText(""));
+        lines.add(Text.literal(""));
 
-        lines.add(new LiteralText("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
-        lines.add(new LiteralText(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
+        lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+        lines.add(Text.literal(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_COLOR)));
 
         return lines;
@@ -392,18 +389,18 @@ public class ItemDictionaryGui extends Screen {
         searchBar.setX(width / 2 + 90);
         searchBar.setWidth(width / 2 - 100);
 
-        showCharmsButton.x = width - sideMenuWidth + 10;
-        showCharmsButton.y = labelMenuHeight + 10;
+        showCharmsButton.setX(width - sideMenuWidth + 10);
+        showCharmsButton.setY(labelMenuHeight + 10);
 
-        filterButton.x = width - sideMenuWidth + 10;
-        filterButton.y = height - 30;
-        resetFilterButton.x = width - sideMenuWidth + 10;
-        resetFilterButton.y = height - 60;
+        filterButton.setX(width - sideMenuWidth + 10);
+        filterButton.setY(height - 30);
+        resetFilterButton.setX(width - sideMenuWidth + 10);
+        resetFilterButton.setY(height - 60);
 
-        minMasterworkButton.x = width - sideMenuWidth + 10;
-        minMasterworkButton.y = height - 120;
-        maxMasterworkButton.x = width - sideMenuWidth + 10;
-        maxMasterworkButton.y = height - 90;
+        minMasterworkButton.setX(width - sideMenuWidth + 10);
+        minMasterworkButton.setY(height - 120);
+        maxMasterworkButton.setX(width - sideMenuWidth + 10);
+        maxMasterworkButton.setY(height - 90);
     }
 
     @Override

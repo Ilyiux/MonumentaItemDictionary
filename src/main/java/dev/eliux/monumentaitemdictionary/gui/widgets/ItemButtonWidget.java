@@ -7,6 +7,7 @@ import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
@@ -15,19 +16,23 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 public class ItemButtonWidget extends ButtonWidget {
     private final int itemSize;
     private final DictionaryItem item;
     private final ItemStack builtItem;
     public final int index;
+    private final Supplier<List<Text>> tooltipTextSupplier;
 
     public int shownMasterworkTier;
 
     private ItemDictionaryGui gui;
 
-    public ItemButtonWidget(int x, int y, int itemSize, int index, Text message, PressAction onPress, DictionaryItem item, TooltipSupplier tooltipSupplier, ItemDictionaryGui gui) {
-        super(x, y, itemSize, itemSize, message, onPress, tooltipSupplier);
+    public ItemButtonWidget(int x, int y, int itemSize, int index, Text message, PressAction onPress, DictionaryItem item, Supplier<List<Text>> tooltipTextSupplier, ItemDictionaryGui gui) {
+        super(x, y, itemSize, itemSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
+        this.tooltipTextSupplier = tooltipTextSupplier;
         this.itemSize = itemSize;
         this.item = item;
         this.index = index;
@@ -71,7 +76,7 @@ public class ItemButtonWidget extends ButtonWidget {
     }
 
     public void scrolled(double mouseX, double mouseY, double amount) {
-        if (mouseX >= x && mouseX <= x + width && mouseY >= y - gui.getScrollPixels() && mouseY <= y + height - gui.getScrollPixels() && item.hasMasterwork) {
+        if (mouseX >= getX() && mouseX <= getX() + width && mouseY >= getY() - gui.getScrollPixels() && mouseY <= getY() + height - gui.getScrollPixels() && item.hasMasterwork) {
             shownMasterworkTier += amount;
             if (shownMasterworkTier < 0) shownMasterworkTier = 0;
             if (shownMasterworkTier > item.getMaxMasterwork() - 1) shownMasterworkTier = item.getMaxMasterwork() - 1;
@@ -85,20 +90,21 @@ public class ItemButtonWidget extends ButtonWidget {
         // rendering breaks if I do not use this, what is this, why do I have to use this, I don't know
         RenderSystem.enableDepthTest();
 
-        boolean hovered = (mouseX >= x) && (mouseX <= x + itemSize) && (mouseY >= (y + yPixelOffset)) && (mouseY <= (y + yPixelOffset) + itemSize) && (mouseY > gui.labelMenuHeight);
+        boolean hovered = (mouseX >= getX()) && (mouseX <= getX() + itemSize) && (mouseY >= (getY() + yPixelOffset)) && (mouseY <= (getY() + yPixelOffset) + itemSize) && (mouseY > gui.labelMenuHeight);
 
         int outlineColor = hovered ? 0xFFC6C6C6 : 0xFFFFFFFF;
         int fillOpacity = hovered ? 0x6B000000 : 0x88000000;
 
-        fill(matrices, x, (y + yPixelOffset), x + width, (y + yPixelOffset) + width, fillOpacity + ItemColors.getColorForTier(item.tier));
-        drawHorizontalLine(matrices, x, x + width, (y + yPixelOffset), outlineColor);
-        drawHorizontalLine(matrices, x, x + width, (y + yPixelOffset) + height, outlineColor);
-        drawVerticalLine(matrices, x, (y + yPixelOffset), (y + yPixelOffset) + height, outlineColor);
-        drawVerticalLine(matrices, x + width, (y + yPixelOffset), (y + yPixelOffset) + height, outlineColor);
+        fill(matrices, getX(), (getY() + yPixelOffset), getX() + width, (getY() + yPixelOffset) + width, fillOpacity + ItemColors.getColorForTier(item.tier));
+        drawHorizontalLine(matrices, getX(), getX() + width, (getY() + yPixelOffset), outlineColor);
+        drawHorizontalLine(matrices, getX(), getX() + width, (getY() + yPixelOffset) + height, outlineColor);
+        drawVerticalLine(matrices, getX(), (getY() + yPixelOffset), (getY() + yPixelOffset) + height, outlineColor);
+        drawVerticalLine(matrices, getX() + width, (getY() + yPixelOffset), (getY() + yPixelOffset) + height, outlineColor);
 
-        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(builtItem, x + (itemSize / 2) - 7, (y + yPixelOffset) + (itemSize / 2) - 7);
+        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, getX() + (itemSize / 2) - 7, (getY() + yPixelOffset) + (itemSize / 2) - 7);
 
-        if (hovered)
-            renderTooltip(matrices, mouseX, mouseY);
+        if (hovered) {
+            gui.renderTooltip(matrices, tooltipTextSupplier.get(), mouseX, mouseY);
+        }
     }
 }

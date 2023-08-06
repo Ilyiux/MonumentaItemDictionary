@@ -29,6 +29,7 @@ public class ItemColors {
     public static final int KEY_COLOR = 0x46b4b3;
     public static final int LEGACY_COLOR = 0xebe3d3;
     public static final int OBFUSCATED_COLOR = 0x5C2C85;
+    public static final int FISH_COLOR = 0x1DCA98;
 
     public static final int UNCOMMON_COLOR = 0xbebebe;
     public static final int TIER5_COLOR = 0x545454;
@@ -127,6 +128,8 @@ public class ItemColors {
     public static final int HOLIDAY_SKIN_COLOR = 0xADC0E0;
     public static final int HALLOWEEN_EVENT_COLOR = 0xFCA800;
     public static final int HALLOWEEN_SKIN_COLOR = 0xFCA800;
+    public static final int FISHING_COLOR = 0xA7CECD;
+    public static final int CHALLENGER_COLOR = 0xFBD910;
 
     public static int getColorForTier(String itemTier) {
         return switch (itemTier) {
@@ -154,6 +157,8 @@ public class ItemColors {
                 yield TROPHY_COLOR;
             case "Key":
                 yield KEY_COLOR;
+            case "Fish":
+                yield FISH_COLOR;
             case "Legacy":
                 yield LEGACY_COLOR;
             case "Obfuscated":
@@ -368,6 +373,10 @@ public class ItemColors {
                 yield HALLOWEEN_EVENT_COLOR;
             case "Halloween Skin":
                 yield HALLOWEEN_SKIN_COLOR;
+            case "Architect's Ring Fishing":
+                yield FISHING_COLOR;
+            case "Challenger":
+                yield CHALLENGER_COLOR;
             default:
                 yield DEFAULT_COLOR;
         };

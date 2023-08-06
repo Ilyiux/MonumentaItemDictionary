@@ -62,6 +62,18 @@ public class ItemFormatter {
         };
     }
 
+    public static int getMaxFishTier() {
+        return 5;
+    }
+
+    public static boolean shouldBoldFish(int fishTier) {
+        return (fishTier >= 3);
+    }
+
+    public static boolean shouldUnderlineFish(int fishTier) {
+        return (fishTier >= 5);
+    }
+
     public static int getNumberForTier(String inTier) {
         return switch (inTier) {
             case "Legendary": yield 20;
