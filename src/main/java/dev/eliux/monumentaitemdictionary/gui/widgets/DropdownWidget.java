@@ -1,14 +1,13 @@
 package dev.eliux.monumentaitemdictionary.gui.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 
 public class DropdownWidget extends TextFieldWidget {
     private final TextRenderer textRenderer;
