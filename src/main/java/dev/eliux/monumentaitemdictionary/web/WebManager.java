@@ -19,8 +19,7 @@ public class WebManager {
         }
 
         BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String responseBody = br.lines().collect(Collectors.joining());
 
-        return responseBody;
+        return br.lines().collect(Collectors.joining());
     }
 }

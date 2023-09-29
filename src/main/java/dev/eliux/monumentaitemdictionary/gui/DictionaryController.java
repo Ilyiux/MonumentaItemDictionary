@@ -11,7 +11,9 @@ import dev.eliux.monumentaitemdictionary.util.CharmStat;
 import dev.eliux.monumentaitemdictionary.util.Filter;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
+import dev.eliux.monumentaitemdictionary.web.ItemApiResponse;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import org.apache.commons.io.FileUtils;
@@ -23,6 +25,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.jetbrains.annotations.Nullable;
 
 public class DictionaryController {
     private String itemNameFilter;
@@ -52,6 +55,8 @@ public class DictionaryController {
     private final ArrayList<DictionaryCharm> charms;
     private ArrayList<DictionaryCharm> validCharms;
 
+    private @Nullable CompletableFuture<ItemApiResponse> itemResponseFuture = null;
+
     public boolean itemLoadFailed = false;
     public boolean charmLoadFailed = false;
 
@@ -77,6 +82,23 @@ public class DictionaryController {
         itemFilterGui = new ItemFilterGui(Text.literal("Item Filter Menu"), this);
         charmGui = new CharmDictionaryGui(Text.literal("Monumenta Charm Dictionary"), this);
         charmFilterGui = new CharmFilterGui(Text.literal("Charm Filter Menu"), this);
+    }
+
+    public void tick() {
+        if (itemResponseFuture != null) {
+            try {
+                // Process remaining item API response code on main thread
+                ItemApiResponse response = itemResponseFuture.join();
+                itemResponseFuture = null;
+
+                loadItems();
+                itemGui.buildItemList();
+                loadCharms();
+                charmGui.buildCharmList();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void open() {
@@ -147,16 +169,19 @@ public class DictionaryController {
     }
 
     public void requestAndUpdate() {
-        try {
-            String data = WebManager.getRequest("https://api.playmonumenta.com/items");
-
-            writeItemData(data);
-            loadItems();
-            itemGui.buildItemList();
-            loadCharms();
-            charmGui.buildCharmList();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (itemResponseFuture == null) {
+            itemResponseFuture = new CompletableFuture<>();
+            // Process remaining item API response code on new thread to prevent lag spike
+            new Thread(() -> {
+                try {
+                    ItemApiResponse response = new ItemApiResponse();
+                    response.itemsData = WebManager.getRequest("https://api.playmonumenta.com/items");
+                    writeItemData(response.itemsData);
+                    itemResponseFuture.complete(response);
+                } catch (IOException e) {
+                    itemResponseFuture.completeExceptionally(e);
+                }
+            }).start();
         }
     }
 
