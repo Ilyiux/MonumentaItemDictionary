@@ -1,6 +1,6 @@
 package dev.eliux.monumentaitemdictionary.util;
 
-import java.util.Locale;
+import java.util.TreeMap;
 
 public class ItemFormatter {
     public static String[] modifiableSkills = {"alchemist_potion", "gruesome_alchemy", "iron_tincture", "empowering_odor", "energizing_elixir", "brutal_alchemy", "alchemical_artillery", "unstable_amalgam", "bezoar", "taboo", "scorched_earth", "esoteric_enhancements", "panacea", "transmutation_ring", "warding_remedy",
@@ -49,6 +49,41 @@ public class ItemFormatter {
         } else {
             return formatStat(name) + " " + (isSingleEnchant(name) ? "" : (int)value);
         }
+    }
+
+    public static String buildStatStringWithRoman(String name, double value) {
+        if (isStat(name)) {
+            return (value < 0 ? "" : (isBaseStat(name) ? " " : "+")) + value + (isPercentStat(name) ? "" : " ") + formatStat(name);
+        } else {
+            return formatStat(name) + " " + (isSingleEnchant(name) ? "" : toRoman((int)value));
+        }
+    }
+
+    public static String toRoman(int number) {
+        TreeMap<Integer, String> romanMap = new TreeMap<>();
+
+        romanMap.put(1000, "M");
+        romanMap.put(900, "CM");
+        romanMap.put(500, "D");
+        romanMap.put(400, "CD");
+        romanMap.put(100, "C");
+        romanMap.put(90, "XC");
+        romanMap.put(50, "L");
+        romanMap.put(40, "XL");
+        romanMap.put(10, "X");
+        romanMap.put(9, "IX");
+        romanMap.put(5, "V");
+        romanMap.put(4, "IV");
+        romanMap.put(1, "I");
+
+        Integer l = romanMap.floorKey(number);
+        if (l == null) {
+            return "" + number;
+        }
+        if (l == number) {
+            return "" + romanMap.get(l);
+        }
+        return romanMap.get(l) + toRoman(number - l);
     }
 
     public static int getMasterworkForRarity(String rarity) {
@@ -106,6 +141,36 @@ public class ItemFormatter {
             case "Isles": yield 2;
             case "Valley": yield 1;
             default: yield 0;
+        };
+    }
+
+    public static String formatUseLine(String inType) {
+        return switch (inType) {
+            case "Helmet": yield "When on Head:";
+            case "Chestplate": yield "When on Chest:";
+            case "Leggings": yield "When on Legs:";
+            case "Boots": yield "When on Feet:";
+            case "Wand":
+            case "Axe":
+            case "Pickaxe":
+            case "Mainhand Sword":
+            case "Mainhand Shield":
+            case "Bow":
+            case "Trident":
+            case "Snowball":
+            case "Shovel":
+            case "Mainhand":
+            case "Scythe":
+            case "Crossbow":
+                yield "When in Main Hand:";
+            case "Projectile":
+                yield "When Shot:";
+            case "Offhand":
+            case "Offhand Sword":
+            case "Offhand Shield":
+                yield "When in Offhand";
+            default:
+                yield "When Used:";
         };
     }
 

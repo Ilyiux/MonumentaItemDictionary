@@ -8,11 +8,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ItemIconButtonWidget extends ButtonWidget {
-    private ItemStack iconItem;
+    private final ItemStack iconItem;
     private final List<Text> tooltipText;
 
     public ItemIconButtonWidget(int x, int y, int width, int height, Text message, PressAction onPress, Text tooltipText, String itemEncoding, String displayInfo) {

@@ -17,11 +17,12 @@ public class DictionaryItem {
     public boolean isFish;
     public String baseItem; // will exist
     public String lore; // will exist
+    public ArrayList<String> nbt; // will exist
     public ArrayList<ArrayList<ItemStat>> stats; // will exist
 
     public boolean hasMasterwork;
 
-    public DictionaryItem(String name, String type, String region, boolean hasRegion, String tier, boolean hasTier, String location, boolean hasLocation, int fishTier, boolean isFish, String baseItem, String lore, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
+    public DictionaryItem(String name, String type, String region, boolean hasRegion, String tier, boolean hasTier, String location, boolean hasLocation, int fishTier, boolean isFish, String baseItem, String lore, ArrayList<String> nbt, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
         this.name = name;
         this.type = type;
         this.region = region;
@@ -34,20 +35,30 @@ public class DictionaryItem {
         this.isFish = isFish;
         this.baseItem = baseItem;
         this.lore = lore;
+        this.nbt = nbt;
         this.stats = stats;
         this.hasMasterwork = hasMasterwork;
     }
 
-    public void addMasterworkTier(ArrayList<ItemStat> newStats, int tier) {
+    public void addMasterworkTier(ArrayList<ItemStat> newStats, String newNbt, int tier) {
         stats.set(tier, newStats);
+        nbt.set(tier, newNbt);
     }
 
-    public ArrayList<ItemStat> getNonMasterwork() {
+    public ArrayList<ItemStat> getStatsNoMasterwork() {
         return stats.get(0);
     }
 
-    public ArrayList<ItemStat> getMasterworkTier(int tier) {
+    public ArrayList<ItemStat> getStatsFromMasterwork(int tier) {
         return stats.get(tier);
+    }
+
+    public String getNbtNoMasterwork() {
+        return nbt.get(0);
+    }
+
+    public String getNbtFromMasterwork(int tier) {
+        return nbt.get(tier);
     }
 
     public int getMinMasterwork() {

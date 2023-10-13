@@ -104,6 +104,7 @@ public class ItemColors {
     public static final int PELIAS_KEEP_COLOR = 0xC2B9A3;
     public static final int RUIN_COLOR = 0x316CA6;
     public static final int SANGUINE_HALLS_COLOR = 0xA90000;
+    public static final int MARINA_NOIR_COLOR = 0x324150;
     public static final int QUEST_REWARD_COLOR = 0xC6A0C6;
     public static final int TRANSMOGRIFIER_COLOR = 0x6E2CA6;
     public static final int ARCHITECTS_RING_COLOR = 0xCDCDCD;
@@ -130,6 +131,7 @@ public class ItemColors {
     public static final int HALLOWEEN_SKIN_COLOR = 0xFCA800;
     public static final int FISHING_COLOR = 0xA7CECD;
     public static final int CHALLENGER_COLOR = 0xFBD910;
+    public static final int TRUE_NORTH_COLOR = 0xFFD700;
 
     public static int getColorForTier(String itemTier) {
         return switch (itemTier) {
@@ -325,6 +327,8 @@ public class ItemColors {
                 yield RUIN_COLOR;
             case "Sanguine Halls":
                 yield SANGUINE_HALLS_COLOR;
+            case "Marina Noir":
+                yield MARINA_NOIR_COLOR;
             case "Quest Reward":
                 yield QUEST_REWARD_COLOR;
             case "Transmogrifier":
@@ -373,10 +377,12 @@ public class ItemColors {
                 yield HALLOWEEN_EVENT_COLOR;
             case "Halloween Skin":
                 yield HALLOWEEN_SKIN_COLOR;
-            case "Architect's Ring Fishing":
+            case "Fishing":
                 yield FISHING_COLOR;
             case "Challenger":
                 yield CHALLENGER_COLOR;
+            case "True North":
+                yield TRUE_NORTH_COLOR;
             default:
                 yield DEFAULT_COLOR;
         };

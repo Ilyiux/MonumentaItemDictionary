@@ -9,8 +9,8 @@ import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
@@ -125,19 +125,25 @@ public class ItemDictionaryGui extends Screen {
         drawVerticalLine(matrices, width - sideMenuWidth, labelMenuHeight, height, 0xFFFFFFFF);
 
         // draw item buttons
-        itemButtons.forEach(b -> {
-            if (b.getY() - scrollPixels + itemSize >= labelMenuHeight && b.getY() - scrollPixels <= height) {
-                b.renderButton(matrices, mouseX, mouseY, delta);
-            }
-        });
+        if (!controller.isRequesting) {
+            itemButtons.forEach(b -> {
+                if (b.getY() - scrollPixels + itemSize >= labelMenuHeight && b.getY() - scrollPixels <= height) {
+                    b.renderButton(matrices, mouseX, mouseY, delta);
+                }
+            });
 
-        if (itemButtons.size() == 0) {
-            drawCenteredTextWithShadow(matrices, textRenderer, "Found No Items", width / 2, labelMenuHeight + 10, 0xFF2222);
+            if (itemButtons.size() == 0) {
+                drawCenteredTextWithShadow(matrices, textRenderer, "Found No Items", width / 2, labelMenuHeight + 10, 0xFF2222);
 
-            if (controller.anyItems()) {
-                drawCenteredTextWithShadow(matrices, textRenderer, "It seems like there were no items to begin with...", width / 2, labelMenuHeight + 30, 0xFF2222);
-                drawCenteredTextWithShadow(matrices, textRenderer, "Try clicking the Reload All Data button in the top left", width / 2, labelMenuHeight + 45, 0xFF2222);
+                if (controller.anyItems()) {
+                    drawCenteredTextWithShadow(matrices, textRenderer, "It seems like there were no items to begin with...", width / 2, labelMenuHeight + 30, 0xFF2222);
+                    drawCenteredTextWithShadow(matrices, textRenderer, "Try clicking the Reload All Data button in the top left", width / 2, labelMenuHeight + 45, 0xFF2222);
+                }
             }
+        }
+
+        if (controller.isRequesting) {
+            drawCenteredTextWithShadow(matrices, textRenderer, "Requesting item data...", width / 2, labelMenuHeight + 10, 0xFF2222);
         }
 
         // draw the label at the top
@@ -186,8 +192,13 @@ public class ItemDictionaryGui extends Screen {
                     String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
                     Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
                 }
+
+                ClientPlayerEntity player = MinecraftClient.getInstance().player;
+                if (player != null && hasAltDown() && player.getAbilities().creativeMode) {
+                    //ItemGenerator.giveItemToClientPlayer(item.name + (item.hasMasterwork ? "-" + button.shownMasterworkTier : ""));
+                    controller.setGeneratorScreen().setItem(item);
+                }
             }, item, () -> generateItemLoreText(item), this);
-            // REMOVING LAMBDA RESULTED IN FUNCTION NOT BEING CALLED AGAIN, RESULTING IN NO UPDATES
 
             itemButtons.add(button);
         }
@@ -238,7 +249,7 @@ public class ItemDictionaryGui extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         super.mouseClicked(mouseX, mouseY, button);
 
-        itemButtons.forEach((b) -> b.mouseClicked(mouseX, mouseY, button));
+        itemButtons.forEach((b) -> b.mouseClicked(mouseX, mouseY + scrollPixels, button));
 
         searchBar.mouseClicked(mouseX, mouseY, button);
         reloadItemsButton.mouseClicked(mouseX, mouseY, button);
@@ -274,9 +285,9 @@ public class ItemDictionaryGui extends Screen {
 
         ArrayList<ItemStat> showStats;
         if (item.hasMasterwork) {
-            showStats = item.getMasterworkTier(masterworkTier);
+            showStats = item.getStatsFromMasterwork(masterworkTier);
         } else {
-            showStats = item.getNonMasterwork();
+            showStats = item.getStatsNoMasterwork();
         }
 
         if (showStats == null) {
@@ -359,7 +370,7 @@ public class ItemDictionaryGui extends Screen {
         if (showStats != null) {
             if (stats.size() > 0 || basestats.size() > 0) {
                 lines.add(Text.literal(""));
-                lines.add(Text.literal("When Used:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
+                lines.add(Text.literal(ItemFormatter.formatUseLine(item.type)).setStyle(Style.EMPTY.withColor(0xAAAAAA)));
             }
 
             lines.addAll(basestats);
@@ -368,6 +379,11 @@ public class ItemDictionaryGui extends Screen {
 
         lines.add(Text.literal(""));
 
+
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        if (player != null && player.getAbilities().creativeMode) {
+            lines.add(Text.literal("[ALT] + Click to generate this item").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+        }
         lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
         lines.add(Text.literal(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_COLOR)));

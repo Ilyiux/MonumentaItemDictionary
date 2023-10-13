@@ -4,12 +4,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class WebManager {
-    public static String getRequest(String targetUrl) throws IOException {
+    public static String getRequestSynchronous(String targetUrl) throws IOException {
         URL url = new URL(targetUrl);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
@@ -19,8 +25,32 @@ public class WebManager {
         }
 
         BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String responseBody = br.lines().collect(Collectors.joining());
 
-        return responseBody;
+        return br.lines().collect(Collectors.joining());
+    }
+
+    public static void manageRequestAsynchronous(String targetUrl, Consumer<String> onSuccess, Runnable onFailure) {
+        Thread thread = new Thread(() -> {
+            try {
+                HttpRequest request = HttpRequest.newBuilder().uri(URI.create(targetUrl)).timeout(Duration.ofMinutes(1)).GET().build();
+                CompletableFuture<HttpResponse<String>> response = HttpClient.newHttpClient().sendAsync(request, HttpResponse.BodyHandlers.ofString());
+                int iterations = 0;
+                while (!response.isDone() || iterations > 2000) { // timeout after 20 seconds
+                    if (response.isCompletedExceptionally() || response.isCancelled()) {
+                        // REQUEST FAILED
+                        onFailure.run();
+                    }
+                    Thread.sleep(10);
+                    iterations++;
+                }
+                if (response.isDone()) {
+                    // REQUEST SUCCEEDED
+                    onSuccess.accept(response.get().body());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
     }
 }
