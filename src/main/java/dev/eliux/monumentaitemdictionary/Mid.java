@@ -21,6 +21,9 @@ public class Mid implements ModInitializer {
 		openMenuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.monumentaitemdictionary.openitemdictionary", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_H, "category.monumentaitemdictionary"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			if (controller != null)
+				controller.tick();
+
 			if (openMenuKey.wasPressed()) {
 				if (client.player == null) return;
 

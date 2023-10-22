@@ -1,18 +1,17 @@
 package dev.eliux.monumentaitemdictionary.gui.item;
 
+import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 
 import java.util.ArrayList;
+import org.jetbrains.annotations.NotNull;
 
-public class DictionaryItem {
+public class DictionaryItem implements Comparable<DictionaryItem> {
     public String name; // will exist
     public String type; // will exist
     public String region;
-    public boolean hasRegion;
     public String tier;
-    public boolean hasTier;
     public String location;
-    public boolean hasLocation;
     public int fishTier;
     public boolean isFish;
     public String baseItem; // will exist
@@ -22,15 +21,12 @@ public class DictionaryItem {
 
     public boolean hasMasterwork;
 
-    public DictionaryItem(String name, String type, String region, boolean hasRegion, String tier, boolean hasTier, String location, boolean hasLocation, int fishTier, boolean isFish, String baseItem, String lore, ArrayList<String> nbt, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
+    public DictionaryItem(String name, String type, String region, String tier, String location, int fishTier, boolean isFish, String baseItem, String lore, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
         this.name = name;
         this.type = type;
         this.region = region;
-        this.hasRegion = hasRegion;
         this.tier = tier;
-        this.hasTier = hasTier;
         this.location = location;
-        this.hasLocation = hasLocation;
         this.fishTier = fishTier;
         this.isFish = isFish;
         this.baseItem = baseItem;
@@ -38,6 +34,18 @@ public class DictionaryItem {
         this.nbt = nbt;
         this.stats = stats;
         this.hasMasterwork = hasMasterwork;
+    }
+
+    public boolean hasRegion() {
+        return !region.isEmpty();
+    }
+
+    public boolean hasTier() {
+        return !tier.isEmpty();
+    }
+
+    public boolean hasLocation() {
+        return !location.isEmpty();
     }
 
     public void addMasterworkTier(ArrayList<ItemStat> newStats, String newNbt, int tier) {
@@ -102,5 +110,20 @@ public class DictionaryItem {
             }
         }
         return highest;
+    }
+
+    @Override
+    public int compareTo(@NotNull DictionaryItem o) {
+        int regionComparison = ItemFormatter.getNumberForRegion(o.region) - ItemFormatter.getNumberForRegion(this.region);
+        if (regionComparison != 0) {
+            return regionComparison;
+        }
+
+        int tierComparison = ItemFormatter.getNumberForTier(o.tier) - ItemFormatter.getNumberForTier(this.tier);
+        if (tierComparison != 0) {
+            return tierComparison;
+        }
+
+        return name.compareTo(o.name);
     }
 }

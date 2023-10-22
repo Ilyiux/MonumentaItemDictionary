@@ -12,7 +12,10 @@ import dev.eliux.monumentaitemdictionary.util.CharmStat;
 import dev.eliux.monumentaitemdictionary.util.Filter;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
+import dev.eliux.monumentaitemdictionary.web.ItemApiResponse;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -25,6 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.jetbrains.annotations.Nullable;
 
 public class DictionaryController {
     private String itemNameFilter;
@@ -53,6 +57,8 @@ public class DictionaryController {
     private ArrayList<DictionaryItem> validItems;
     private final ArrayList<DictionaryCharm> charms;
     private ArrayList<DictionaryCharm> validCharms;
+
+    private @Nullable CompletableFuture<ItemApiResponse> itemResponseFuture = null;
 
     public boolean itemLoadFailed = false;
     public boolean charmLoadFailed = false;
@@ -87,6 +93,23 @@ public class DictionaryController {
         charmFilterGui = new CharmFilterGui(Text.literal("Charm Filter Menu"), this);
 
         generatorGui = new GeneratorGui(Text.literal("Item Generator Options"), this);
+    }
+
+    public void tick() {
+        if (itemResponseFuture != null) {
+            try {
+                // Process remaining item API response code on main thread
+                ItemApiResponse response = itemResponseFuture.join();
+                itemResponseFuture = null;
+
+                loadItems();
+                itemGui.buildItemList();
+                loadCharms();
+                charmGui.buildCharmList();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void open() {
@@ -204,8 +227,8 @@ public class DictionaryController {
 
             items.clear();
             JsonObject data = new Gson().fromJson(rawData, JsonObject.class);
-            for (String key : data.keySet()) {
-                JsonObject itemData = data.getAsJsonObject(key);
+            for (JsonElement itemElement : data.asMap().values()) {
+                JsonObject itemData = (JsonObject) itemElement;
 
                 // Construct item information
                 if (itemData.get("type").getAsString().equals("Charm"))
@@ -216,13 +239,18 @@ public class DictionaryController {
 
                 if (!itemData.has("type")) continue; // if this element is not present, skip this item
                 String itemType = itemData.get("type").getAsString();
+                if (itemType.equals("Charm"))
+                    continue;
                 if (!allItemTypes.contains(itemType))
                     allItemTypes.add(itemType);
 
+                String itemName = itemData.get("name").getAsString();
+
                 String itemRegion = "";
                 boolean hasRegion = false;
-                if (itemData.has("region")) {
-                    itemRegion = itemData.get("region").getAsString();
+                JsonPrimitive regionPrimitive = itemData.getAsJsonPrimitive("region");
+                if (regionPrimitive != null) {
+                    itemRegion = regionPrimitive.getAsString();
                     hasRegion = true;
 
                     if (!allItemRegions.contains(itemRegion))
@@ -231,16 +259,17 @@ public class DictionaryController {
 
                 String itemTier = "";
                 boolean hasTier = false;
-                if (itemData.has("tier")) {
-                    List<String> plainSplit = Arrays.asList(itemData.get("tier").getAsString().replace("_", " ").split(" ")); // janky code to patch Event Currency appearing as Event_currency and other future similar events
-                    String formattedSplit = "";
+                JsonPrimitive tierPrimitive = itemData.getAsJsonPrimitive("tier");
+                if (tierPrimitive != null) {
+                    List<String> plainSplit = Arrays.asList(tierPrimitive.getAsString().replace("_", " ").split(" ")); // janky code to patch Event Currency appearing as Event_currency and other future similar events
+                    StringBuilder formattedSplit = new StringBuilder();
                     for (String s : plainSplit) {
                         if (s.length() > 0)
-                            formattedSplit = formattedSplit + s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
+                            formattedSplit.append(s.substring(0, 1).toUpperCase()).append(s.substring(1).toLowerCase());
                         if (plainSplit.indexOf(s) != plainSplit.size() - 1)
-                            formattedSplit += " ";
+                            formattedSplit.append(" ");
                     }
-                    itemTier = formattedSplit;
+                    itemTier = formattedSplit.toString();
                     hasTier = true;
 
                     if (!allItemTiers.contains(itemTier))
@@ -249,8 +278,9 @@ public class DictionaryController {
 
                 String itemLocation = "";
                 boolean hasLocation = false;
-                if (itemData.has("location")) {
-                    itemLocation = itemData.get("location").getAsString();
+                JsonPrimitive locationPrimitive = itemData.getAsJsonPrimitive("location");
+                if (locationPrimitive != null) {
+                    itemLocation = locationPrimitive.getAsString();
                     hasLocation = true;
 
                     if (!allItemLocations.contains(itemLocation))
@@ -259,8 +289,9 @@ public class DictionaryController {
 
                 int fishTier = -1;
                 boolean isFish = false;
-                if (itemData.has("fish_quality")) {
-                    fishTier = itemData.get("fish_quality").getAsInt();
+                JsonPrimitive fishQualityPrimitive = itemData.getAsJsonPrimitive("fish_quality");
+                if (fishQualityPrimitive != null) {
+                    fishTier = fishQualityPrimitive.getAsInt();
                     isFish = true;
                 }
 
@@ -270,16 +301,18 @@ public class DictionaryController {
                     allItemBaseItems.add(itemBaseItem);
 
                 String itemLore = "";
-                if (itemData.has("lore")) {
-                    itemLore = itemData.get("lore").getAsString();
+                JsonPrimitive lorePrimitive = itemData.getAsJsonPrimitive("lore");
+                if (lorePrimitive != null) {
+                    itemLore = lorePrimitive.getAsString();
                 }
 
                 ArrayList<ItemStat> itemStats = new ArrayList<>();
                 JsonObject statObject = itemData.get("stats").getAsJsonObject();
-                for (String statKey : statObject.keySet()) {
+                for (Map.Entry<String, JsonElement> statEntry : statObject.entrySet()) {
+                    String statKey = statEntry.getKey();
                     if (ItemFormatter.isHiddenStat(statKey)) continue;
 
-                    itemStats.add(new ItemStat(statKey, statObject.get(statKey).getAsDouble()));
+                    itemStats.add(new ItemStat(statKey, statEntry.getValue().getAsDouble()));
 
                     if (!allItemStats.contains(statKey))
                         allItemStats.add(statKey);
@@ -291,31 +324,26 @@ public class DictionaryController {
                 }
 
                 // Build the item
-                if (itemData.has("masterwork")) {
+                JsonPrimitive masterworkPrimitive = itemData.getAsJsonPrimitive("masterwork");
+                if (masterworkPrimitive != null) {
                     boolean hasItem = false;
                     for (DictionaryItem dictionaryItem : items) {
                         if (dictionaryItem.name.equals(itemName)) {
                             hasItem = true;
-                            dictionaryItem.addMasterworkTier(itemStats, itemNbt, itemData.get("masterwork").getAsInt());
+                            dictionaryItem.addMasterworkTier(itemStats, masterworkPrimitive.getAsInt());
                         }
                     }
                     if (!hasItem) {
-                        ArrayList<ArrayList<ItemStat>> totalStatsList = new ArrayList<>();
-                        ArrayList<String> totalNbtList = new ArrayList<>();
-                        for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier) + 1; i++) {
-                            totalStatsList.add(null);
-                            totalNbtList.add(null);
-                        }
-                        totalStatsList.set(itemData.get("masterwork").getAsInt(), itemStats);
-                        totalNbtList.set(itemData.get("masterwork").getAsInt(), itemNbt);
-                        items.add(new DictionaryItem(itemName, itemType, itemRegion, hasRegion, itemTier, hasTier, itemLocation, hasLocation, fishTier, isFish, itemBaseItem, itemLore, totalNbtList, totalStatsList, true));
+                        ArrayList<ArrayList<ItemStat>> totalList = new ArrayList<>();
+                        for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier) + 1; i ++)
+                            totalList.add(null);
+                        totalList.set(masterworkPrimitive.getAsInt(), itemStats);
+                        items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalList, true));
                     }
                 } else {
-                    ArrayList<ArrayList<ItemStat>> totalStatsList = new ArrayList<>();
-                    totalStatsList.add(itemStats);
-                    ArrayList<String> totalNbtList = new ArrayList<>();
-                    totalNbtList.add(itemNbt);
-                    items.add(new DictionaryItem(itemName, itemType, itemRegion, hasRegion, itemTier, hasTier, itemLocation, hasLocation, fishTier, isFish, itemBaseItem, itemLore, totalNbtList, totalStatsList, false));
+                    ArrayList<ArrayList<ItemStat>> totalList = new ArrayList<>();
+                    totalList.add(itemStats);
+                    items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalList, false));
                 }
             }
         } catch (Exception e) {
@@ -323,14 +351,7 @@ public class DictionaryController {
             itemLoadFailed = true;
         }
 
-        items.sort((o1, o2) -> {
-            if (!o1.region.equals(o2.region)) {
-                return -(ItemFormatter.getNumberForRegion(o1.region) - ItemFormatter.getNumberForRegion(o2.region));
-            } else if (!o1.tier.equals(o2.tier)) {
-                return -(ItemFormatter.getNumberForTier(o1.tier) - ItemFormatter.getNumberForTier(o2.tier));
-            }
-            return 0;
-        });
+        items.sort(DictionaryItem::compareTo);
     }
 
     public void loadCharms() {
@@ -347,8 +368,8 @@ public class DictionaryController {
 
             charms.clear();
             JsonObject data = new Gson().fromJson(rawData, JsonObject.class);
-            for (String key : data.keySet()) {
-                JsonObject charmData = data.getAsJsonObject(key);
+            for (JsonElement charmElement : data.asMap().values()) {
+                JsonObject charmData = (JsonObject) charmElement;
 
                 // Construct charm information
                 if (!charmData.get("type").getAsString().equals("Charm"))
@@ -393,12 +414,13 @@ public class DictionaryController {
 
                 ArrayList<CharmStat> charmStats = new ArrayList<>();
                 JsonObject statObject = charmData.get("stats").getAsJsonObject();
-                for (String statKey : statObject.keySet()) {
+                for (Map.Entry<String, JsonElement> statEntry : statObject.entrySet()) {
+                    String statKey = statEntry.getKey();
                     String skillMod = ItemFormatter.getSkillFromCharmStat(statKey);
                     if (!allCharmSkillMods.contains(skillMod))
                         allCharmSkillMods.add(skillMod);
 
-                    charmStats.add(new CharmStat(statKey, skillMod, statObject.get(statKey).getAsDouble()));
+                    charmStats.add(new CharmStat(statKey, skillMod, statEntry.getValue().getAsDouble()));
 
                     if (!allCharmStats.contains(statKey))
                         allCharmStats.add(statKey);
@@ -525,15 +547,15 @@ public class DictionaryController {
                 } else if (filter.getOption().equals("Tier")) {
                     if (!filter.value.equals("")) {
                         switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasTier || !i.tier.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasTier && i.tier.equals(filter.value));
+                            case 0 -> filteredItems.removeIf(i -> !i.hasTier() || !i.tier.equals(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.hasTier() && i.tier.equals(filter.value));
                         }
                     }
                 } else if (filter.getOption().equals("Region")) {
                     if (!filter.value.equals("")) {
                         switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasRegion || !i.region.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasRegion && i.region.equals(filter.value));
+                            case 0 -> filteredItems.removeIf(i -> !i.hasRegion() || !i.region.equals(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.hasRegion() && i.region.equals(filter.value));
                         }
                     }
                 } else if (filter.getOption().equals("Type")) {
@@ -546,8 +568,8 @@ public class DictionaryController {
                 } else if (filter.getOption().equals("Location")) {
                     if (!filter.value.equals("")) {
                         switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasLocation || !i.location.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasLocation && i.location.equals(filter.value));
+                            case 0 -> filteredItems.removeIf(i -> !i.hasLocation() || !i.location.equals(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.hasLocation() && i.location.equals(filter.value));
                         }
                     }
                 } else if (filter.getOption().equals("Base Item")) {
@@ -567,13 +589,13 @@ public class DictionaryController {
         filteredItems.sort((o1, o2) -> {
             for (Filter f : itemFilters) {
                 if (f.getOption().equals("Stat")) {
-                    if (o1.getStat(f.value) == o2.getStat(f.value))
+                    double val = o2.getStat(f.value) - o1.getStat(f.value);
+
+                    if (val == 0)
                         continue;
 
-                    double val = o1.getStat(f.value) - o2.getStat(f.value);
-
-                    if (val > 0) return -1;
-                    if (val < 0) return 1;
+                    if (val > 0) return 1;
+                    if (val < 0) return -1;
                 }
             }
             return 0;
@@ -652,13 +674,13 @@ public class DictionaryController {
         filteredCharms.sort((o1, o2) -> {
             for (Filter f : charmFilters) {
                 if (f.getOption().equals("Stat")) {
-                    if (o1.getStat(f.value) == o2.getStat(f.value))
+                    double val = o2.getStat(f.value) - o1.getStat(f.value);
+
+                    if (val == 0)
                         continue;
 
-                    double val = o1.getStat(f.value) - o2.getStat(f.value);
-
-                    if (val > 0) return -1;
-                    if (val < 0) return 1;
+                    if (val < 0) return -1;
+                    if (val > 0) return 1;
                 }
             }
             return 0;
