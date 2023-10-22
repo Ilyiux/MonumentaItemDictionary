@@ -6,10 +6,11 @@ import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
+import java.util.HashMap;
+import java.util.TreeMap;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.MutableText;
@@ -32,7 +33,8 @@ public class ItemDictionaryGui extends Screen {
 
     private final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
-    private ArrayList<ItemButtonWidget> itemButtons = new ArrayList<>();
+    private final TreeMap<Integer, ArrayList<ItemButtonWidget>> itemButtons = new TreeMap<>();
+    private final HashMap<DictionaryItem, ItemButtonWidget> widgetByItem = new HashMap<>();
 
     private TextFieldWidget searchBar;
     private ItemIconButtonWidget reloadItemsButton;
@@ -83,11 +85,15 @@ public class ItemDictionaryGui extends Screen {
         }, Text.literal("Reset Filters").setStyle(Style.EMPTY.withColor(0xFFFF0000)), "barrier", "");
 
         minMasterworkButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 120, 20, 20, Text.literal(""), (button) -> {
-            itemButtons.forEach(ItemButtonWidget::setMinimumMasterwork);
+            for (List<ItemButtonWidget> row : itemButtons.values()) {
+                row.forEach(ItemButtonWidget::setMinimumMasterwork);
+            }
         }, Text.literal("Show Minimum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), "netherite_scrap", "");
 
         maxMasterworkButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 90, 20, 20, Text.literal(""), (button) -> {
-            itemButtons.forEach(ItemButtonWidget::setMaximumMasterwork);
+            for (List<ItemButtonWidget> row : itemButtons.values()) {
+                row.forEach(ItemButtonWidget::setMaximumMasterwork);
+            }
         }, Arrays.asList(Text.literal("Show Maximum Masterwork").setStyle(Style.EMPTY.withColor(0xFFAA00AA)), Text.literal("(Only counts tiers with data)").setStyle(Style.EMPTY.withColor(0xFFAAAAAA))), "netherite_ingot", "");
 
         tipsMasterworkButton = new ItemIconButtonWidget(30, 5, 20, 20, Text.literal(""), (button) -> {
@@ -112,7 +118,7 @@ public class ItemDictionaryGui extends Screen {
         this.renderBackground(matrices);
 
         // draw the scroll bar
-        int totalRows = (int) Math.ceil((double)itemButtons.size() / (double)((width - sideMenuWidth - 5) / (itemSize + itemPadding)));
+        int totalRows = itemButtons.size();
         int totalPixelHeight = totalRows * itemSize + (totalRows + 1) * itemPadding;
         double bottomPercent = (double)scrollPixels / totalPixelHeight;
         double screenPercent = (double)(height - labelMenuHeight) / totalPixelHeight;
@@ -125,13 +131,14 @@ public class ItemDictionaryGui extends Screen {
         drawVerticalLine(matrices, width - sideMenuWidth, labelMenuHeight, height, 0xFFFFFFFF);
 
         // draw item buttons
-        itemButtons.forEach(b -> {
-            if (b.getY() - scrollPixels + itemSize >= labelMenuHeight && b.getY() - scrollPixels <= height) {
-                b.renderButton(matrices, mouseX, mouseY, delta);
-            }
-        });
+        for (List<ItemButtonWidget> row : itemButtons
+                .subMap(labelMenuHeight + scrollPixels - itemSize, true,
+                        height + scrollPixels, true)
+                .values()) {
+            row.forEach(b -> b.renderButton(matrices, mouseX, mouseY, delta));
+        }
 
-        if (itemButtons.size() == 0) {
+        if (itemButtons.isEmpty()) {
             drawCenteredTextWithShadow(matrices, textRenderer, "Found No Items", width / 2, labelMenuHeight + 10, 0xFF2222);
 
             if (controller.anyItems()) {
@@ -173,6 +180,7 @@ public class ItemDictionaryGui extends Screen {
         ArrayList<DictionaryItem> toBuildItems = controller.getItems();
 
         itemButtons.clear();
+        widgetByItem.clear();
         for (DictionaryItem item : toBuildItems) {
             int index = toBuildItems.indexOf(item);
             int row = index / ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
@@ -189,7 +197,9 @@ public class ItemDictionaryGui extends Screen {
             }, item, () -> generateItemLoreText(item), this);
             // REMOVING LAMBDA RESULTED IN FUNCTION NOT BEING CALLED AGAIN, RESULTING IN NO UPDATES
 
-            itemButtons.add(button);
+            itemButtons.computeIfAbsent(y, k -> new ArrayList<>())
+                    .add(button);
+            widgetByItem.put(item, button);
         }
     }
 
@@ -238,7 +248,12 @@ public class ItemDictionaryGui extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         super.mouseClicked(mouseX, mouseY, button);
 
-        itemButtons.forEach((b) -> b.mouseClicked(mouseX, mouseY, button));
+        for (List<ItemButtonWidget> row : itemButtons
+                .subMap((int) mouseY + scrollPixels - itemSize, true,
+                        (int) mouseY + scrollPixels, true)
+                .values()) {
+            row.forEach(b -> b.mouseClicked(mouseX, mouseY, button));
+        }
 
         searchBar.mouseClicked(mouseX, mouseY, button);
         reloadItemsButton.mouseClicked(mouseX, mouseY, button);
@@ -255,10 +270,9 @@ public class ItemDictionaryGui extends Screen {
     private List<Text> generateItemLoreText(DictionaryItem item) {
         // this is scuffed
         int masterworkTier = 0;
-        for (ItemButtonWidget itemButton : itemButtons) {
-            if (itemButton.isItem(item)) {
-                masterworkTier = itemButton.shownMasterworkTier;
-            }
+        ItemButtonWidget itemButton = widgetByItem.get(item);
+        if (itemButton != null) {
+            masterworkTier = itemButton.shownMasterworkTier;
         }
 
         List<Text> lines = new ArrayList<>();
@@ -307,10 +321,10 @@ public class ItemDictionaryGui extends Screen {
             lines.addAll(enchants);
         }
 
-        if (item.hasRegion || item.hasTier) {
-            MutableText regionText = Text.literal(item.hasRegion ? ItemFormatter.formatRegion(item.region) + (item.hasTier ? " : " : "") : "")
+        if (item.hasRegion() || item.hasTier()) {
+            MutableText regionText = Text.literal(item.hasRegion() ? ItemFormatter.formatRegion(item.region) + (item.hasTier() ? " : " : "") : "")
                     .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
-            MutableText tierText = Text.literal(item.hasTier ? item.tier : "").setStyle(Style.EMPTY
+            MutableText tierText = Text.literal(item.hasTier() ? item.tier : "").setStyle(Style.EMPTY
                     .withColor(ItemColors.getColorForTier(item.tier))
                     .withBold(ItemFormatter.shouldUnderline(item.tier)));
 
@@ -341,7 +355,7 @@ public class ItemDictionaryGui extends Screen {
             lines.add(baseText);
         }
 
-        if (item.hasLocation) {
+        if (item.hasLocation()) {
             lines.add(Text.literal(item.location).setStyle(Style.EMPTY
                     .withColor(ItemColors.getColorForLocation(item.location))));
         }
@@ -408,7 +422,12 @@ public class ItemDictionaryGui extends Screen {
         super.mouseScrolled(mouseX, mouseY, amount);
 
         if (Screen.hasControlDown()) {
-            itemButtons.forEach((b) -> b.scrolled(mouseX, mouseY, amount));
+            for (List<ItemButtonWidget> row : itemButtons
+                    .subMap(labelMenuHeight + scrollPixels - itemSize, true,
+                            height + scrollPixels, true)
+                    .values()) {
+                row.forEach(b -> b.scrolled(mouseX, mouseY, amount));
+            }
         } else {
             if (mouseX >= 0 && mouseX < width - sideMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
                 scrollPixels += -amount * 22; // scaled
@@ -421,7 +440,7 @@ public class ItemDictionaryGui extends Screen {
     }
 
     private void updateScrollLimits() {
-        int rows = (int) Math.ceil((double)itemButtons.size() / (double)((width - sideMenuWidth - 5) / (itemSize + itemPadding)));
+        int rows = itemButtons.size();
         int maxScroll = rows * itemSize + (rows + 1) * itemPadding - height + labelMenuHeight;
         if (scrollPixels > maxScroll) scrollPixels = maxScroll;
 
