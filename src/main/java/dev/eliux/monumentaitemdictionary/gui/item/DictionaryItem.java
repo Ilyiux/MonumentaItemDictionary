@@ -21,7 +21,7 @@ public class DictionaryItem implements Comparable<DictionaryItem> {
 
     public boolean hasMasterwork;
 
-    public DictionaryItem(String name, String type, String region, String tier, String location, int fishTier, boolean isFish, String baseItem, String lore, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
+    public DictionaryItem(String name, String type, String region, String tier, String location, int fishTier, boolean isFish, String baseItem, String lore, ArrayList<String> nbt, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
         this.name = name;
         this.type = type;
         this.region = region;

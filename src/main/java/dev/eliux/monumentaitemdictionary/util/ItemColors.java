@@ -209,7 +209,12 @@ public class ItemColors {
 
     public static int getColorForCharmStat(CharmStat charmStat) {
         boolean positive = charmStat.statValue >= 0;
-        boolean inverted = (charmStat.statNameFull.contains("cooldown") && !charmStat.statNameFull.contains("cooldown_reduction")) || charmStat.statNameFull.contains("self_damage") || charmStat.statNameFull.contains("requirement");
+        boolean inverted = (charmStat.statNameFull.contains("cooldown") && !charmStat.statNameFull.contains("cooldown_reduction"))
+                || charmStat.statNameFull.contains("self_damage")
+                || charmStat.statNameFull.contains("requirement")
+                || charmStat.statNameFull.contains("penalty")
+                || charmStat.statNameFull.contains("delay")
+                || charmStat.statNameFull.contains("price");
         return (positive ^ inverted) ? TEXT_POSITIVE_CHARM_COLOR : TEXT_NEGATIVE_CHARM_COLOR;
     }
 
