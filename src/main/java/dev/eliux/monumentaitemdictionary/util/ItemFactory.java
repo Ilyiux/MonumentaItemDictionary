@@ -53,9 +53,11 @@ public class ItemFactory {
         return fromEncodingWithNbt(encoding, compound);
     }
 
-    public static void giveItemToClientPlayer(ItemStack item) {
+    public static void giveItemToClientPlayer(ItemStack item, int count) {
         if (MinecraftClient.getInstance().player != null) {
-            MinecraftClient.getInstance().player.getInventory().insertStack(item.copy());
+            ItemStack finalItem = item.copy();
+            finalItem.setCount(count);
+            MinecraftClient.getInstance().player.getInventory().insertStack(finalItem);
         }
     }
 }

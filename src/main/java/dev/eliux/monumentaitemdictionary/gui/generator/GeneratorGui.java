@@ -62,7 +62,10 @@ public class GeneratorGui extends Screen {
             }
         }, Text.literal("Go Back"), "arrow", "");
 
-        giveButton = ButtonWidget.builder(Text.literal("Generate Item"), (button) -> ItemFactory.giveItemToClientPlayer(generatedItem)).dimensions(10, labelMenuHeight + 10, 90, 20).tooltip(Tooltip.of(Text.literal(""))).build();
+        giveButton = ButtonWidget.builder(Text.literal("Generate Item"), (button) -> {
+            boolean generateFullStack = hasShiftDown();
+            ItemFactory.giveItemToClientPlayer(generatedItem, generateFullStack ? generatedItem.getItem().getMaxCount() : 1);
+        }).dimensions(10, labelMenuHeight + 10, 90, 20).tooltip(Tooltip.of(Text.literal(""))).build();
 
         decreaseMasterworkButton = ButtonWidget.builder(Text.literal("<"), (button) -> {
             masterworkLevel--;

@@ -114,6 +114,8 @@ public class DictionaryController {
             setItemDictionaryScreen();
         } else if (lastOpenedScreen instanceof CharmDictionaryGui) {
             setCharmDictionaryScreen();
+        } else {
+            setItemDictionaryScreen();
         }
     }
 
