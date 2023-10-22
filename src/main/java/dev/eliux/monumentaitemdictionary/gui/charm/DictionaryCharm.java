@@ -12,9 +12,10 @@ public class DictionaryCharm {
     public int power; // will exist
     public String className; // will exist
     public String baseItem; // will exist
+    public String nbt; // will exist
     public ArrayList<CharmStat> stats; // will exist
 
-    public DictionaryCharm(String name, String region, String location, String tier, int power, String className, String baseItem, ArrayList<CharmStat> stats) {
+    public DictionaryCharm(String name, String region, String location, String tier, int power, String className, String baseItem, String nbt, ArrayList<CharmStat> stats) {
         this.name = name;
         this.region = region;
         this.location = location;
@@ -22,6 +23,7 @@ public class DictionaryCharm {
         this.power = power;
         this.className = className;
         this.baseItem = baseItem;
+        this.nbt = nbt;
         this.stats = stats;
     }
 

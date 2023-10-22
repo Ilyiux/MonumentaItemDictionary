@@ -10,7 +10,7 @@
   ],
 
   "license": "GPL-3",
-  "icon": "assets/modid/icon.png",
+  "icon": "assets/monumentaitemdictionary/icon.png",
 
   "environment": "*",
   "entrypoints": {

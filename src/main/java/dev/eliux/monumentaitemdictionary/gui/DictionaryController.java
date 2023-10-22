@@ -4,6 +4,7 @@ import com.google.gson.*;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmFilterGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
+import dev.eliux.monumentaitemdictionary.gui.generator.GeneratorGui;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
 import dev.eliux.monumentaitemdictionary.gui.item.ItemDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.item.ItemFilterGui;
@@ -11,11 +12,10 @@ import dev.eliux.monumentaitemdictionary.util.CharmStat;
 import dev.eliux.monumentaitemdictionary.util.Filter;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
-import dev.eliux.monumentaitemdictionary.web.ItemApiResponse;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import org.apache.commons.io.FileUtils;
 
@@ -26,7 +26,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.jetbrains.annotations.Nullable;
 
 public class DictionaryController {
     private String itemNameFilter;
@@ -56,10 +55,12 @@ public class DictionaryController {
     private final ArrayList<DictionaryCharm> charms;
     private ArrayList<DictionaryCharm> validCharms;
 
-    private @Nullable CompletableFuture<ItemApiResponse> itemResponseFuture = null;
+    // private @Nullable CompletableFuture<ItemApiResponse> itemResponseFuture = null;
 
     public boolean itemLoadFailed = false;
     public boolean charmLoadFailed = false;
+
+    public boolean isRequesting = false;
 
     public ItemDictionaryGui itemGui;
     public boolean itemGuiPreviouslyOpened = false;
@@ -69,6 +70,10 @@ public class DictionaryController {
     public boolean charmGuiPreviouslyOpened = false;
     public CharmFilterGui charmFilterGui;
     public boolean charmFilterGuiPreviouslyOpened = false;
+
+    public Screen lastOpenedScreen = null;
+
+    public GeneratorGui generatorGui;
 
     public DictionaryController() {
         items = new ArrayList<>();
@@ -83,10 +88,12 @@ public class DictionaryController {
         itemFilterGui = new ItemFilterGui(Text.literal("Item Filter Menu"), this);
         charmGui = new CharmDictionaryGui(Text.literal("Monumenta Charm Dictionary"), this);
         charmFilterGui = new CharmFilterGui(Text.literal("Charm Filter Menu"), this);
+
+        generatorGui = new GeneratorGui(Text.literal("Item Generator Options"), this);
     }
 
     public void tick() {
-        if (itemResponseFuture != null) {
+        /*if (itemResponseFuture != null) {
             try {
                 // Process remaining item API response code on main thread
                 ItemApiResponse response = itemResponseFuture.join();
@@ -99,14 +106,20 @@ public class DictionaryController {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+        }*/
     }
 
     public void open() {
-        setItemDictionaryScreen();
+        if (lastOpenedScreen == null || lastOpenedScreen instanceof ItemDictionaryGui) {
+            setItemDictionaryScreen();
+        } else if (lastOpenedScreen instanceof CharmDictionaryGui) {
+            setCharmDictionaryScreen();
+        }
     }
 
     public void setItemDictionaryScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
         MinecraftClient.getInstance().setScreen(itemGui);
         if (!itemGuiPreviouslyOpened) {
             itemGui.postInit();
@@ -117,6 +130,8 @@ public class DictionaryController {
     }
 
     public void setItemFilterScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
         MinecraftClient.getInstance().setScreen(itemFilterGui);
         if (!itemFilterGuiPreviouslyOpened) {
             itemFilterGui.postInit();
@@ -127,6 +142,8 @@ public class DictionaryController {
     }
 
     public void setCharmDictionaryScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
         MinecraftClient.getInstance().setScreen(charmGui);
         if (!charmGuiPreviouslyOpened) {
             charmGui.postInit();
@@ -137,6 +154,8 @@ public class DictionaryController {
     }
 
     public void setCharmFilterScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
         MinecraftClient.getInstance().setScreen(charmFilterGui);
         if (!charmFilterGuiPreviouslyOpened) {
             charmFilterGui.postInit();
@@ -144,6 +163,14 @@ public class DictionaryController {
         } else {
             //charmFilterGui.updateGuiPositions();
         }
+    }
+
+    public GeneratorGui setGeneratorScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
+        MinecraftClient.getInstance().setScreen(generatorGui);
+        generatorGui.postInit();
+        return generatorGui;
     }
 
     private String readItemData() {
@@ -170,20 +197,18 @@ public class DictionaryController {
     }
 
     public void requestAndUpdate() {
-        if (itemResponseFuture == null) {
-            itemResponseFuture = new CompletableFuture<>();
-            // Process remaining item API response code on new thread to prevent lag spike
-            new Thread(() -> {
-                try {
-                    ItemApiResponse response = new ItemApiResponse();
-                    response.itemsData = WebManager.getRequest("https://api.playmonumenta.com/items");
-                    writeItemData(response.itemsData);
-                    itemResponseFuture.complete(response);
-                } catch (IOException e) {
-                    itemResponseFuture.completeExceptionally(e);
-                }
-            }).start();
-        }
+        if (isRequesting) return;
+        isRequesting = true;
+        WebManager.manageRequestAsynchronous("https://api.playmonumenta.com/itemswithnbt", (data) -> {
+            writeItemData(data);
+            loadItems();
+            itemGui.buildItemList();
+            loadCharms();
+            charmGui.buildCharmList();
+            isRequesting = false;
+        }, () -> {
+            isRequesting = false;
+        });
     }
 
     public void loadItems() {
@@ -203,27 +228,29 @@ public class DictionaryController {
                 JsonObject itemData = (JsonObject) itemElement;
 
                 // Construct item information
+                if (itemData.get("type").getAsString().equals("Charm"))
+                    continue;
+
+                if (!itemData.has("name")) continue; // if this element is not present, skip this item
+                String itemName = itemData.get("name").getAsString();
+
+                if (!itemData.has("type")) continue; // if this element is not present, skip this item
                 String itemType = itemData.get("type").getAsString();
                 if (itemType.equals("Charm"))
                     continue;
                 if (!allItemTypes.contains(itemType))
                     allItemTypes.add(itemType);
 
-                String itemName = itemData.get("name").getAsString();
-
                 String itemRegion = "";
-                boolean hasRegion = false;
                 JsonPrimitive regionPrimitive = itemData.getAsJsonPrimitive("region");
                 if (regionPrimitive != null) {
                     itemRegion = regionPrimitive.getAsString();
-                    hasRegion = true;
 
                     if (!allItemRegions.contains(itemRegion))
                         allItemRegions.add(itemRegion);
                 }
 
                 String itemTier = "";
-                boolean hasTier = false;
                 JsonPrimitive tierPrimitive = itemData.getAsJsonPrimitive("tier");
                 if (tierPrimitive != null) {
                     List<String> plainSplit = Arrays.asList(tierPrimitive.getAsString().replace("_", " ").split(" ")); // janky code to patch Event Currency appearing as Event_currency and other future similar events
@@ -235,18 +262,15 @@ public class DictionaryController {
                             formattedSplit.append(" ");
                     }
                     itemTier = formattedSplit.toString();
-                    hasTier = true;
 
                     if (!allItemTiers.contains(itemTier))
                         allItemTiers.add(itemTier);
                 }
 
                 String itemLocation = "";
-                boolean hasLocation = false;
                 JsonPrimitive locationPrimitive = itemData.getAsJsonPrimitive("location");
                 if (locationPrimitive != null) {
                     itemLocation = locationPrimitive.getAsString();
-                    hasLocation = true;
 
                     if (!allItemLocations.contains(itemLocation))
                         allItemLocations.add(itemLocation);
@@ -258,10 +282,9 @@ public class DictionaryController {
                 if (fishQualityPrimitive != null) {
                     fishTier = fishQualityPrimitive.getAsInt();
                     isFish = true;
-
-
                 }
 
+                if (!itemData.has("base_item")) continue; // if this element is not present, skip this item
                 String itemBaseItem = itemData.get("base_item").getAsString();
                 if (!allItemBaseItems.contains(itemBaseItem))
                     allItemBaseItems.add(itemBaseItem);
@@ -284,6 +307,12 @@ public class DictionaryController {
                         allItemStats.add(statKey);
                 }
 
+                String itemNbt = "";
+                JsonPrimitive nbtPrimitive = itemData.getAsJsonPrimitive("nbt");
+                if (nbtPrimitive != null) {
+                    itemNbt = nbtPrimitive.getAsString();
+                }
+
                 // Build the item
                 JsonPrimitive masterworkPrimitive = itemData.getAsJsonPrimitive("masterwork");
                 if (masterworkPrimitive != null) {
@@ -291,20 +320,26 @@ public class DictionaryController {
                     for (DictionaryItem dictionaryItem : items) {
                         if (dictionaryItem.name.equals(itemName)) {
                             hasItem = true;
-                            dictionaryItem.addMasterworkTier(itemStats, masterworkPrimitive.getAsInt());
+                            dictionaryItem.addMasterworkTier(itemStats, itemNbt, masterworkPrimitive.getAsInt());
                         }
                     }
                     if (!hasItem) {
-                        ArrayList<ArrayList<ItemStat>> totalList = new ArrayList<>();
-                        for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier) + 1; i ++)
-                            totalList.add(null);
-                        totalList.set(masterworkPrimitive.getAsInt(), itemStats);
-                        items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalList, true));
+                        ArrayList<ArrayList<ItemStat>> totalStatsList = new ArrayList<>();
+                        ArrayList<String> totalNbtList = new ArrayList<>();
+                        for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier) + 1; i++) {
+                            totalStatsList.add(null);
+                            totalNbtList.add(null);
+                        }
+                        totalStatsList.set(masterworkPrimitive.getAsInt(), itemStats);
+                        totalNbtList.set(itemData.get("masterwork").getAsInt(), itemNbt);
+                        items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalNbtList, totalStatsList, true));
                     }
                 } else {
-                    ArrayList<ArrayList<ItemStat>> totalList = new ArrayList<>();
-                    totalList.add(itemStats);
-                    items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalList, false));
+                    ArrayList<ArrayList<ItemStat>> totalStatsList = new ArrayList<>();
+                    totalStatsList.add(itemStats);
+                    ArrayList<String> totalNbtList = new ArrayList<>();
+                    totalNbtList.add(itemNbt);
+                    items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalNbtList, totalStatsList, false));
                 }
             }
         } catch (Exception e) {
@@ -336,29 +371,42 @@ public class DictionaryController {
                 if (!charmData.get("type").getAsString().equals("Charm"))
                     continue;
 
+                if (!charmData.has("name")) continue; // if this element is not present, skip this item
                 String charmName = charmData.get("name").getAsString();
 
+                // only one region for charms, for now
                 String charmRegion = "Architect's Ring";
                 if (!allCharmRegions.contains(charmRegion))
                     allCharmRegions.add(charmRegion);
 
+                if (!charmData.has("location")) continue; // if this element is not present, skip this item
                 String charmLocation = charmData.get("location").getAsString();
                 if (!allCharmLocations.contains(charmLocation))
                     allCharmLocations.add(charmLocation);
 
+                if (!charmData.has("tier")) continue; // if this element is not present, skip this item
                 String charmTier = charmData.get("tier").getAsString().replace("_", " ");
                 if (!allCharmTiers.contains(charmTier))
                     allCharmTiers.add(charmTier);
 
+                if (!charmData.has("power")) continue; // if this element is not present, skip this item
                 int charmPower = charmData.get("power").getAsInt();
 
+
+                if (!charmData.has("class_name")) continue; // if this element is not present, skip this item
                 String charmClass = charmData.get("class_name").getAsString();
                 if (!allCharmClasses.contains(charmClass))
                     allCharmClasses.add(charmClass);
 
+                if (!charmData.has("base_item")) continue; // if this element is not present, skip this item
                 String charmBaseItem = charmData.get("base_item").getAsString();
                 if (!allCharmBaseItems.contains(charmBaseItem))
                     allCharmBaseItems.add(charmBaseItem);
+
+                String charmNbt = "";
+                if (charmData.has("nbt")) {
+                    charmNbt = charmData.get("nbt").getAsString();
+                }
 
                 ArrayList<CharmStat> charmStats = new ArrayList<>();
                 JsonObject statObject = charmData.get("stats").getAsJsonObject();
@@ -374,7 +422,7 @@ public class DictionaryController {
                         allCharmStats.add(statKey);
                 }
 
-                charms.add(new DictionaryCharm(charmName, charmRegion, charmLocation, charmTier, charmPower, charmClass, charmBaseItem, charmStats));
+                charms.add(new DictionaryCharm(charmName, charmRegion, charmLocation, charmTier, charmPower, charmClass, charmBaseItem, charmNbt, charmStats));
             }
         } catch (Exception e) {
             e.printStackTrace();

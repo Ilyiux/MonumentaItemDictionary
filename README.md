@@ -1,5 +1,4 @@
 # Monumenta Item Dictionary (MID)
-Developed by Eliux
 
 An entirely in-game item dictionary for Monumenta
 

@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Mid implements ModInitializer {
-	public static final Logger LOGGER = LoggerFactory.getLogger("modid");
+	public static final Logger LOGGER = LoggerFactory.getLogger("monumentaitemdictionary");
 	private static KeyBinding openMenuKey;
 
 	public DictionaryController controller = null;

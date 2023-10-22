@@ -1,8 +1,11 @@
 package dev.eliux.monumentaitemdictionary.util;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
@@ -35,5 +38,24 @@ public class ItemFactory {
         }
 
         return ERROR_ITEM;
+    }
+
+    public static ItemStack fromEncodingWithStringNbt(String encoding, String nbt) {
+        NbtCompound compound;
+        try {
+            compound = StringNbtReader.parse(nbt);
+        } catch (CommandSyntaxException e) {
+            e.printStackTrace();
+
+            return ERROR_ITEM;
+        }
+
+        return fromEncodingWithNbt(encoding, compound);
+    }
+
+    public static void giveItemToClientPlayer(ItemStack item) {
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.getInventory().insertStack(item.copy());
+        }
     }
 }
