@@ -97,7 +97,7 @@ public class ItemButtonWidget extends ButtonWidget {
         int outlineColor = hovered ? 0xFFC6C6C6 : 0xFFFFFFFF;
         int fillOpacity = hovered ? 0x6B000000 : 0x88000000;
 
-        fill(matrices, minX, minY, maxX, maxY, fillOpacity | ItemColors.getColorForTier(item.tier));
+        fill(matrices, minX, minY, maxX, maxY, fillOpacity | ItemColors.getColorForTier(item.hasMasterwork ? item.getTierFromMasterwork(item.getMinMasterwork()) : item.getTierNoMasterwork()));
         drawHorizontalLine(matrices, minX, maxX, minY, outlineColor);
         drawHorizontalLine(matrices, minX, maxX, maxY, outlineColor);
         drawVerticalLine(matrices, minX, minY, maxY, outlineColor);

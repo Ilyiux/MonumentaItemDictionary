@@ -1,6 +1,7 @@
 package dev.eliux.monumentaitemdictionary.gui;
 
 import com.google.gson.*;
+import dev.eliux.monumentaitemdictionary.Mid;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmFilterGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
@@ -199,6 +200,8 @@ public class DictionaryController {
     }
 
     public void requestAndUpdate() {
+        Mid.LOGGER.info("Started Data Request");
+
         if (isRequesting) return;
         isRequesting = true;
         WebManager.manageRequestAsynchronous("https://api.playmonumenta.com/itemswithnbt", (data) -> {
@@ -208,8 +211,12 @@ public class DictionaryController {
             loadCharms();
             charmGui.buildCharmList();
             isRequesting = false;
+
+            Mid.LOGGER.info("Finished Data Request - Success");
         }, () -> {
             isRequesting = false;
+
+            Mid.LOGGER.info("Finished Data Request - Failure");
         });
     }
 
@@ -318,30 +325,43 @@ public class DictionaryController {
                 // Build the item
                 JsonPrimitive masterworkPrimitive = itemData.getAsJsonPrimitive("masterwork");
                 if (masterworkPrimitive != null) {
+                    // if the item has masterwork
+                    // attempt to add a tier to the item
                     boolean hasItem = false;
                     for (DictionaryItem dictionaryItem : items) {
-                        if (dictionaryItem.name.equals(itemName)) {
+                        if (dictionaryItem.name.equals(itemName) && masterworkPrimitive.getAsInt() <= ItemFormatter.getMasterworkForRarity(itemTier)) {
+                            // if the item already exists
                             hasItem = true;
-                            dictionaryItem.addMasterworkTier(itemStats, itemNbt, masterworkPrimitive.getAsInt());
+                            dictionaryItem.addMasterworkTier(itemTier, itemStats, itemNbt, masterworkPrimitive.getAsInt());
                         }
                     }
                     if (!hasItem) {
+                        // if the item does not already exist
+                        ArrayList<String> totalTierList = new ArrayList<>();
                         ArrayList<ArrayList<ItemStat>> totalStatsList = new ArrayList<>();
                         ArrayList<String> totalNbtList = new ArrayList<>();
                         for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier) + 1; i++) {
+                            totalTierList.add(null);
                             totalStatsList.add(null);
                             totalNbtList.add(null);
                         }
-                        totalStatsList.set(masterworkPrimitive.getAsInt(), itemStats);
-                        totalNbtList.set(itemData.get("masterwork").getAsInt(), itemNbt);
-                        items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalNbtList, totalStatsList, true));
+                        int level = masterworkPrimitive.getAsInt();
+                        if (level <= ItemFormatter.getMasterworkForRarity(itemTier)) { // prevent adding a tier above the believed cap
+                            totalTierList.set(level, itemTier);
+                            totalStatsList.set(level, itemStats);
+                            totalNbtList.set(level, itemNbt);
+                            items.add(new DictionaryItem(itemName, itemType, itemRegion, totalTierList, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalNbtList, totalStatsList, true));
+                        }
                     }
                 } else {
+                    // if the item does not have masterwork
+                    ArrayList<String> totalTierList = new ArrayList<>();
+                    totalTierList.add(itemTier);
                     ArrayList<ArrayList<ItemStat>> totalStatsList = new ArrayList<>();
                     totalStatsList.add(itemStats);
                     ArrayList<String> totalNbtList = new ArrayList<>();
                     totalNbtList.add(itemNbt);
-                    items.add(new DictionaryItem(itemName, itemType, itemRegion, itemTier, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalNbtList, totalStatsList, false));
+                    items.add(new DictionaryItem(itemName, itemType, itemRegion, totalTierList, itemLocation, fishTier, isFish, itemBaseItem, itemLore, totalNbtList, totalStatsList, false));
                 }
             }
         } catch (Exception e) {
@@ -545,8 +565,8 @@ public class DictionaryController {
                 } else if (filter.getOption().equals("Tier")) {
                     if (!filter.value.equals("")) {
                         switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasTier() || !i.tier.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasTier() && i.tier.equals(filter.value));
+                            case 0 -> filteredItems.removeIf(i -> !i.hasTier() || !i.tier.contains(filter.value));
+                            case 1 -> filteredItems.removeIf(i -> i.hasTier() && i.tier.contains(filter.value));
                         }
                     }
                 } else if (filter.getOption().equals("Region")) {

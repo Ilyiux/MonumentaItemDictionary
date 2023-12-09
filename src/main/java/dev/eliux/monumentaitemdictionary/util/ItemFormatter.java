@@ -90,7 +90,8 @@ public class ItemFormatter {
     public static int getMasterworkForRarity(String rarity) {
         return switch (rarity) {
             case "Rare":
-                yield 3;
+            case "Artifact":
+                yield 4;
             case "Epic":
                 yield 6;
             default:

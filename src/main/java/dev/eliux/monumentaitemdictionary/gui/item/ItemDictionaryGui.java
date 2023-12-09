@@ -286,24 +286,20 @@ public class ItemDictionaryGui extends Screen {
         if (itemButton != null) {
             masterworkTier = itemButton.shownMasterworkTier;
         }
+        String itemTier = item.hasMasterwork ? item.getTierFromMasterwork(Math.max(masterworkTier, item.getMinMasterwork())) : item.getTierNoMasterwork();
 
         List<Text> lines = new ArrayList<>();
 
         lines.add(Text.literal(item.name).setStyle(Style.EMPTY
                 .withColor(0xFF000000 + ItemColors.getColorForLocation(item.location))
-                .withBold(!item.isFish ? ItemFormatter.shouldBold(item.tier) : ItemFormatter.shouldBoldFish(item.fishTier))
-                .withUnderline(!item.isFish ? ItemFormatter.shouldUnderline(item.tier) : ItemFormatter.shouldUnderlineFish(item.fishTier))));
+                .withBold(!item.isFish ? ItemFormatter.shouldBold(itemTier) : ItemFormatter.shouldBoldFish(item.fishTier))
+                .withUnderline(!item.isFish ? ItemFormatter.shouldUnderline(itemTier) : ItemFormatter.shouldUnderlineFish(item.fishTier))));
 
         ArrayList<Text> enchants = new ArrayList<>();
         ArrayList<Text> basestats = new ArrayList<>();
         ArrayList<Text> stats = new ArrayList<>();
 
-        ArrayList<ItemStat> showStats;
-        if (item.hasMasterwork) {
-            showStats = item.getStatsFromMasterwork(masterworkTier);
-        } else {
-            showStats = item.getStatsNoMasterwork();
-        }
+        ArrayList<ItemStat> showStats = item.hasMasterwork ? item.getStatsFromMasterwork(masterworkTier) : item.getStatsNoMasterwork();
 
         if (showStats == null) {
             if (masterworkTier > item.getMinMasterwork()) {
@@ -336,16 +332,16 @@ public class ItemDictionaryGui extends Screen {
         if (item.hasRegion() || item.hasTier()) {
             MutableText regionText = Text.literal(item.hasRegion() ? ItemFormatter.formatRegion(item.region) + (item.hasTier() ? " : " : "") : "")
                     .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
-            MutableText tierText = Text.literal(item.hasTier() ? item.tier : "").setStyle(Style.EMPTY
-                    .withColor(ItemColors.getColorForTier(item.tier))
-                    .withBold(ItemFormatter.shouldUnderline(item.tier)));
+            MutableText tierText = Text.literal(item.hasTier() ? itemTier : "").setStyle(Style.EMPTY
+                    .withColor(ItemColors.getColorForTier(itemTier))
+                    .withBold(ItemFormatter.shouldUnderline(itemTier)));
 
             lines.add(regionText.append(tierText));
         }
 
         if (item.hasMasterwork) {
             MutableText baseText = Text.literal("Masterwork : ").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
-            for (int i = 0; i < ItemFormatter.getMasterworkForRarity(item.tier); i ++) {
+            for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier); i ++) {
                 if (i < masterworkTier) {
                     baseText.append(Text.literal("★").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_MASTERWORK_COLOR)));
                 } else {

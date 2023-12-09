@@ -132,6 +132,7 @@ public class ItemColors {
     public static final int FISHING_COLOR = 0xA7CECD;
     public static final int CHALLENGER_COLOR = 0xFBD910;
     public static final int TRUE_NORTH_COLOR = 0xFFD700;
+    public static final int STARPOINT_COLOR = 0x342768;
 
     public static int getColorForTier(String itemTier) {
         return switch (itemTier) {
@@ -388,6 +389,8 @@ public class ItemColors {
                 yield CHALLENGER_COLOR;
             case "True North":
                 yield TRUE_NORTH_COLOR;
+            case "Starpoint":
+                yield STARPOINT_COLOR;
             default:
                 yield DEFAULT_COLOR;
         };

@@ -1,5 +1,6 @@
 package dev.eliux.monumentaitemdictionary.gui.item;
 
+import dev.eliux.monumentaitemdictionary.Mid;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 
@@ -10,7 +11,7 @@ public class DictionaryItem implements Comparable<DictionaryItem> {
     public String name; // will exist
     public String type; // will exist
     public String region;
-    public String tier;
+    public ArrayList<String> tier;
     public String location;
     public int fishTier;
     public boolean isFish;
@@ -21,7 +22,7 @@ public class DictionaryItem implements Comparable<DictionaryItem> {
 
     public boolean hasMasterwork;
 
-    public DictionaryItem(String name, String type, String region, String tier, String location, int fishTier, boolean isFish, String baseItem, String lore, ArrayList<String> nbt, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
+    public DictionaryItem(String name, String type, String region, ArrayList<String> tier, String location, int fishTier, boolean isFish, String baseItem, String lore, ArrayList<String> nbt, ArrayList<ArrayList<ItemStat>> stats, boolean hasMasterwork) {
         this.name = name;
         this.type = type;
         this.region = region;
@@ -48,25 +49,34 @@ public class DictionaryItem implements Comparable<DictionaryItem> {
         return !location.isEmpty();
     }
 
-    public void addMasterworkTier(ArrayList<ItemStat> newStats, String newNbt, int tier) {
-        stats.set(tier, newStats);
-        nbt.set(tier, newNbt);
+    public void addMasterworkTier(String newTier, ArrayList<ItemStat> newStats, String newNbt, int level) {
+        tier.set(level, newTier);
+        stats.set(level, newStats);
+        nbt.set(level, newNbt);
     }
 
     public ArrayList<ItemStat> getStatsNoMasterwork() {
         return stats.get(0);
     }
 
-    public ArrayList<ItemStat> getStatsFromMasterwork(int tier) {
-        return stats.get(tier);
+    public ArrayList<ItemStat> getStatsFromMasterwork(int level) {
+        return stats.get(level);
     }
 
     public String getNbtNoMasterwork() {
         return nbt.get(0);
     }
 
-    public String getNbtFromMasterwork(int tier) {
-        return nbt.get(tier);
+    public String getNbtFromMasterwork(int level) {
+        return nbt.get(level);
+    }
+
+    public String getTierNoMasterwork() {
+        return tier.get(0);
+    }
+
+    public String getTierFromMasterwork(int level) {
+        return tier.get(level);
     }
 
     public int getMinMasterwork() {
@@ -119,7 +129,7 @@ public class DictionaryItem implements Comparable<DictionaryItem> {
             return regionComparison;
         }
 
-        int tierComparison = ItemFormatter.getNumberForTier(o.tier) - ItemFormatter.getNumberForTier(this.tier);
+        int tierComparison = ItemFormatter.getNumberForTier(o.hasMasterwork ? o.getTierFromMasterwork(o.getMinMasterwork()) : o.getTierNoMasterwork()) - ItemFormatter.getNumberForTier(this.hasMasterwork ? this.getTierFromMasterwork(this.getMinMasterwork()) : this.getTierNoMasterwork());
         if (tierComparison != 0) {
             return tierComparison;
         }
