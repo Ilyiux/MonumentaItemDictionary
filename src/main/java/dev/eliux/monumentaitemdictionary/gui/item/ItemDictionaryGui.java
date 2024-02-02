@@ -39,6 +39,7 @@ public class ItemDictionaryGui extends Screen {
 
     private TextFieldWidget searchBar;
     private ItemIconButtonWidget reloadItemsButton;
+    private ItemIconButtonWidget builderGuiButton;
     private ItemIconButtonWidget showCharmsButton;
     private ItemIconButtonWidget filterButton;
     private ItemIconButtonWidget resetFilterButton;
@@ -70,6 +71,10 @@ public class ItemDictionaryGui extends Screen {
         reloadItemsButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> {
             controller.requestAndUpdate();
         }, Text.literal("Reload All Data"), "globe_banner_pattern", "");
+
+        builderGuiButton = new ItemIconButtonWidget(55, 5, 20, 20, Text.literal(""), (button) -> {
+            controller.setBuilderScreen();
+        }, Text.literal("Open Builder GUI"), "iron_chestplate", "");
 
         showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, Text.literal(""), (button) -> {
             controller.setCharmDictionaryScreen();
@@ -167,6 +172,7 @@ public class ItemDictionaryGui extends Screen {
         matrices.translate(0, 0, 110);
         searchBar.render(matrices, mouseX, mouseY, delta);
         reloadItemsButton.render(matrices, mouseX, mouseY, delta);
+        builderGuiButton.render(matrices, mouseX, mouseY, delta);
         showCharmsButton.render(matrices, mouseX, mouseY, delta);
         filterButton.render(matrices, mouseX, mouseY, delta);
         resetFilterButton.render(matrices, mouseX, mouseY, delta);
@@ -269,6 +275,7 @@ public class ItemDictionaryGui extends Screen {
 
         searchBar.mouseClicked(mouseX, mouseY, button);
         reloadItemsButton.mouseClicked(mouseX, mouseY, button);
+        builderGuiButton.mouseClicked(mouseX, mouseY, button);
         showCharmsButton.mouseClicked(mouseX, mouseY, button);
         filterButton.mouseClicked(mouseX, mouseY, button);
         resetFilterButton.mouseClicked(mouseX, mouseY, button);

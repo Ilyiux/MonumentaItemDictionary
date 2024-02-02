@@ -2,6 +2,7 @@ package dev.eliux.monumentaitemdictionary.gui;
 
 import com.google.gson.*;
 import dev.eliux.monumentaitemdictionary.Mid;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmFilterGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
@@ -71,6 +72,8 @@ public class DictionaryController {
     public boolean charmGuiPreviouslyOpened = false;
     public CharmFilterGui charmFilterGui;
     public boolean charmFilterGuiPreviouslyOpened = false;
+    public BuilderGui builderGui;
+    public boolean builderGuiPreviouslyOpened = false;
 
     public Screen lastOpenedScreen = null;
 
@@ -89,6 +92,7 @@ public class DictionaryController {
         itemFilterGui = new ItemFilterGui(Text.literal("Item Filter Menu"), this);
         charmGui = new CharmDictionaryGui(Text.literal("Monumenta Charm Dictionary"), this);
         charmFilterGui = new CharmFilterGui(Text.literal("Charm Filter Menu"), this);
+        builderGui = new BuilderGui(Text.literal("Builder Gui Menu"), this);
 
         generatorGui = new GeneratorGui(Text.literal("Item Generator Options"), this);
     }
@@ -174,6 +178,18 @@ public class DictionaryController {
         MinecraftClient.getInstance().setScreen(generatorGui);
         generatorGui.postInit();
         return generatorGui;
+    }
+
+    public void setBuilderScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
+        MinecraftClient.getInstance().setScreen(builderGui);
+        if (!builderGuiPreviouslyOpened) {
+            builderGui.postInit();
+            builderGuiPreviouslyOpened = true;
+        } else {
+            builderGui.updateGuiPositions();
+        }
     }
 
     private String readItemData() {
