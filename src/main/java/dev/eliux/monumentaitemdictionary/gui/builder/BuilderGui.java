@@ -17,7 +17,8 @@ import java.util.*;
 
 public class BuilderGui  extends Screen {
     private ItemIconButtonWidget addBuildFromClipboardButton;
-    private ItemIconButtonWidget backButton;
+    private ItemIconButtonWidget showItemsButton;
+    private ItemIconButtonWidget showCharmsButton;
     public final int sideMenuWidth = 40;
     public final int labelMenuHeight = 30;
     public final int itemPadding = 10;
@@ -45,6 +46,14 @@ public class BuilderGui  extends Screen {
                 e.printStackTrace();
             }
         }, Text.literal("Add Build From Clipboard"), "name_tag", "");
+
+        showItemsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, Text.literal(""), (button) -> {
+            controller.setItemDictionaryScreen();
+        }, Text.literal("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), "iron_chestplate", "");
+
+        showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 30, 20, 20, Text.literal(""), (button) -> {
+            controller.setCharmDictionaryScreen();
+        }, Text.literal("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)), "glowstone_dust", "");
     }
 
     private void getBuildFromUrl(String buildUrl) {
@@ -117,6 +126,8 @@ public class BuilderGui  extends Screen {
         drawHorizontalLine(matrices, 0, width, labelMenuHeight, 0xFFFFFFFF);
         drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFF2ca9d3);
         matrices.pop();
+        drawVerticalLine(matrices, width - sideMenuWidth - 1, labelMenuHeight, height, 0x77AAAAAA); // called twice to make the scroll bar render wider (janky, but I don't really care)
+        drawVerticalLine(matrices, width - sideMenuWidth - 2, labelMenuHeight, height, 0x77AAAAAA);
 
         buildsButtons.forEach((build, button) -> {
             button.renderButton(matrices, mouseX, mouseY, delta);
@@ -129,6 +140,8 @@ public class BuilderGui  extends Screen {
         matrices.push();
         matrices.translate(0, 0, 110);
         addBuildFromClipboardButton.render(matrices, mouseX, mouseY, delta);
+        showCharmsButton.render(matrices, mouseX, mouseY, delta);
+        showItemsButton.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
 
         try {
@@ -151,6 +164,8 @@ public class BuilderGui  extends Screen {
         });
 
         addBuildFromClipboardButton.mouseClicked(mouseX, mouseY, button);
+        showCharmsButton.mouseClicked(mouseX, mouseY, button);
+        showItemsButton.mouseClicked(mouseX, mouseY, button);
 
         return true;
     }

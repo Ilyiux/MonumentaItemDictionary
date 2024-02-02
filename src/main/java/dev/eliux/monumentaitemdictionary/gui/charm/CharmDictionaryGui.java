@@ -42,6 +42,7 @@ public class CharmDictionaryGui extends Screen {
     private ItemIconButtonWidget tipsMasterworkButton;
 
     public final DictionaryController controller;
+    private ItemIconButtonWidget builderGuiButton;
 
     public CharmDictionaryGui(Text title, DictionaryController controller) {
         super(title);
@@ -70,6 +71,10 @@ public class CharmDictionaryGui extends Screen {
             controller.setItemDictionaryScreen();
         }, Text.literal("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), "iron_chestplate", "");
 
+        builderGuiButton = new ItemIconButtonWidget(55, 5, 20, 20, Text.literal(""), (button) -> {
+            controller.setBuilderScreen();
+        }, Text.literal("Open Builder GUI"), "iron_chestplate", "");
+        
         filterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 30, 20, 20, Text.literal(""), (button) -> {
             controller.setCharmFilterScreen();
         }, Text.literal("Filter"), "chest", "");
@@ -151,6 +156,7 @@ public class CharmDictionaryGui extends Screen {
         filterButton.render(matrices, mouseX, mouseY, delta);
         resetFilterButton.render(matrices, mouseX, mouseY, delta);
         tipsMasterworkButton.render(matrices, mouseX, mouseY, delta);
+        builderGuiButton.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
 
         try {
@@ -243,6 +249,7 @@ public class CharmDictionaryGui extends Screen {
         filterButton.mouseClicked(mouseX, mouseY, button);
         resetFilterButton.mouseClicked(mouseX, mouseY, button);
         tipsMasterworkButton.mouseClicked(mouseX, mouseY, button);
+        builderGuiButton.mouseClicked(mouseX, mouseY, button);
 
         return true;
     }
