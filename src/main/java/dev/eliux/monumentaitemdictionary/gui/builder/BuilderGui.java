@@ -1,6 +1,7 @@
 package dev.eliux.monumentaitemdictionary.gui.builder;
 
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
+import dev.eliux.monumentaitemdictionary.gui.widgets.BuildButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -12,25 +13,27 @@ import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class BuilderGui  extends Screen {
     private ItemIconButtonWidget addBuildFromClipboardButton;
+    private ItemIconButtonWidget backButton;
+    public final int sideMenuWidth = 40;
     public final int labelMenuHeight = 30;
+    public final int itemPadding = 10;
+    public final int itemSize = 50;
     public final DictionaryController controller;
     public ArrayList<DictionaryBuild> buildsList;
+    public HashMap<DictionaryBuild, BuildButtonWidget> buildsButtons = new HashMap<>();
     public BuilderGui(Text title, DictionaryController controller) {
         super(title);
         this.controller = controller;
     }
 
     public void postInit() {
-        System.setProperty("java.awt.headless", "false");
         buildsList = new ArrayList<>();
 
-        addBuildFromClipboardButton = new ItemIconButtonWidget(5, 50, 20, 20, Text.literal(""), (button) -> {
+        addBuildFromClipboardButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> {
             try {
                 String buildUrl = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
                 if (verifyUrl(buildUrl)) {
@@ -46,8 +49,7 @@ public class BuilderGui  extends Screen {
 
     private void getBuildFromUrl(String buildUrl) {
         buildUrl = buildUrl.substring(buildUrl.indexOf("m="));
-
-        Map<String, String> buildItems = new HashMap<>(Map.of());
+        HashMap<String, String> buildItems = new HashMap<>();
 
         for (String item : buildUrl.split("&")) {
             String itemName = String.join(" ", item.substring(2).split("%20"));
@@ -63,13 +65,9 @@ public class BuilderGui  extends Screen {
                 default:
                     break;
             }
-
-            System.out.println(itemName);
-
         }
 
         String[] charms = buildUrl.substring(buildUrl.indexOf("charm=") + 6).split(",");
-
         DictionaryBuild build = new DictionaryBuild(
                 "Build",
                 buildItems.get("mainhand"),
@@ -80,20 +78,33 @@ public class BuilderGui  extends Screen {
                 buildItems.get("boots"),
                 charms
         );
-
-        for (String charm : charms) {
-            System.out.println(charm);
-        }
-
         addBuild(build);
     }
 
     private void addBuild(DictionaryBuild build) {
         buildsList.add(build);
+        buildBuildsList();
     }
 
     private boolean verifyUrl(String buildUrl) {
         return buildUrl.contains("ohthemisery.tk/builder");
+    }
+
+    public void buildBuildsList() {
+        for (DictionaryBuild build : buildsList) {
+            int index = buildsList.indexOf(build);
+            int row = index / ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
+            int col = index % ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
+
+            int x = (col + 1) * itemPadding + col * itemSize;
+            int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
+
+            BuildButtonWidget button = new BuildButtonWidget(x, y, itemSize, Text.literal(build.name), (b) -> {
+                System.out.println(build.chestplate);
+            }, build, this);
+
+            buildsButtons.put(build, button);
+        }
     }
 
     @Override
@@ -106,6 +117,14 @@ public class BuilderGui  extends Screen {
         drawHorizontalLine(matrices, 0, width, labelMenuHeight, 0xFFFFFFFF);
         drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFF2ca9d3);
         matrices.pop();
+
+        buildsButtons.forEach((build, button) -> {
+            button.renderButton(matrices, mouseX, mouseY, delta);
+        });
+
+        if (buildsButtons.isEmpty()) {
+            drawCenteredTextWithShadow(matrices, textRenderer, "Found No Builds", width / 2, labelMenuHeight + 10, 0xFF2222);
+        }
 
         matrices.push();
         matrices.translate(0, 0, 110);
@@ -126,6 +145,10 @@ public class BuilderGui  extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         super.mouseClicked(mouseX, mouseY, button);
+
+        buildsButtons.forEach((build, b) -> {
+            b.mouseClicked(mouseX, mouseY, button);
+        });
 
         addBuildFromClipboardButton.mouseClicked(mouseX, mouseY, button);
 
