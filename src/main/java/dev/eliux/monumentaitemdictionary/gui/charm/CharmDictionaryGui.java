@@ -72,7 +72,7 @@ public class CharmDictionaryGui extends Screen {
         }, Text.literal("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), "iron_chestplate", "");
 
         builderGuiButton = new ItemIconButtonWidget(55, 5, 20, 20, Text.literal(""), (button) -> {
-            controller.setBuilderScreen();
+            controller.setBuildDictionaryScreen();
         }, Text.literal("Open Builder GUI"), "iron_chestplate", "");
         
         filterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 30, 20, 20, Text.literal(""), (button) -> {

@@ -1,8 +1,7 @@
 package dev.eliux.monumentaitemdictionary.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.eliux.monumentaitemdictionary.gui.builder.BuildDictionaryGui;
-import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import net.minecraft.client.MinecraftClient;
@@ -16,23 +15,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class BuildButtonWidget extends ButtonWidget {
-    private final DictionaryBuild build;
-    private final BuildDictionaryGui gui;
-    private final DictionaryItem displayingItem;
+public class BuildItemButtonWidget extends ButtonWidget {
+    private final Supplier<List<Text>> lore;
+    private final int itemSize;
+    private final DictionaryItem item;
+    private final BuilderGui gui;
     private final ItemStack builtItem;
-    public BuildButtonWidget(int x, int y, int itemSize, Text message, PressAction onPress, DictionaryBuild build, BuildDictionaryGui gui, Supplier<List<Text>> tooltipTextSupplier) {
+    public BuildItemButtonWidget(int x, int y, int itemSize, Text message, PressAction onPress, DictionaryItem item, Supplier<List<Text>> lore, BuilderGui gui) {
         super(x, y, itemSize, itemSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
-        this.build = build;
+        this.lore = lore;
+        this.itemSize = itemSize;
+        this.item = item;
         this.gui = gui;
 
-        displayingItem = build.allItems.get(0);
-
-        builtItem = ItemFactory.fromEncoding(displayingItem.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_"));
+        builtItem = ItemFactory.fromEncoding(item != null ? (item.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_")) : "barrier");
         NbtCompound baseNbt = builtItem.getOrCreateNbt();
         NbtCompound plain = new NbtCompound();
         NbtCompound display = new NbtCompound();
-        display.putString("Name", displayingItem.name.split("\\(")[0].trim());
+        display.putString("Name", item != null ? (item.name.split("\\(")[0].trim()) : "No Item");
         plain.put("display", display);
         baseNbt.put("plain", plain);
         builtItem.setNbt(baseNbt);
@@ -45,13 +45,12 @@ public class BuildButtonWidget extends ButtonWidget {
 
     @Override
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        RenderSystem.enableDepthTest();
+
         int minX = getX();
         int minY = getY();
         int maxX = minX + width;
         int maxY = minY + height;
-
-        // rendering breaks if I do not use this, what is this, why do I have to use this, I don't know
-        RenderSystem.enableDepthTest();
 
         boolean hovered = (mouseX >= minX) && (mouseX <= maxX) && (mouseY >= minY) && (mouseY <= maxY) && (mouseY > gui.labelMenuHeight);
 
@@ -68,8 +67,8 @@ public class BuildButtonWidget extends ButtonWidget {
 
         if (hovered) {
             List<Text> lines = new ArrayList<>();
-            lines.add(Text.literal("Amazing"));
-            gui.renderTooltip(matrices, lines, mouseX, mouseY);
+            lines.add(Text.literal("Click to add an item."));
+            gui.renderTooltip(matrices, (item != null ? lore.get() : lines), mouseX, mouseY);
         }
     }
 }

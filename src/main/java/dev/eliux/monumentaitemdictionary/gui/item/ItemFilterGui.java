@@ -37,10 +37,12 @@ public class ItemFilterGui extends Screen {
     private int removeIndex = -1;
 
     public final DictionaryController controller;
+    public final ItemDictionaryGui itemGui;
 
     public ItemFilterGui(Text title, DictionaryController controller) {
         super(title);
         this.controller = controller;
+        this.itemGui = controller.itemGui;
 
         filterListOption = new ArrayList<>();
         filterListValue = new ArrayList<>();
@@ -95,8 +97,7 @@ public class ItemFilterGui extends Screen {
             });
             DropdownWidget options = new DropdownWidget(textRenderer, 30, labelMenuHeight + 7 + index * 25, 90, Text.literal(""), "Select Sort Type", Arrays.asList("Tier", "Region", "Location", "Type", "Stat", "Base Item"), (v) -> {
                 filter.setOption(v);
-
-                switch (v) {
+                    switch (v) {
                     case "Tier" -> {
                         value.setChoices(controller.getAllItemTiers());
                         value.setDefaultText("Select Tier");
@@ -112,11 +113,6 @@ public class ItemFilterGui extends Screen {
                         value.setDefaultText("Select Location");
                         comparator.setMessage(Text.literal("Matches"));
                     }
-                    case "Type" -> {
-                        value.setChoices(controller.getAllItemTypes());
-                        value.setDefaultText("Select Type");
-                        comparator.setMessage(Text.literal("Matches"));
-                    }
                     case "Stat" -> {
                         ArrayList<String> vc = new ArrayList<>();
                         for (String s : controller.getAllItemStats()) vc.add(ItemFormatter.formatStat(s));
@@ -127,6 +123,11 @@ public class ItemFilterGui extends Screen {
                     case "Base Item" -> {
                         value.setChoices(controller.getAllItemBaseItems());
                         value.setDefaultText("Select Base Item");
+                        comparator.setMessage(Text.literal("Matches"));
+                    }
+                    case "Type" -> {
+                        value.setChoices(controller.getAllItemTypes());
+                        value.setDefaultText("Select Type");
                         comparator.setMessage(Text.literal("Matches"));
                     }
                 }

@@ -1,6 +1,7 @@
 package dev.eliux.monumentaitemdictionary.gui.item;
 
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
@@ -28,6 +29,7 @@ public class ItemDictionaryGui extends Screen {
     public final int labelMenuHeight = 30;
     public final int itemPadding = 7;
     public final int itemSize = 25;
+    public String itemTypeLookingFor;
     private int scrollPixels = 0;
 
     private long lastAltPressed = 0;
@@ -46,6 +48,7 @@ public class ItemDictionaryGui extends Screen {
     private ItemIconButtonWidget minMasterworkButton;
     private ItemIconButtonWidget maxMasterworkButton;
     private ItemIconButtonWidget tipsMasterworkButton;
+    public boolean isGettingBuildItem = false;
 
     public final DictionaryController controller;
 
@@ -73,7 +76,7 @@ public class ItemDictionaryGui extends Screen {
         }, Text.literal("Reload All Data"), "globe_banner_pattern", "");
 
         builderGuiButton = new ItemIconButtonWidget(55, 5, 20, 20, Text.literal(""), (button) -> {
-            controller.setBuilderScreen();
+            controller.setBuildDictionaryScreen();
         }, Text.literal("Open Builder GUI"), "iron_chestplate", "");
 
         showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, Text.literal(""), (button) -> {
@@ -172,13 +175,17 @@ public class ItemDictionaryGui extends Screen {
         matrices.translate(0, 0, 110);
         searchBar.render(matrices, mouseX, mouseY, delta);
         reloadItemsButton.render(matrices, mouseX, mouseY, delta);
-        builderGuiButton.render(matrices, mouseX, mouseY, delta);
-        showCharmsButton.render(matrices, mouseX, mouseY, delta);
         filterButton.render(matrices, mouseX, mouseY, delta);
         resetFilterButton.render(matrices, mouseX, mouseY, delta);
         minMasterworkButton.render(matrices, mouseX, mouseY, delta);
         maxMasterworkButton.render(matrices, mouseX, mouseY, delta);
         tipsMasterworkButton.render(matrices, mouseX, mouseY, delta);
+
+        if (!isGettingBuildItem) {
+            builderGuiButton.render(matrices, mouseX, mouseY, delta);
+            showCharmsButton.render(matrices, mouseX, mouseY, delta);
+        }
+
         matrices.pop();
 
         try {
@@ -206,6 +213,8 @@ public class ItemDictionaryGui extends Screen {
                 if (hasShiftDown() && hasControlDown()) {
                     String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
                     Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+                } else if (isGettingBuildItem) {
+                    returnItem(item);
                 }
 
                 ClientPlayerEntity player = MinecraftClient.getInstance().player;
@@ -219,6 +228,26 @@ public class ItemDictionaryGui extends Screen {
                     .add(button);
             widgetByItem.put(item, button);
         }
+    }
+
+    private void returnItem(DictionaryItem item) {
+        BuilderGui builderGui = controller.builderGui;
+
+        int index = 0;
+        for (String itemType : builderGui.itemTypesIndex) {
+            if (item.type.contains(itemType)) {
+                index = builderGui.itemTypesIndex.indexOf(itemType);
+                break;
+            }
+        }
+
+        builderGui.buildItems.set(index, item);
+
+        controller.setBuilderScreen();
+        controller.builderGui.updateButtons();
+        controller.itemFilterGui.clearFilters();
+
+        isGettingBuildItem = false;
     }
 
     @Override
@@ -275,18 +304,21 @@ public class ItemDictionaryGui extends Screen {
 
         searchBar.mouseClicked(mouseX, mouseY, button);
         reloadItemsButton.mouseClicked(mouseX, mouseY, button);
-        builderGuiButton.mouseClicked(mouseX, mouseY, button);
-        showCharmsButton.mouseClicked(mouseX, mouseY, button);
         filterButton.mouseClicked(mouseX, mouseY, button);
         resetFilterButton.mouseClicked(mouseX, mouseY, button);
         minMasterworkButton.mouseClicked(mouseX, mouseY, button);
         maxMasterworkButton.mouseClicked(mouseX, mouseY, button);
         tipsMasterworkButton.mouseClicked(mouseX, mouseY, button);
 
+        if (!isGettingBuildItem) {
+            builderGuiButton.mouseClicked(mouseX, mouseY, button);
+            showCharmsButton.mouseClicked(mouseX, mouseY, button);
+        }
+
         return true;
     }
 
-    private List<Text> generateItemLoreText(DictionaryItem item) {
+    public List<Text> generateItemLoreText(DictionaryItem item) {
         // this is scuffed
         int masterworkTier = 0;
         ItemButtonWidget itemButton = widgetByItem.get(item);

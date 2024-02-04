@@ -2,7 +2,9 @@ package dev.eliux.monumentaitemdictionary.gui;
 
 import com.google.gson.*;
 import dev.eliux.monumentaitemdictionary.Mid;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuildDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
+import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmFilterGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
@@ -72,6 +74,8 @@ public class DictionaryController {
     public boolean charmGuiPreviouslyOpened = false;
     public CharmFilterGui charmFilterGui;
     public boolean charmFilterGuiPreviouslyOpened = false;
+    public BuildDictionaryGui buildDictionaryGui;
+    public boolean buildDictionaryGuiPreviouslyOpened = false;
     public BuilderGui builderGui;
     public boolean builderGuiPreviouslyOpened = false;
 
@@ -92,7 +96,8 @@ public class DictionaryController {
         itemFilterGui = new ItemFilterGui(Text.literal("Item Filter Menu"), this);
         charmGui = new CharmDictionaryGui(Text.literal("Monumenta Charm Dictionary"), this);
         charmFilterGui = new CharmFilterGui(Text.literal("Charm Filter Menu"), this);
-        builderGui = new BuilderGui(Text.literal("Builder Gui Menu"), this);
+        buildDictionaryGui = new BuildDictionaryGui(Text.literal("Build Dictionary Menu"), this);
+        builderGui = new BuilderGui(Text.literal("Builder Menu"), this);
 
         generatorGui = new GeneratorGui(Text.literal("Item Generator Options"), this);
     }
@@ -116,10 +121,13 @@ public class DictionaryController {
 
     public void open() {
         if (lastOpenedScreen == null || lastOpenedScreen instanceof ItemDictionaryGui) {
+            itemGui.isGettingBuildItem = false;
             setItemDictionaryScreen();
         } else if (lastOpenedScreen instanceof CharmDictionaryGui) {
+            itemGui.isGettingBuildItem = false;
             setCharmDictionaryScreen();
         } else {
+            itemGui.isGettingBuildItem = false;
             setItemDictionaryScreen();
         }
     }
@@ -178,6 +186,18 @@ public class DictionaryController {
         MinecraftClient.getInstance().setScreen(generatorGui);
         generatorGui.postInit();
         return generatorGui;
+    }
+
+    public void setBuildDictionaryScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
+        MinecraftClient.getInstance().setScreen(buildDictionaryGui);
+        if (!buildDictionaryGuiPreviouslyOpened) {
+            buildDictionaryGui.postInit();
+            buildDictionaryGuiPreviouslyOpened = true;
+        } else {
+            buildDictionaryGui.updateGuiPositions();
+        }
     }
 
     public void setBuilderScreen() {
@@ -566,51 +586,65 @@ public class DictionaryController {
 
         for (Filter filter : itemFilters) {
             if (filter != null) {
-                if (filter.getOption().equals("Stat")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasStat(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasStat(filter.value));
-                            case 2 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
-                            case 3 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
-                            case 4 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
-                            case 5 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
-                            case 6 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                switch (filter.getOption()) {
+                    case "Stat" -> {
+                        if (!filter.value.equals("")) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.hasStat(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.hasStat(filter.value));
+                                case 2 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
+                                case 3 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
+                                case 4 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
+                                case 5 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
+                                case 6 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Tier")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasTier() || !i.tier.contains(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasTier() && i.tier.contains(filter.value));
+                    case "Tier" -> {
+                        if (!filter.value.equals("")) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.hasTier() || !i.tier.contains(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.hasTier() && i.tier.contains(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Region")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasRegion() || !i.region.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasRegion() && i.region.equals(filter.value));
+                    case "Region" -> {
+                        if (!filter.value.equals("")) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.hasRegion() || !i.region.equals(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.hasRegion() && i.region.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Type")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.type.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.type.equals(filter.value));
+                    case "Type" -> {
+                        if (!filter.value.equals("")) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.type.equals(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.type.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Location")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasLocation() || !i.location.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasLocation() && i.location.equals(filter.value));
+                    case "Location" -> {
+                        if (!filter.value.equals("")) {
+                            switch (filter.comparator) {
+                                case 0 ->
+                                        filteredItems.removeIf(i -> !i.hasLocation() || !i.location.equals(filter.value));
+                                case 1 ->
+                                        filteredItems.removeIf(i -> i.hasLocation() && i.location.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Base Item")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.baseItem.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.baseItem.equals(filter.value));
+                    case "Base Item" -> {
+                        if (!filter.value.equals("")) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.baseItem.equals(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.baseItem.equals(filter.value));
+                            }
                         }
                     }
                 }
@@ -619,6 +653,17 @@ public class DictionaryController {
 
         if (hasItemNameFilter)
             filteredItems.removeIf(i -> !i.name.toLowerCase().contains(itemNameFilter.toLowerCase()));
+
+
+        if (itemGui.isGettingBuildItem) {
+            if (itemGui.itemTypeLookingFor.equals("Mainhand")) {
+                filteredItems.removeIf(i -> !i.type.equals("Mainhand") && !i.type.equals("Mainhand Sword") && !i.type.equals("Mainhand Shield"));
+            } else if (itemGui.itemTypeLookingFor.equals("Offhand")) {
+                filteredItems.removeIf(i -> !i.type.equals("Offhand") && !i.type.equals("Offhand Sword") && !i.type.equals("Offhand Shield"));
+            } else {
+                filteredItems.removeIf(i -> !i.type.equals(itemGui.itemTypeLookingFor));
+            }
+        }
 
         filteredItems.sort((o1, o2) -> {
             for (Filter f : itemFilters) {
@@ -737,5 +782,33 @@ public class DictionaryController {
 
     public boolean anyCharms() {
         return charms.size() == 0;
+    }
+
+    public DictionaryItem getItemByName(String itemName) {
+        for (DictionaryItem item : items) {
+            if (item.name.equals(itemName)) {
+                return item;
+            }
+        }
+        return null;
+    }
+    public DictionaryCharm getCharmByName(String charmName) {
+        for (DictionaryCharm charm : charms) {
+            if (charm.name.equals(charmName)) {
+                return charm;
+            }
+        }
+        return null;
+    }
+
+    public void addBuild(DictionaryBuild build) {
+        buildDictionaryGui.buildsList.add(build);
+        buildDictionaryGui.buildBuildsList();
+    }
+
+    public void getItemFromDictionary(String itemType) {
+        itemGui.isGettingBuildItem = true;
+        itemGui.itemTypeLookingFor = itemType;
+        setItemDictionaryScreen();
     }
 }
