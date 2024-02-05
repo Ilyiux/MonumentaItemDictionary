@@ -329,7 +329,7 @@ public class ItemDictionaryGui extends Screen {
         // this is scuffed
         int masterworkTier = item.getMaxMasterwork() - 1;
         ItemButtonWidget itemButton = widgetByItem.get(item);
-        if (itemButton != null) {
+        if (itemButton != null && !(MinecraftClient.getInstance().currentScreen instanceof BuilderGui)) {
             masterworkTier = itemButton.shownMasterworkTier;
         }
         String itemTier = item.hasMasterwork ? item.getTierFromMasterwork(Math.max(masterworkTier, item.getMinMasterwork())) : item.getTierNoMasterwork();
@@ -443,7 +443,7 @@ public class ItemDictionaryGui extends Screen {
         }
 
         Screen currentScreen = MinecraftClient.getInstance().currentScreen;
-        if (currentScreen instanceof ItemDictionaryGui || currentScreen instanceof CharmDictionaryGui) {
+        if (currentScreen instanceof ItemDictionaryGui || currentScreen instanceof CharmDictionaryGui || currentScreen instanceof BuilderGui) {
             lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
             lines.add(Text.literal(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
                     .withColor(ItemColors.TEXT_COLOR)));

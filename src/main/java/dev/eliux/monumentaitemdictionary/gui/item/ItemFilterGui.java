@@ -126,7 +126,17 @@ public class ItemFilterGui extends Screen {
                         comparator.setMessage(Text.literal("Matches"));
                     }
                     case "Type" -> {
-                        value.setChoices(controller.getAllItemTypes());
+                        ArrayList<String> allTypes = controller.getAllItemTypes();
+                        ArrayList<String> mainhandTypes = new ArrayList<String>(Arrays.asList("Mainhand",
+                                "Mainhand Sword", "Mainhand Shield", "Wand", "Axe", "Pickaxe", "Trident",
+                                "Snowball", "Shovel", "Scythe", "Bow", "Crossbow"));
+                        ArrayList<String> offhandTypes = new ArrayList<String>(Arrays.asList("Offhand",
+                                "Offhand Sword", "Offhand Shield"));
+                        ArrayList<String> oneType = new ArrayList<String>(Arrays.asList(itemGui.itemTypeLookingFor));
+                        if (itemGui.isGettingBuildItem && itemGui.itemTypeLookingFor.equals("Mainhand")) value.setChoices(mainhandTypes);
+                        else if (itemGui.isGettingBuildItem && itemGui.itemTypeLookingFor.equals("Offhand")) value.setChoices(offhandTypes);
+                        else if (itemGui.isGettingBuildItem) value.setChoices(oneType);
+                        else value.setChoices(allTypes);
                         value.setDefaultText("Select Type");
                         comparator.setMessage(Text.literal("Matches"));
                     }
@@ -144,7 +154,7 @@ public class ItemFilterGui extends Screen {
                 renderTooltip(matrices, Text.literal("Duplicate").setStyle(Style.EMPTY.withColor(0x4444FF)), mouseX, mouseY);
             }), "blue_stained_glass_pane", "");
              */
-
+            if (itemGui.isGettingBuildItem && !(itemGui.itemTypeLookingFor.equals("Mainhand") || itemGui.itemTypeLookingFor.equals("Offhand"))) options.setChoices(Arrays.asList("Tier", "Region", "Location", "Stat", "Base Item"));
             filterListOption.add(options);
             filterListValue.add(value);
             filterListComparator.add(comparator);

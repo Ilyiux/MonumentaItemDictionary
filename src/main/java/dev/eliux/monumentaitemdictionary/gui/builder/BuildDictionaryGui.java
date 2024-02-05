@@ -131,6 +131,7 @@ public class BuildDictionaryGui extends Screen {
     }
 
     public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms) {
+        if (name.isEmpty()) name = "No Name";
         DictionaryBuild build = new DictionaryBuild(name, items, charms);
         buildsList.add(build);
         buildBuildsList();

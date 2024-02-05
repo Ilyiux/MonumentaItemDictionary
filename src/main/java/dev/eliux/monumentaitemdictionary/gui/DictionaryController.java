@@ -656,7 +656,7 @@ public class DictionaryController {
 
         if (itemGui.isGettingBuildItem) {
             if (itemGui.itemTypeLookingFor.equals("Mainhand")) {
-                filteredItems.removeIf(i -> !i.type.equals("Mainhand") && !i.type.equals("Mainhand Sword") && !i.type.equals("Mainhand Shield"));
+                filteredItems.removeIf(i -> !i.type.equals("Mainhand") && !i.type.equals("Mainhand Sword") && !i.type.equals("Mainhand Shield") && !i.type.equals("Wand") && !i.type.equals("Axe") && !i.type.equals("Pickaxe") && !i.type.equals("Trident") && !i.type.equals("Snowball") && !i.type.equals("Shovel") && !i.type.equals("Scythe") && !i.type.equals("Bow") && !i.type.equals("Crossbow"));
             } else if (itemGui.itemTypeLookingFor.equals("Offhand")) {
                 filteredItems.removeIf(i -> !i.type.equals("Offhand") && !i.type.equals("Offhand Sword") && !i.type.equals("Offhand Shield"));
             } else {

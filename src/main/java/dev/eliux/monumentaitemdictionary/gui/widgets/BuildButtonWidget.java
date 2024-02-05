@@ -79,22 +79,13 @@ public class BuildButtonWidget extends ButtonWidget {
             lines.add(Text.literal(build.name));
 
             for (DictionaryItem item : build.allItems) {
-                if (!Screen.hasShiftDown()) {
-                    String itemTier = item.hasMasterwork ? item.getTierFromMasterwork(item.getMaxMasterwork() - 1) : item.getTierNoMasterwork();
-                    lines.add(Text.literal(item.name).setStyle(Style.EMPTY
-                            .withColor(0xFF000000 + ItemColors.getColorForLocation(item.location))
-                            .withBold(ItemFormatter.shouldBold(itemTier))
-                            .withUnderline(ItemFormatter.shouldUnderline(itemTier))));
-                    lines.add(Text.literal(""));
-
-                } else {
-                    item.lore = "";
-                    List<Text> itemStats = gui.controller.itemGui.generateItemLoreText(item);
-                    lines.addAll(itemStats);
-                }
+                String itemTier = item.hasMasterwork ? item.getTierFromMasterwork(item.getMaxMasterwork() - 1) : item.getTierNoMasterwork();
+                lines.add(Text.literal(item.name).setStyle(Style.EMPTY
+                        .withColor(0xFF000000 + ItemColors.getColorForLocation(item.location))
+                        .withBold(ItemFormatter.shouldBold(itemTier))
+                        .withUnderline(ItemFormatter.shouldUnderline(itemTier))));
+                lines.add(Text.literal(""));
             }
-            if (!Screen.hasShiftDown()) lines.add(Text.literal("Press [SHIFT] to show item Stats.").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
-
             gui.renderTooltip(matrices, lines, mouseX, mouseY);
         }
     }

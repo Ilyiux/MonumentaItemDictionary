@@ -13,6 +13,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
@@ -80,27 +81,51 @@ public class BuilderGui extends Screen {
 
     public void updateButtons() {
         mainhandButton = new BuildItemButtonWidget((width/2), 40, 50, Text.literal(""), (b) -> {
-            controller.getItemFromDictionary("Mainhand");
+            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Mainhand");
+            else if (hasShiftDown() && hasControlDown()){
+                String wikiFormatted = buildItems.get(0).name.replace(" ", "_").replace("'", "%27");
+                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+            }
         }, buildItems.get(0), () -> controller.itemGui.generateItemLoreText(buildItems.get(0)), this);
 
         offhandButton = new BuildItemButtonWidget((width/2), 100, 50, Text.literal(""), (b) -> {
-            controller.getItemFromDictionary("Offhand");
+            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Offhand");
+            else if (hasShiftDown() && hasControlDown()){
+                String wikiFormatted = buildItems.get(1).name.replace(" ", "_").replace("'", "%27");
+                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+            }
         }, buildItems.get(1), () -> controller.itemGui.generateItemLoreText(buildItems.get(1)), this);
 
         headButton = new BuildItemButtonWidget(10, 40, 50, Text.literal(""), (b) -> {
-            controller.getItemFromDictionary("Helmet");
+            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Helmet");
+            else if (hasShiftDown() && hasControlDown()){
+                String wikiFormatted = buildItems.get(2).name.replace(" ", "_").replace("'", "%27");
+                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+            }
         }, buildItems.get(2), () -> controller.itemGui.generateItemLoreText(buildItems.get(2)), this);
 
         chestplateButton = new BuildItemButtonWidget(10, 100, 50, Text.literal(""), (b) -> {
-            controller.getItemFromDictionary("Chestplate");
+            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Chestplate");
+            else if (hasShiftDown() && hasControlDown()){
+                String wikiFormatted = buildItems.get(3).name.replace(" ", "_").replace("'", "%27");
+                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+            }
         }, buildItems.get(3), () -> controller.itemGui.generateItemLoreText(buildItems.get(3)), this);
 
         leggingsButton = new BuildItemButtonWidget(10, 160, 50, Text.literal(""), (b) -> {
-            controller.getItemFromDictionary("Leggings");
+            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Leggings");
+            else if (hasShiftDown() && hasControlDown()){
+                String wikiFormatted = buildItems.get(4).name.replace(" ", "_").replace("'", "%27");
+                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+            }
         }, buildItems.get(4), () -> controller.itemGui.generateItemLoreText(buildItems.get(4)), this);
 
         bootsButton = new BuildItemButtonWidget(10, 220, 50, Text.literal(""), (b) -> {
-            controller.getItemFromDictionary("Boots");
+            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Boots");
+            else if (hasShiftDown() && hasControlDown()){
+                String wikiFormatted = buildItems.get(5).name.replace(" ", "_").replace("'", "%27");
+                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+            }
         }, buildItems.get(5), () -> controller.itemGui.generateItemLoreText(buildItems.get(5)), this);
 
         buildCharmButtons.clear();
@@ -113,10 +138,15 @@ public class BuilderGui extends Screen {
             for (int i = 0; i < charms.size(); i++) {
                 DictionaryCharm charm = charms.get(i);
                 charmsButton = new BuildCharmButtonWidget(width/2 + ((i%6)*60), 220 + ((i/6)*60), 50, Text.literal(""), (b) -> {
-                    do {
-                        charms.remove(charm);
-                    } while (charms.contains(charm));
-                    controller.getCharmFromDictionary();
+                     if (!Screen.hasShiftDown() && !Screen.hasControlDown()) {
+                         do {
+                             charms.remove(charm);
+                         } while (charms.contains(charm));
+                         controller.getCharmFromDictionary();
+                     } else {
+                         String wikiFormatted = charm.name.replace(" ", "_").replace("'", "%27");
+                         Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+                     }
                 }, charm,  () -> controller.charmGui.generateCharmLoreText(charm), this);
                 buildCharmButtons.add(charmsButton);
             }
@@ -178,8 +208,14 @@ public class BuilderGui extends Screen {
         String[] rawCharms = buildUrl.substring(buildUrl.indexOf("charm=") + 6).split(",");
 
         for (String charm : rawCharms) {
+            System.out.println(charm);
             DictionaryCharm charmToAdd = controller.getCharmByName(charm);
-            if (charmToAdd != null) for (int i = 0; i < charmToAdd.power; i++) charms.add(charmToAdd);
+            if (charmToAdd != null) {
+                System.out.println(charmToAdd.power);
+                for (int i = 0; i < charmToAdd.power; i++) {
+                    charms.add(charmToAdd);
+                }
+            }
         }
 
         updateButtons();
@@ -250,7 +286,7 @@ public class BuilderGui extends Screen {
         }
 
         drawTextWithShadow(matrices, textRenderer, Text.literal("Charms").setStyle(Style.EMPTY.withBold(true)), width/2, 200, 0xFFFFFFFF);
-        String stars = "★".repeat(charms.size()) + "☆".repeat(12- charms.size());
+        String stars = "★".repeat(charms.size()) + "☆".repeat(12 - charms.size());
         drawTextWithShadow(matrices, textRenderer, Text.literal(stars).setStyle(Style.EMPTY.withBold(true)), width/2 + 50, 200, 0xFFFFFF00);
         if (charms.size() == 12) {
             drawTextWithShadow(matrices, textRenderer, Text.literal("FULL CHARM POWER").setStyle(Style.EMPTY.withBold(true).withUnderline(true)), width/2 + 170, 200, 0xFFFF0000);
