@@ -15,7 +15,6 @@ import java.util.*;
 
 public class BuildDictionaryGui extends Screen {
     private ItemIconButtonWidget addBuildButton;
-    private ItemIconButtonWidget addBuildFromClipboardButton;
     private ItemIconButtonWidget showItemsButton;
     private ItemIconButtonWidget showCharmsButton;
     public final int sideMenuWidth = 40;
@@ -56,7 +55,8 @@ public class BuildDictionaryGui extends Screen {
             int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
 
             BuildButtonWidget button = new BuildButtonWidget(x, y, itemSize, Text.literal(build.name), (b) -> {
-                System.out.println(build.chestplate);
+                controller.builderGui.loadItems(build);
+                controller.setBuilderScreen();
             }, build, this, () -> getBuildDescription(build));
 
             buildsButtons.put(build, button);
@@ -128,5 +128,11 @@ public class BuildDictionaryGui extends Screen {
     }
 
     public void updateGuiPositions() {
+    }
+
+    public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms) {
+        DictionaryBuild build = new DictionaryBuild(name, items, charms);
+        buildsList.add(build);
+        buildBuildsList();
     }
 }

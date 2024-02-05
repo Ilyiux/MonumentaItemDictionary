@@ -2,6 +2,7 @@ package dev.eliux.monumentaitemdictionary.gui.item;
 
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
 import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
+import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
@@ -51,6 +52,7 @@ public class ItemDictionaryGui extends Screen {
     public boolean isGettingBuildItem = false;
 
     public final DictionaryController controller;
+    private ItemIconButtonWidget builderButton;
 
     public ItemDictionaryGui(Text title, DictionaryController controller) {
         super(title);
@@ -78,6 +80,11 @@ public class ItemDictionaryGui extends Screen {
         builderGuiButton = new ItemIconButtonWidget(55, 5, 20, 20, Text.literal(""), (button) -> {
             controller.setBuildDictionaryScreen();
         }, Text.literal("Open Builder GUI"), "iron_chestplate", "");
+
+        builderButton = new ItemIconButtonWidget(55, 5, 20, 20, Text.literal(""), (button) -> {
+            isGettingBuildItem = false;
+            controller.setBuilderScreen();
+        }, Text.literal("Go Back To Builder"), "arrow", "");
 
         showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, Text.literal(""), (button) -> {
             controller.setCharmDictionaryScreen();
@@ -184,6 +191,8 @@ public class ItemDictionaryGui extends Screen {
         if (!isGettingBuildItem) {
             builderGuiButton.render(matrices, mouseX, mouseY, delta);
             showCharmsButton.render(matrices, mouseX, mouseY, delta);
+        } else {
+            builderButton.render(matrices, mouseX, mouseY, delta);
         }
 
         matrices.pop();
@@ -213,6 +222,7 @@ public class ItemDictionaryGui extends Screen {
                 if (hasShiftDown() && hasControlDown()) {
                     String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
                     Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+
                 } else if (isGettingBuildItem) {
                     returnItem(item);
                 }
@@ -227,6 +237,12 @@ public class ItemDictionaryGui extends Screen {
             itemButtons.computeIfAbsent(y, k -> new ArrayList<>())
                     .add(button);
             widgetByItem.put(item, button);
+        }
+
+        if (isGettingBuildItem) {
+            for (List<ItemButtonWidget> row : itemButtons.values()) {
+                row.forEach(ItemButtonWidget::setMaximumMasterwork);
+            }
         }
     }
 
@@ -272,17 +288,6 @@ public class ItemDictionaryGui extends Screen {
     }
 
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        super.keyReleased(keyCode, scanCode, modifiers);
-
-        if (keyCode == 342 || keyCode == 346) { // left or right alt pressed
-            lastAltPressed = System.currentTimeMillis();
-        }
-
-        return true;
-    }
-
-    @Override
     public boolean charTyped(char chr, int modifiers) {
         super.charTyped(chr, modifiers);
 
@@ -313,6 +318,8 @@ public class ItemDictionaryGui extends Screen {
         if (!isGettingBuildItem) {
             builderGuiButton.mouseClicked(mouseX, mouseY, button);
             showCharmsButton.mouseClicked(mouseX, mouseY, button);
+        } else {
+            builderButton.mouseClicked(mouseX, mouseY, button);
         }
 
         return true;
@@ -320,7 +327,7 @@ public class ItemDictionaryGui extends Screen {
 
     public List<Text> generateItemLoreText(DictionaryItem item) {
         // this is scuffed
-        int masterworkTier = 0;
+        int masterworkTier = item.getMaxMasterwork() - 1;
         ItemButtonWidget itemButton = widgetByItem.get(item);
         if (itemButton != null) {
             masterworkTier = itemButton.shownMasterworkTier;
@@ -434,9 +441,13 @@ public class ItemDictionaryGui extends Screen {
         if (player != null && player.getAbilities().creativeMode) {
             lines.add(Text.literal("[ALT] + Click to generate this item").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
         }
-        lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
-        lines.add(Text.literal(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
-                .withColor(ItemColors.TEXT_COLOR)));
+
+        Screen currentScreen = MinecraftClient.getInstance().currentScreen;
+        if (currentScreen instanceof ItemDictionaryGui || currentScreen instanceof CharmDictionaryGui) {
+            lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+            lines.add(Text.literal(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
+                    .withColor(ItemColors.TEXT_COLOR)));
+        }
 
         return lines;
     }
@@ -473,7 +484,7 @@ public class ItemDictionaryGui extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         super.mouseScrolled(mouseX, mouseY, amount);
 
-        if (Screen.hasControlDown()) {
+        if (Screen.hasControlDown() && !isGettingBuildItem) {
             for (List<ItemButtonWidget> row : itemButtons
                     .subMap(labelMenuHeight + scrollPixels - itemSize, true,
                             height + scrollPixels, true)

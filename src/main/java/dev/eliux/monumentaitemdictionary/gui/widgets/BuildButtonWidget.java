@@ -4,12 +4,16 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.eliux.monumentaitemdictionary.gui.builder.BuildDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
+import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
+import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
@@ -28,14 +32,18 @@ public class BuildButtonWidget extends ButtonWidget {
 
         displayingItem = build.allItems.get(0);
 
-        builtItem = ItemFactory.fromEncoding(displayingItem.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_"));
-        NbtCompound baseNbt = builtItem.getOrCreateNbt();
-        NbtCompound plain = new NbtCompound();
-        NbtCompound display = new NbtCompound();
-        display.putString("Name", displayingItem.name.split("\\(")[0].trim());
-        plain.put("display", display);
-        baseNbt.put("plain", plain);
-        builtItem.setNbt(baseNbt);
+        if (displayingItem != null) {
+            builtItem = ItemFactory.fromEncoding(displayingItem.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_"));
+            NbtCompound baseNbt = builtItem.getOrCreateNbt();
+            NbtCompound plain = new NbtCompound();
+            NbtCompound display = new NbtCompound();
+            display.putString("Name", displayingItem.name.split("\\(")[0].trim());
+            plain.put("display", display);
+            baseNbt.put("plain", plain);
+            builtItem.setNbt(baseNbt);
+        } else {
+            builtItem = ItemFactory.fromEncoding("barrier");
+        }
     }
 
     @Override
@@ -68,7 +76,25 @@ public class BuildButtonWidget extends ButtonWidget {
 
         if (hovered) {
             List<Text> lines = new ArrayList<>();
-            lines.add(Text.literal("Amazing"));
+            lines.add(Text.literal(build.name));
+
+            for (DictionaryItem item : build.allItems) {
+                if (!Screen.hasShiftDown()) {
+                    String itemTier = item.hasMasterwork ? item.getTierFromMasterwork(item.getMaxMasterwork() - 1) : item.getTierNoMasterwork();
+                    lines.add(Text.literal(item.name).setStyle(Style.EMPTY
+                            .withColor(0xFF000000 + ItemColors.getColorForLocation(item.location))
+                            .withBold(ItemFormatter.shouldBold(itemTier))
+                            .withUnderline(ItemFormatter.shouldUnderline(itemTier))));
+                    lines.add(Text.literal(""));
+
+                } else {
+                    item.lore = "";
+                    List<Text> itemStats = gui.controller.itemGui.generateItemLoreText(item);
+                    lines.addAll(itemStats);
+                }
+            }
+            if (!Screen.hasShiftDown()) lines.add(Text.literal("Press [SHIFT] to show item Stats.").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+
             gui.renderTooltip(matrices, lines, mouseX, mouseY);
         }
     }

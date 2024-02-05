@@ -12,14 +12,13 @@ import dev.eliux.monumentaitemdictionary.gui.generator.GeneratorGui;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
 import dev.eliux.monumentaitemdictionary.gui.item.ItemDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.item.ItemFilterGui;
-import dev.eliux.monumentaitemdictionary.util.CharmStat;
-import dev.eliux.monumentaitemdictionary.util.Filter;
-import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
-import dev.eliux.monumentaitemdictionary.util.ItemStat;
+import dev.eliux.monumentaitemdictionary.gui.widgets.ItemButtonWidget;
+import dev.eliux.monumentaitemdictionary.util.*;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
 import java.util.Map;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.apache.commons.io.FileUtils;
 
@@ -784,17 +783,38 @@ public class DictionaryController {
         return charms.size() == 0;
     }
 
-    public DictionaryItem getItemByName(String itemName) {
+    public DictionaryItem getItemByName(String itemName, boolean isExalted) {
+        List<DictionaryItem> possibleItems = new ArrayList<>();
         for (DictionaryItem item : items) {
             if (item.name.equals(itemName)) {
-                return item;
+                possibleItems.add(item);
+            }
+        }
+
+        if (possibleItems.size() == 1) {
+            return possibleItems.get(0);
+        } else if (possibleItems.size() > 1) {
+            for (DictionaryItem item : possibleItems) {
+                if (isExalted && item.region.equals("Ring")) {
+                    return item;
+                } else if (!isExalted && !item.region.equals("Ring")) {
+                    return item;
+                }
             }
         }
         return null;
     }
-    public DictionaryCharm getCharmByName(String charmName) {
+    public DictionaryCharm getCharmByName(String rawCharm) {
+        String[] rawCharmParts = rawCharm.split("-");
+
+        String preffix = rawCharmParts[0].replaceAll("_", " ");
+        String suffix = rawCharmParts[1].replaceAll("_", " ");
+        int power = Integer.parseInt(rawCharmParts[2]);
+        String classLetter = rawCharmParts[3];
+
         for (DictionaryCharm charm : charms) {
-            if (charm.name.equals(charmName)) {
+            String name = charm.name;
+            if (name.substring(0, 3).equals(preffix) && name.contains(suffix) && charm.power == power && charm.className.startsWith(classLetter)) {
                 return charm;
             }
         }
@@ -810,5 +830,10 @@ public class DictionaryController {
         itemGui.isGettingBuildItem = true;
         itemGui.itemTypeLookingFor = itemType;
         setItemDictionaryScreen();
+    }
+
+    public void getCharmFromDictionary() {
+        charmGui.isGettingBuildCharm = true;
+        setCharmDictionaryScreen();
     }
 }
