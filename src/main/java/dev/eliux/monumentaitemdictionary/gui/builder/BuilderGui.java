@@ -7,6 +7,8 @@ import dev.eliux.monumentaitemdictionary.gui.widgets.BuildCharmButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.BuildItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
+import dev.eliux.monumentaitemdictionary.util.ItemStat;
+import dev.eliux.monumentaitemdictionary.util.Stats;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -35,6 +37,7 @@ public class BuilderGui extends Screen {
     public List<DictionaryCharm> charms = new ArrayList<>();
     private BuildCharmButtonWidget charmsButton;
     public List<DictionaryItem> buildItems = Arrays.asList(null, null, null, null, null, null);
+    private Stats buildStats;
     private final List<BuildItemButtonWidget> buildItemButtons = new ArrayList<>();
     private final List<BuildCharmButtonWidget> buildCharmButtons = new ArrayList<>();
     public final int sideMenuWidth = 40;
@@ -44,6 +47,9 @@ public class BuilderGui extends Screen {
     private final DictionaryController controller;
     private ItemIconButtonWidget setBuildFromClipboardButton;
     private ItemIconButtonWidget addBuildButton;
+    private HashMap<String, Integer> situationals;
+    private HashMap<String, Integer> infusions;
+    private double currentHealthPercent;
 
     public BuilderGui(Text title, DictionaryController controller) {
         super(title);
@@ -75,6 +81,30 @@ public class BuilderGui extends Screen {
             resetBuild();
             controller.setBuildDictionaryScreen();
         }, Text.literal("Add Build To Dictionary"), "writable_book", "");
+
+        this.situationals = new HashMap<String, Integer>() {{
+            put("shielding", 0);
+            put("poise", 0);
+            put("inure", 0);
+            put("steadfast", 0);
+            put("guard", 0);
+            put("ethereal", 0);
+            put("reflexes", 0);
+            put("evasion", 0);
+            put("tempo", 0);
+            put("cloaked", 0);
+            put("adaptability", 0);
+            put("second_wind", 0);
+            put("versatile", 0);
+        }};
+        this.infusions = new HashMap<String, Integer>() {{
+            put("vitality", 0);
+            put("tenacity", 0);
+            put("vigor", 0);
+            put("focus", 0);
+            put("perspicacity", 0);
+        }};
+        this.currentHealthPercent = 100;
 
         updateButtons();
     }
@@ -166,7 +196,6 @@ public class BuilderGui extends Screen {
         buildItemButtons.add(leggingsButton);
         buildItemButtons.add(bootsButton);
     }
-
     private boolean verifyUrl(String buildUrl) {
         return buildUrl.contains("ohthemisery.tk/builder");
     }
@@ -206,19 +235,92 @@ public class BuilderGui extends Screen {
         }
 
         String[] rawCharms = buildUrl.substring(buildUrl.indexOf("charm=") + 6).split(",");
-
-        for (String charm : rawCharms) {
-            System.out.println(charm);
-            DictionaryCharm charmToAdd = controller.getCharmByName(charm);
-            if (charmToAdd != null) {
-                System.out.println(charmToAdd.power);
-                for (int i = 0; i < charmToAdd.power; i++) {
-                    charms.add(charmToAdd);
+        if (!rawCharms[0].equals("None")) {
+            for (String charm : rawCharms) {
+                DictionaryCharm charmToAdd = controller.getCharmByName(charm);
+                if (charmToAdd != null) {
+                    for (int i = 0; i < charmToAdd.power; i++) {
+                        charms.add(charmToAdd);
+                    }
                 }
             }
         }
 
         updateButtons();
+        buildStats = new Stats(buildItems, situationals, infusions, currentHealthPercent);
+        System.out.println(buildStats.agility);
+        System.out.println(buildStats.armor);
+        System.out.println(buildStats.speedPercent.val);
+        System.out.println(buildStats.speedFlat);
+        System.out.println(buildStats.knockbackRes);
+        System.out.println(buildStats.thorns);
+        System.out.println(buildStats.thornsPercent.val);
+        System.out.println(buildStats.healthPercent.val);
+        System.out.println(buildStats.healthFlat);
+        System.out.println(buildStats.healthFinal);
+        System.out.println(buildStats.currentHealh);
+        System.out.println(buildStats.healingRate.val);
+        System.out.println(buildStats.regenPerSec);
+        System.out.println(buildStats.regenPerSecPercent.val);
+        System.out.println(buildStats.lifeDrainOnCrit);
+        System.out.println(buildStats.lifeDrainOnCritPercent.val);
+        System.out.println(buildStats.meleeProt);
+        System.out.println(buildStats.projectileProt);
+        System.out.println(buildStats.blastProt);
+        System.out.println(buildStats.fireProt);
+        System.out.println(buildStats.fallProt);
+        System.out.println(buildStats.ailmentProt);
+        System.out.println(buildStats.meleeFragility);
+        System.out.println(buildStats.projectileFragility);
+        System.out.println(buildStats.magicFragility);
+        System.out.println(buildStats.blastFragility);
+        System.out.println(buildStats.fireFragility);
+        System.out.println(buildStats.meleeHNDR.val);
+        System.out.println(buildStats.projectileHNDR.val);
+        System.out.println(buildStats.magicHNDR.val);
+        System.out.println(buildStats.blastHNDR.val);
+        System.out.println(buildStats.fireHNDR.val);
+        System.out.println(buildStats.fallHNDR.val);
+        System.out.println(buildStats.ailmentHNDR.val);
+        System.out.println(buildStats.meleeDR.val);
+        System.out.println(buildStats.projectileDR.val);
+        System.out.println(buildStats.magicDR.val);
+        System.out.println(buildStats.blastDR.val);
+        System.out.println(buildStats.fireDR.val);
+        System.out.println(buildStats.fallDR.val);
+        System.out.println(buildStats.ailmentDR.val);
+        System.out.println(buildStats.meleeEHP);
+        System.out.println(buildStats.projectileEHP);
+        System.out.println(buildStats.magicEHP);
+        System.out.println(buildStats.blastEHP);
+        System.out.println(buildStats.fireEHP);
+        System.out.println(buildStats.fallEHP);
+        System.out.println(buildStats.ailmentEHP);
+        System.out.println(buildStats.worldlyProtection);
+        System.out.println(buildStats.attackDamagePercent.val);
+        System.out.println(buildStats.attackSpeedPercent.val);
+        System.out.println(buildStats.attackSpeed);
+        System.out.println(buildStats.attackSpeedFlatBonus);
+        System.out.println(buildStats.attackDamage);
+        System.out.println(buildStats.attackDamageCrit);
+        System.out.println(buildStats.iframeDPS);
+        System.out.println(buildStats.iframeCritDPS);
+        System.out.println(buildStats.projectileDamagePercent.val);
+        System.out.println(buildStats.projectileDamage);
+        System.out.println(buildStats.projectileSpeedPercent.val);
+        System.out.println(buildStats.projectileSpeed);
+        System.out.println(buildStats.throwRatePercent.val);
+        System.out.println(buildStats.throwRate);
+        System.out.println(buildStats.magicDamagePercent.val);
+        System.out.println(buildStats.spellPowerPercent.val);
+        System.out.println(buildStats.spellDamage.val);
+        System.out.println(buildStats.spellCooldownPercent.val);
+        System.out.println(buildStats.aptitude);
+        System.out.println(buildStats.ineptitude);
+        System.out.println(buildStats.crippling);
+        System.out.println(buildStats.corruption);
+        System.out.println(buildStats.twoHanded);
+        System.out.println(buildStats.weightless);
     }
 
     @Override
@@ -335,7 +437,6 @@ public class BuilderGui extends Screen {
     public void updateGuiPositions() {
 
     }
-
     public void loadItems(DictionaryBuild build) {
         for (int i = 0; i < build.allItems.size(); i++) {
             buildItems.set(i, build.allItems.get(i));
