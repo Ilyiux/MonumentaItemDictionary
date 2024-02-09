@@ -259,9 +259,10 @@ public class ItemDictionaryGui extends Screen {
 
         builderGui.buildItems.set(index, item);
 
-        controller.setBuilderScreen();
         controller.builderGui.updateButtons();
+        controller.builderGui.updateStats();
         controller.itemFilterGui.clearFilters();
+        controller.setBuilderScreen();
 
         isGettingBuildItem = false;
     }

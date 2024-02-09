@@ -8,6 +8,7 @@ import dev.eliux.monumentaitemdictionary.gui.widgets.BuildItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
+import dev.eliux.monumentaitemdictionary.util.Percentage;
 import dev.eliux.monumentaitemdictionary.util.Stats;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -21,9 +22,11 @@ import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.List;
 
+import static java.lang.Math.floor;
 import static net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity;
 
 public class BuilderGui extends Screen {
@@ -38,6 +41,7 @@ public class BuilderGui extends Screen {
     private BuildCharmButtonWidget charmsButton;
     public List<DictionaryItem> buildItems = Arrays.asList(null, null, null, null, null, null);
     private Stats buildStats;
+    private List<String> statsToRender = new ArrayList<>();
     private final List<BuildItemButtonWidget> buildItemButtons = new ArrayList<>();
     private final List<BuildCharmButtonWidget> buildCharmButtons = new ArrayList<>();
     public final int sideMenuWidth = 40;
@@ -105,6 +109,8 @@ public class BuilderGui extends Screen {
             put("perspicacity", 0);
         }};
         this.currentHealthPercent = 100;
+
+        this.buildStats = new Stats(buildItems, situationals, infusions, currentHealthPercent);
 
         updateButtons();
     }
@@ -234,6 +240,7 @@ public class BuilderGui extends Screen {
             }
         }
 
+        charms.clear();
         String[] rawCharms = buildUrl.substring(buildUrl.indexOf("charm=") + 6).split(",");
         if (!rawCharms[0].equals("None")) {
             for (String charm : rawCharms) {
@@ -247,80 +254,42 @@ public class BuilderGui extends Screen {
         }
 
         updateButtons();
+        updateStats();
+    }
+
+    public void updateStats() {
         buildStats = new Stats(buildItems, situationals, infusions, currentHealthPercent);
-        System.out.println(buildStats.agility);
-        System.out.println(buildStats.armor);
-        System.out.println(buildStats.speedPercent.val);
-        System.out.println(buildStats.speedFlat);
-        System.out.println(buildStats.knockbackRes);
-        System.out.println(buildStats.thorns);
-        System.out.println(buildStats.thornsPercent.val);
-        System.out.println(buildStats.healthPercent.val);
-        System.out.println(buildStats.healthFlat);
-        System.out.println(buildStats.healthFinal);
-        System.out.println(buildStats.currentHealh);
-        System.out.println(buildStats.healingRate.val);
-        System.out.println(buildStats.regenPerSec);
-        System.out.println(buildStats.regenPerSecPercent.val);
-        System.out.println(buildStats.lifeDrainOnCrit);
-        System.out.println(buildStats.lifeDrainOnCritPercent.val);
-        System.out.println(buildStats.meleeProt);
-        System.out.println(buildStats.projectileProt);
-        System.out.println(buildStats.blastProt);
-        System.out.println(buildStats.fireProt);
-        System.out.println(buildStats.fallProt);
-        System.out.println(buildStats.ailmentProt);
-        System.out.println(buildStats.meleeFragility);
-        System.out.println(buildStats.projectileFragility);
-        System.out.println(buildStats.magicFragility);
-        System.out.println(buildStats.blastFragility);
-        System.out.println(buildStats.fireFragility);
-        System.out.println(buildStats.meleeHNDR.val);
-        System.out.println(buildStats.projectileHNDR.val);
-        System.out.println(buildStats.magicHNDR.val);
-        System.out.println(buildStats.blastHNDR.val);
-        System.out.println(buildStats.fireHNDR.val);
-        System.out.println(buildStats.fallHNDR.val);
-        System.out.println(buildStats.ailmentHNDR.val);
-        System.out.println(buildStats.meleeDR.val);
-        System.out.println(buildStats.projectileDR.val);
-        System.out.println(buildStats.magicDR.val);
-        System.out.println(buildStats.blastDR.val);
-        System.out.println(buildStats.fireDR.val);
-        System.out.println(buildStats.fallDR.val);
-        System.out.println(buildStats.ailmentDR.val);
-        System.out.println(buildStats.meleeEHP);
-        System.out.println(buildStats.projectileEHP);
-        System.out.println(buildStats.magicEHP);
-        System.out.println(buildStats.blastEHP);
-        System.out.println(buildStats.fireEHP);
-        System.out.println(buildStats.fallEHP);
-        System.out.println(buildStats.ailmentEHP);
-        System.out.println(buildStats.worldlyProtection);
-        System.out.println(buildStats.attackDamagePercent.val);
-        System.out.println(buildStats.attackSpeedPercent.val);
-        System.out.println(buildStats.attackSpeed);
-        System.out.println(buildStats.attackSpeedFlatBonus);
-        System.out.println(buildStats.attackDamage);
-        System.out.println(buildStats.attackDamageCrit);
-        System.out.println(buildStats.iframeDPS);
-        System.out.println(buildStats.iframeCritDPS);
-        System.out.println(buildStats.projectileDamagePercent.val);
-        System.out.println(buildStats.projectileDamage);
-        System.out.println(buildStats.projectileSpeedPercent.val);
-        System.out.println(buildStats.projectileSpeed);
-        System.out.println(buildStats.throwRatePercent.val);
-        System.out.println(buildStats.throwRate);
-        System.out.println(buildStats.magicDamagePercent.val);
-        System.out.println(buildStats.spellPowerPercent.val);
-        System.out.println(buildStats.spellDamage.val);
-        System.out.println(buildStats.spellCooldownPercent.val);
-        System.out.println(buildStats.aptitude);
-        System.out.println(buildStats.ineptitude);
-        System.out.println(buildStats.crippling);
-        System.out.println(buildStats.corruption);
-        System.out.println(buildStats.twoHanded);
-        System.out.println(buildStats.weightless);
+        statsToRender.clear();
+        Field[] fields = Stats.class.getDeclaredFields();
+
+        for (int i=0;i<fields.length;i++) {
+            Field field = fields[i];
+            try {
+                String statName = formatStatName(field.getName());
+                int intStatValue = 0;
+                double doubleStatValue = 0.0;
+                String formattedStatValue;
+                if (field.get(buildStats) instanceof Percentage) {
+                    doubleStatValue = (((Percentage) field.get(buildStats)).perc);
+                    formattedStatValue = String.format("%.2f", doubleStatValue) + "%";
+                } else if (field.get(buildStats) instanceof Integer){
+                    intStatValue = field.getInt(buildStats);
+                    formattedStatValue = String.valueOf(intStatValue);
+                } else {
+                    doubleStatValue = field.getDouble(buildStats);
+                    formattedStatValue = String.valueOf(String.format("%.2f", doubleStatValue));
+                }
+
+                String formattedStat = statName + " " + formattedStatValue;
+                statsToRender.add(formattedStat);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String formatStatName(String rawStat) {
+        return "";
     }
 
     @Override
@@ -354,6 +323,7 @@ public class BuilderGui extends Screen {
 
         drawButtons(matrices, mouseX, mouseY, delta);
         drawItemText(matrices);
+        drawStats(matrices);
 
         matrices.pop();
 
@@ -393,7 +363,33 @@ public class BuilderGui extends Screen {
         if (charms.size() == 12) {
             drawTextWithShadow(matrices, textRenderer, Text.literal("FULL CHARM POWER").setStyle(Style.EMPTY.withBold(true).withUnderline(true)), width/2 + 170, 200, 0xFFFF0000);
         }
+    }
 
+    private void drawStats(MatrixStack matrices) {
+        if (statsToRender.isEmpty()) return;
+        List<String> statsTypes = new ArrayList<>(Arrays.asList("Misc Stats", "Health Stats", "DR Stats", "HP Normalized DR Stats", "EHP Stats", "Melee Stats", "Projectile Stats", "Magic Stats"));
+        List<List<String>> statsByType = new ArrayList<>();
+
+        statsByType.add(statsToRender.subList(0 ,  5)); // Misc Stats
+        statsByType.add(statsToRender.subList(6 , 13)); // Health Stats
+        statsByType.add(statsToRender.subList(14, 20)); // Damage Reduction Stats
+        statsByType.add(statsToRender.subList(21, 27)); // Health Normalized Damage Reduction Stats
+        statsByType.add(statsToRender.subList(28, 34)); // EHP Stats
+        statsByType.add(statsToRender.subList(35, 41)); // Melee Stats
+        statsByType.add(statsToRender.subList(42, 48)); // Projectile Stats
+        statsByType.add(statsToRender.subList(48, 52)); // Magic Stats
+
+        int i = 0;
+        int j = 0;
+        for (List<String> stats : statsByType) {
+            drawTextWithShadow(matrices, textRenderer, Text.literal(statsTypes.get(i)).setStyle(Style.EMPTY.withBold(true)), 10 + ((i/3)*150), 290 + (j*10)%240, 0xFF92BDA3);
+            for (String stat : stats) {
+                j++;
+                drawTextWithShadow(matrices, textRenderer, Text.literal(stat).setStyle(Style.EMPTY.withBold(true)), 10 + ((i/3)*150), 290 + (j*10)%240, 0xFFA1BA89);
+            }
+            j += 2;
+            i++;
+        }
     }
 
     @Override

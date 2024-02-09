@@ -8,40 +8,23 @@ import static java.lang.Math.*;
 public class Stats {
     private final Map<String, Integer> situationals;
     private final Map<String, List<ItemStat>> allItemStats = new HashMap<>();
-    public Percentage currentHealthPercent;
-    public Percentage speedPercent;
-    public double speedFlat;
-    public double agility;
+    // Misc Stats
     public double armor;
-    public double knockbackRes;
-    public double thorns;
-    public Percentage healthPercent;
-    public double healthFlat;
+    public double agility;
+    public Percentage speedPercent;
+    public int knockbackRes;
+    public int thorns;
+    public double fireTickDamage;
+    // Health Stats
     public double healthFinal;
-    public Percentage healingRate;
+    public double currentHealh;
     public Percentage effHealingRate;
+    public Percentage healingRate;
     public double regenPerSec;
     public Percentage regenPerSecPercent;
     public double lifeDrainOnCrit;
     public Percentage lifeDrainOnCritPercent;
-    public double meleeProt;
-    public double projectileProt;
-    public double magicProt;
-    public double blastProt;
-    public double fireProt;
-    public double fallProt;
-    public double meleeFragility;
-    public double projectileFragility;
-    public double magicFragility;
-    public double blastFragility;
-    public double fireFragility;
-    public Percentage ailmentHNDR;
-    public Percentage fallHNDR;
-    public Percentage meleeHNDR;
-    public Percentage magicHNDR;
-    public Percentage projectileHNDR;
-    public Percentage blastHNDR;
-    public Percentage fireHNDR;
+    // DR Stats
     public Percentage meleeDR;
     public Percentage projectileDR;
     public Percentage magicDR;
@@ -49,6 +32,15 @@ public class Stats {
     public Percentage fallDR;
     public Percentage fireDR;
     public Percentage ailmentDR;
+    // Health Normalized DR Stats
+    public Percentage meleeHNDR;
+    public Percentage projectileHNDR;
+    public Percentage magicHNDR;
+    public Percentage blastHNDR;
+    public Percentage fireHNDR;
+    public Percentage fallHNDR;
+    public Percentage ailmentHNDR;
+    // EHP Stats
     public double meleeEHP;
     public double projectileEHP;
     public double magicEHP;
@@ -56,58 +48,70 @@ public class Stats {
     public double fallEHP;
     public double fireEHP;
     public double ailmentEHP;
-    public boolean hasMoreArmor;
-    public boolean hasMoreAgility;
-    public boolean hasEqualDefenses;
-    public double worldlyProtection;
-    public Percentage attackDamagePercent;
+    // Melee Stats
     public Percentage attackSpeedPercent;
     public double attackSpeed;
-    public double attackSpeedFlatBonus;
+    public Percentage attackDamagePercent;
     public double attackDamage;
     public double attackDamageCrit;
     public double iframeDPS;
     public double iframeCritDPS;
+    // Projectile Stats
     public Percentage projectileDamagePercent;
     public double projectileDamage;
     public Percentage projectileSpeedPercent;
     public double projectileSpeed;
-    public double throwRate;
     public Percentage throwRatePercent;
+    public double throwRate;
+    // Magic Stats
     public Percentage magicDamagePercent;
     public Percentage spellPowerPercent;
     public Percentage spellDamage;
     public Percentage spellCooldownPercent;
-    public double aptitude;
-    public double ineptitude;
-    public double crippling;
-    public double corruption;
-    public boolean twoHanded;
-    public final double vitality;
-    public final double tenacity;
-    public final double vigor;
-    public final double focus;
-    public final double perspicacity;
-    public Percentage thornsPercent;
-    public double currentHealh;
-    public double ailmentProt;
-    private List<String> itemTypes = new ArrayList<>(Arrays.asList("mainhand", "offhand", "helmet", "chestplate", "leggings", "boots"));
-    public boolean weightless;
+    private Percentage currentHealthPercent;
+    private double speedFlat;
+    private Percentage healthPercent;
+    private double attackSpeedFlatBonus;
+    private double healthFlat;
+    private double meleeProt;
+    private double projectileProt;
+    private double magicProt;
+    private double blastProt;
+    private double fireProt;
+    private double fallProt;
+    private double meleeFragility;
+    private double projectileFragility;
+    private double magicFragility;
+    private double blastFragility;
+    private double fireFragility;
+    private double worldlyProtection;
+    private Percentage thornsPercent;
+    private double ailmentProt;
+    private double aptitude;
+    private double ineptitude;
+    private double crippling;
+    private double corruption;
+    private final double vitality;
+    private final double tenacity;
+    private final double vigor;
+    private final double focus;
+    private final double perspicacity;
 
     public Stats(List<DictionaryItem> items, Map<String, Integer> situationals, Map<String, Integer> infusions, double currentHealthPercent) {
         this.situationals = situationals;
-        this.vitality = (infusions.get("vitality") != null) ? infusions.get("vitality") : 0;
-        this.tenacity = (infusions.get("tenacity") != null) ? infusions.get("tenacity") : 0;
-        this.vigor = (infusions.get("vigor") != null) ? infusions.get("vigor") : 0;
-        this.focus = (infusions.get("focus") != null) ? infusions.get("focus") : 0;
-        this.perspicacity = (infusions.get("perspicacity") != null) ? infusions.get("perspicacity") : 0;
+        vitality = (infusions.get("vitality") != null) ? infusions.get("vitality") : 0;
+        tenacity = (infusions.get("tenacity") != null) ? infusions.get("tenacity") : 0;
+        vigor = (infusions.get("vigor") != null) ? infusions.get("vigor") : 0;
+        focus = (infusions.get("focus") != null) ? infusions.get("focus") : 0;
+        perspicacity = (infusions.get("perspicacity") != null) ? infusions.get("perspicacity") : 0;
 
         this.currentHealthPercent = new Percentage(currentHealthPercent, true);
 
-        for (int i=0;i<itemTypes.size();i++) {
+        List<String> itemTypes = new ArrayList<>(Arrays.asList("mainhand", "offhand", "helmet", "chestplate", "leggings", "boots"));
+        for (int i = 0; i< itemTypes.size(); i++) {
             if (items.get(i) != null) {
                 DictionaryItem item = items.get(i);
-                List<ItemStat> itemStats = item.getStatsFromMasterwork(item.getMaxMasterwork() - 1);
+                List<ItemStat> itemStats = item.hasMasterwork ? item.getStatsFromMasterwork(item.getMaxMasterwork() - 1) : item.getStatsNoMasterwork();
                 this.allItemStats.put(itemTypes.get(i), itemStats);
             }
         }
@@ -121,77 +125,77 @@ public class Stats {
 
     private void calculateOffenseStats() {
         List<ItemStat> mainhand = allItemStats.get("mainhand");
-        if (this.situationals.get("versatile") > 0) {
-            double extraAttackDamagePercent = (this.projectileDamagePercent.perc - 100) * 0.5;
-            double extraProjectileDamagePercent = (this.attackDamagePercent.perc - 100) * 0.4;
-            this.attackDamagePercent.add(extraAttackDamagePercent, true);
-            this.projectileDamagePercent.add(extraProjectileDamagePercent, true);
+        if (situationals.get("versatile") > 0) {
+            double extraAttackDamagePercent = (projectileDamagePercent.perc - 100) * 0.5;
+            double extraProjectileDamagePercent = (attackDamagePercent.perc - 100) * 0.4;
+            attackDamagePercent.add(extraAttackDamagePercent, true);
+            projectileDamagePercent.add(extraProjectileDamagePercent, true);
         }
 
-        this.attackDamage = sumNumberStat(mainhand, "attack_damage_base", this.attackDamage)
-                * this.attackDamagePercent.val
-                * (1 + 0.0075 * this.vigor)
-                * ((this.currentHealthPercent.perc <= 50) ? 1 - 0.1 * this.crippling : 1);
-        this.attackSpeed = (sumNumberStat(mainhand, "attack_speed_base", this.attackSpeed) + this.attackSpeedFlatBonus) * this.attackDamagePercent.val;
-        this.attackDamageCrit = (attackDamage * 1.5);
-        this.iframeDPS = ((this.attackSpeed >= 2) ? attackDamage * 2 : attackDamage * attackSpeed);
-        this.iframeCritDPS = ((this.attackSpeed >= 2) ? attackDamageCrit * 2 : attackDamageCrit * attackSpeed);
+        attackDamage = sumNumberStat(mainhand, "attack_damage_base", attackDamage)
+                * attackDamagePercent.val
+                * (1 + 0.0075 * vigor)
+                * ((currentHealthPercent.perc <= 50) ? 1 - 0.1 * crippling : 1);
+        attackSpeed = (sumNumberStat(mainhand, "attack_speed_base", attackSpeed) + attackSpeedFlatBonus) * attackDamagePercent.val;
+        attackDamageCrit = (attackDamage * 1.5);
+        iframeDPS = ((attackSpeed >= 2) ? attackDamage * 2 : attackDamage * attackSpeed);
+        iframeCritDPS = ((attackSpeed >= 2) ? attackDamageCrit * 2 : attackDamageCrit * attackSpeed);
 
-        this.projectileDamage = sumNumberStat(mainhand, "projectile_damage_base", projectileDamage)
-                * this.projectileDamagePercent.val
-                * (1 + 0.0075 * this.focus);
-        this.projectileSpeed = sumNumberStat(mainhand, "projectile_speed_base", this.projectileSpeed) * this.projectileDamagePercent.val;
-        this.throwRate = sumNumberStat(mainhand, "throw_rate_base", this.throwRate) * this.throwRatePercent.val;
+        projectileDamage = sumNumberStat(mainhand, "projectile_damage_base", projectileDamage)
+                * projectileDamagePercent.val
+                * (1 + 0.0075 * focus);
+        projectileSpeed = sumNumberStat(mainhand, "projectile_speed_base", projectileSpeed) * projectileDamagePercent.val;
+        throwRate = sumNumberStat(mainhand, "throw_rate_base", throwRate) * throwRatePercent.val;
 
-        this.spellPowerPercent.add(sumNumberStat(mainhand, "spell_power_base", 0), true);
-        this.spellDamage = (
-                this.spellPowerPercent.duplicate()
-                        .mulP(this.magicDamagePercent)
-                        .mul(1 + 0.0075 * this.perspicacity, false)
+        spellPowerPercent.add(sumNumberStat(mainhand, "spell_power_base", 0), true);
+        spellDamage = (
+                spellPowerPercent.duplicate()
+                        .mulP(magicDamagePercent)
+                        .mul(1 + 0.0075 * perspicacity, false)
                 );
-        this.spellCooldownPercent = this.spellCooldownPercent.mul(pow(0.95, this.aptitude + this.ineptitude), false);
+        spellCooldownPercent = spellCooldownPercent.mul(pow(0.95, aptitude + ineptitude), false);
             }
 
     private void calculateDefenseStats() {
         Map<String, Map<String, Percentage>> drs =  calculateDamageReductions();
 
-        String drType = (this.situationals.get("second_wind") > 0) ? "second_wind" : "base";
+        String drType = (situationals.get("second_wind") > 0) ? "second_wind" : "base";
 
-        this.meleeDR = drs.get("melee").get(drType);
-        this.projectileDR = drs.get("projectile").get(drType);
-        this.magicDR = drs.get("magic").get(drType);
-        this.blastDR = drs.get("blast").get(drType);
-        this.fireDR = drs.get("fire").get(drType);
-        this.fallDR = drs.get("fall").get(drType);
-        this.ailmentDR = drs.get("ailment").get(drType);
+        meleeDR = drs.get("melee").get(drType);
+        projectileDR = drs.get("projectile").get(drType);
+        magicDR = drs.get("magic").get(drType);
+        blastDR = drs.get("blast").get(drType);
+        fireDR = drs.get("fire").get(drType);
+        fallDR = drs.get("fall").get(drType);
+        ailmentDR = drs.get("ailment").get(drType);
 
-        if (this.situationals.get("second_wind") == 0 || drType.equals("base")) {
-            this.meleeEHP = (this.healthFinal * this.currentHealthPercent.val / (1 - drs.get("melee").get("base").val));
-            this.projectileEHP = (this.healthFinal * this.currentHealthPercent.val / (1 - drs.get("projectile").get("base").val));
-            this.magicEHP = (this.healthFinal * this.currentHealthPercent.val / (1 - drs.get("magic").get("base").val));
-            this.blastEHP = (this.healthFinal * this.currentHealthPercent.val / (1 - drs.get("blast").get("base").val));
-            this.fireEHP = (this.healthFinal * this.currentHealthPercent.val / (1 - drs.get("fire").get("base").val));
-            this.fallEHP = (this.healthFinal * this.currentHealthPercent.val / (1 - drs.get("fall").get("base").val));
-            this.ailmentEHP = (this.healthFinal * this.currentHealthPercent.val / (1 - drs.get("ailment").get("base").val));
+        if (situationals.get("second_wind") == 0 || drType.equals("base")) {
+            meleeEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("melee").get("base").val));
+            projectileEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("projectile").get("base").val));
+            magicEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("magic").get("base").val));
+            blastEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("blast").get("base").val));
+            fireEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("fire").get("base").val));
+            fallEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("fall").get("base").val));
+            ailmentEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("ailment").get("base").val));
         } else {
-            double hpNoSecondWind = max(0, (this.currentHealh - this.healthFinal * 0.5));
-            double hpSecondWind = min(this.currentHealh, this.healthFinal * 0.5);
-            this.meleeEHP = (hpNoSecondWind / (1 - drs.get("melee").get("base").val) + hpSecondWind / (1 - drs.get("melee").get("second_wind").val));
-            this.projectileEHP = (hpNoSecondWind / (1 - drs.get("projectile").get("base").val) + hpSecondWind / (1 - drs.get("projectile").get("second_wind").val));
-            this.magicEHP = (hpNoSecondWind / (1 - drs.get("magic").get("base").val) + hpSecondWind / (1 - drs.get("magic").get("second_wind").val));
-            this.blastEHP = (hpNoSecondWind / (1 - drs.get("blast").get("base").val) + hpSecondWind / (1 - drs.get("blast").get("second_wind").val));
-            this.fireEHP = (hpNoSecondWind / (1 - drs.get("fire").get("base").val) + hpSecondWind / (1 - drs.get("fire").get("second_wind").val));
-            this.fallEHP = (hpNoSecondWind / (1 - drs.get("fall").get("base").val) + hpSecondWind / (1 - drs.get("fall").get("second_wind").val));
-            this.ailmentEHP = (hpNoSecondWind / (1 - drs.get("ailment").get("base").val) + hpSecondWind / (1 - drs.get("ailment").get("second_wind").val));
+            double hpNoSecondWind = max(0, (currentHealh - healthFinal * 0.5));
+            double hpSecondWind = min(currentHealh, healthFinal * 0.5);
+            meleeEHP = (hpNoSecondWind / (1 - drs.get("melee").get("base").val) + hpSecondWind / (1 - drs.get("melee").get("second_wind").val));
+            projectileEHP = (hpNoSecondWind / (1 - drs.get("projectile").get("base").val) + hpSecondWind / (1 - drs.get("projectile").get("second_wind").val));
+            magicEHP = (hpNoSecondWind / (1 - drs.get("magic").get("base").val) + hpSecondWind / (1 - drs.get("magic").get("second_wind").val));
+            blastEHP = (hpNoSecondWind / (1 - drs.get("blast").get("base").val) + hpSecondWind / (1 - drs.get("blast").get("second_wind").val));
+            fireEHP = (hpNoSecondWind / (1 - drs.get("fire").get("base").val) + hpSecondWind / (1 - drs.get("fire").get("second_wind").val));
+            fallEHP = (hpNoSecondWind / (1 - drs.get("fall").get("base").val) + hpSecondWind / (1 - drs.get("fall").get("second_wind").val));
+            ailmentEHP = (hpNoSecondWind / (1 - drs.get("ailment").get("base").val) + hpSecondWind / (1 - drs.get("ailment").get("second_wind").val));
         }
 
-        this.meleeHNDR = new Percentage((1 - ((1 - drs.get("melee").get(drType).val) / (this.healthFinal / 20))), false);
-        this.projectileHNDR = new Percentage((1 - ((1 - drs.get("projectile").get(drType).val) / (this.healthFinal / 20))), false);
-        this.magicHNDR = new Percentage((1 - ((1 - drs.get("magic").get(drType).val) / (this.healthFinal / 20))), false);
-        this.blastHNDR = new Percentage((1 - ((1 - drs.get("blast").get(drType).val) / (this.healthFinal / 20))), false);
-        this.fireHNDR = new Percentage((1 - ((1 - drs.get("fire").get(drType).val) / (this.healthFinal / 20))), false);
-        this.fallHNDR = new Percentage((1 - ((1 - drs.get("fall").get(drType).val) / (this.healthFinal / 20))), false);
-        this.ailmentHNDR = new Percentage((1 - ((1 - drs.get("ailment").get(drType).val) / (this.healthFinal / 20))), false);
+        meleeHNDR = new Percentage((1 - ((1 - drs.get("melee").get(drType).val) / (healthFinal / 20))), false);
+        projectileHNDR = new Percentage((1 - ((1 - drs.get("projectile").get(drType).val) / (healthFinal / 20))), false);
+        magicHNDR = new Percentage((1 - ((1 - drs.get("magic").get(drType).val) / (healthFinal / 20))), false);
+        blastHNDR = new Percentage((1 - ((1 - drs.get("blast").get(drType).val) / (healthFinal / 20))), false);
+        fireHNDR = new Percentage((1 - ((1 - drs.get("fire").get(drType).val) / (healthFinal / 20))), false);
+        fallHNDR = new Percentage((1 - ((1 - drs.get("fall").get(drType).val) / (healthFinal / 20))), false);
+        ailmentHNDR = new Percentage((1 - ((1 - drs.get("ailment").get(drType).val) / (healthFinal / 20))), false);
     }
 
     private Map<String, Map<String, Percentage>> calculateDamageReductions() {
@@ -203,32 +207,32 @@ public class Stats {
         boolean hasEqual = armor == agility;
         boolean hasNothing = (hasEqual && armor == 0);
 
-        double situationalArmor = (this.situationals.get("adaptability") > 0) ? min(max(agility, armor), 30) * 0.2 : min(armor, 30) * 0.2;
-        double situationalAgility = (this.situationals.get("adaptability") > 0) ? min(max(agility, armor), 30) * 0.2 : min(agility, 30) * 0.2;
+        double situationalArmor = (situationals.get("adaptability") > 0) ? min(max(agility, armor), 30) * 0.2 : min(armor, 30) * 0.2;
+        double situationalAgility = (situationals.get("adaptability") > 0) ? min(max(agility, armor), 30) * 0.2 : min(agility, 30) * 0.2;
 
-        double etherealSit =    (this.situationals.get("ethereal") > 0) ? situationalAgility * this.situationals.get("ethereal") : 0;
-        double tempoSit =       (this.situationals.get("tempo") > 0) ? situationalAgility * this.situationals.get("tempo") : 0;
-        double evasionSit =     (this.situationals.get("evasion") > 0) ? situationalAgility * this.situationals.get("evasion") : 0;
-        double reflexesSit =    (this.situationals.get("reflexes") > 0) ? situationalAgility * this.situationals.get("reflexes") : 0;
-        double shieldingSit =   (this.situationals.get("shielding") > 0) ? situationalArmor * this.situationals.get("shielding") : 0;
-        double poiseSit =       (this.situationals.get("poise") > 0) ? ((this.currentHealthPercent.val >= 0.9) ? situationalArmor * this.situationals.get("poise") : 0) : 0;
-        double inureSit =       (this.situationals.get("inure") > 0) ? situationalArmor * this.situationals.get("inure") : 0;
-        double guardSit =       (this.situationals.get("guard") > 0) ? situationalArmor * this.situationals.get("guard") : 0;
-        double cloakedSit =     (this.situationals.get("cloaked") > 0) ? situationalAgility * this.situationals.get("cloaked") : 0;
+        double etherealSit =    (situationals.get("ethereal") > 0) ? situationalAgility * situationals.get("ethereal") : 0;
+        double tempoSit =       (situationals.get("tempo") > 0) ? situationalAgility * situationals.get("tempo") : 0;
+        double evasionSit =     (situationals.get("evasion") > 0) ? situationalAgility * situationals.get("evasion") : 0;
+        double reflexesSit =    (situationals.get("reflexes") > 0) ? situationalAgility * situationals.get("reflexes") : 0;
+        double shieldingSit =   (situationals.get("shielding") > 0) ? situationalArmor * situationals.get("shielding") : 0;
+        double poiseSit =       (situationals.get("poise") > 0) ? ((currentHealthPercent.val >= 0.9) ? situationalArmor * situationals.get("poise") : 0) : 0;
+        double inureSit =       (situationals.get("inure") > 0) ? situationalArmor * situationals.get("inure") : 0;
+        double guardSit =       (situationals.get("guard") > 0) ? situationalArmor * situationals.get("guard") : 0;
+        double cloakedSit =     (situationals.get("cloaked") > 0) ? situationalAgility * situationals.get("cloaked") : 0;
 
         double steadfastScaling = 0.33;
         double steadfastMaxScaling = 20;
         double steadfastLowerBound = 1 - (steadfastMaxScaling / steadfastScaling / 100);
-        double steadfastArmor = (1 - max(steadfastLowerBound, min(1, this.currentHealthPercent.val))) * steadfastScaling *
-                min(((this.situationals.get("adaptability") > 0 && moreAgility) ? agility : (moreArmor) ? armor : (this.situationals.get("adaptability") == 0) ? armor : 0), 30);
-        double steadfastSit = (this.situationals.get("steadfast") > 0) ? steadfastArmor * this.situationals.get("steadfast") : 0;
+        double steadfastArmor = (1 - max(steadfastLowerBound, min(1, currentHealthPercent.val))) * steadfastScaling *
+                min(((situationals.get("adaptability") > 0 && moreAgility) ? agility : (moreArmor) ? armor : (situationals.get("adaptability") == 0) ? armor : 0), 30);
+        double steadfastSit = (situationals.get("steadfast") > 0) ? steadfastArmor * situationals.get("steadfast") : 0;
 
         double sumSits = etherealSit + tempoSit + evasionSit + reflexesSit + shieldingSit + poiseSit + inureSit + guardSit + cloakedSit;
         double sumArmorSits = shieldingSit + poiseSit + inureSit + guardSit;
         double sumAgiSits = etherealSit + tempoSit + evasionSit + reflexesSit + cloakedSit;
 
         double armorPlusSits = armor;
-        if (this.situationals.get("adaptability") > 0) {
+        if (situationals.get("adaptability") > 0) {
             if (moreArmor) {
                 armorPlusSits += sumSits;
             }
@@ -238,7 +242,7 @@ public class Stats {
         double armorPlusSitsSteadfast = armorPlusSits + steadfastSit;
 
         double agilityPlusSits = agility;
-        if (this.situationals.get("adaptability") > 0) {
+        if (situationals.get("adaptability") > 0) {
             if (moreAgility) {
                 agilityPlusSits += sumSits;
             }
@@ -249,12 +253,12 @@ public class Stats {
         double halfArmor = armorPlusSitsSteadfast / 2;
         double halfAgility = agilityPlusSits / 2;
 
-        Map<String, Double> meleeDamage =       calculateDamageTaken(hasNothing,    this.meleeProt,         this.meleeFragility,        2, armorPlusSitsSteadfast,  agilityPlusSits);
-        Map<String, Double> projectileDamage =  calculateDamageTaken(hasNothing,    this.projectileProt,    this.projectileFragility,   2, armorPlusSitsSteadfast,  agilityPlusSits);
-        Map<String, Double> magicDamage =       calculateDamageTaken(hasNothing,    this.magicProt,         this.magicFragility,        2, armorPlusSitsSteadfast,  agilityPlusSits);
-        Map<String, Double> blastDamage =       calculateDamageTaken(hasNothing,    this.blastProt,         this.blastFragility,        2, armorPlusSitsSteadfast,  agilityPlusSits);
-        Map<String, Double> fireDamage =        calculateDamageTaken(hasNothing,    this.fireProt,          this.fireFragility,         2, halfArmor,               halfAgility);
-        Map<String, Double> fallDamage =        calculateDamageTaken(hasNothing,    this.fallProt,          0,                          3, halfArmor,               halfAgility);
+        Map<String, Double> meleeDamage =       calculateDamageTaken(hasNothing,    meleeProt,         meleeFragility,        2, armorPlusSitsSteadfast,  agilityPlusSits);
+        Map<String, Double> projectileDamage =  calculateDamageTaken(hasNothing,    projectileProt,    projectileFragility,   2, armorPlusSitsSteadfast,  agilityPlusSits);
+        Map<String, Double> magicDamage =       calculateDamageTaken(hasNothing,    magicProt,         magicFragility,        2, armorPlusSitsSteadfast,  agilityPlusSits);
+        Map<String, Double> blastDamage =       calculateDamageTaken(hasNothing,    blastProt,         blastFragility,        2, armorPlusSitsSteadfast,  agilityPlusSits);
+        Map<String, Double> fireDamage =        calculateDamageTaken(hasNothing,    fireProt,          fireFragility,         2, halfArmor,               halfAgility);
+        Map<String, Double> fallDamage =        calculateDamageTaken(hasNothing,    fallProt,          0,                          3, halfArmor,               halfAgility);
         Map<String, Double> ailmentDamage =     calculateDamageTaken(true,          0,                      0,                          0, 0,                       0);
 
         Map<String, Map<String, Percentage>> reductions = new HashMap<>();
@@ -293,9 +297,9 @@ public class Stats {
     private Map<String, Double> calculateDamageTaken(boolean noArmor, double prot, double fragility, double protModifier, double earmor, double eagility) {
         Map<String, Double> damageTaken = new HashMap<>();
 
-        double baseDmg = (noArmor) ? 100 * (1 - this.worldlyProtection * 0.1) * pow(0.96, (prot * protModifier - fragility * protModifier)) :
-                100 * (1 - this.worldlyProtection * 0.1) * pow(0.96, ((prot * protModifier - fragility * protModifier) + earmor + eagility) - (0.5 * earmor * eagility / (earmor + eagility))) * (1 - (this.tenacity * 0.005));
-        double secondwindDmg = baseDmg * pow(0.9, this.situationals.get("second_wind")) * (1-(this.tenacity * 0.005));
+        double baseDmg = (noArmor) ? 100 * (1 - worldlyProtection * 0.1) * pow(0.96, (prot * protModifier - fragility * protModifier)) :
+                100 * (1 - worldlyProtection * 0.1) * pow(0.96, ((prot * protModifier - fragility * protModifier) + earmor + eagility) - (0.5 * earmor * eagility / (earmor + eagility))) * (1 - (tenacity * 0.005));
+        double secondwindDmg = baseDmg * pow(0.9, situationals.get("second_wind")) * (1-(tenacity * 0.005));
 
 
         damageTaken.put("base", baseDmg);
@@ -305,204 +309,195 @@ public class Stats {
     }
 
     private void adjustStats() {
-        this.healthFinal = this.healthFlat * this.healthPercent.val * (1 + 0.01*this.vitality);
-        this.currentHealh = this.healthFinal * this.currentHealthPercent.val;
-        this.speedPercent = this.speedPercent
-                .mul((this.speedFlat)/0.1, false)
-                .mul(((this.currentHealthPercent.perc <= 50) ? 1 - 0.1 * this.crippling : 1), false);
-        this.knockbackRes = (this.knockbackRes > 10) ? 100 : this.knockbackRes * 10;
+        healthFinal = healthFlat * healthPercent.val * (1 + 0.01*vitality);
+        currentHealh = healthFinal * currentHealthPercent.val;
+        speedPercent = speedPercent
+                .mul((speedFlat)/0.1, false)
+                .mul(((currentHealthPercent.perc <= 50) ? 1 - 0.1 * crippling : 1), false);
+        knockbackRes = (knockbackRes > 10) ? 100 : knockbackRes * 10;
 
-        this.effHealingRate = new Percentage(((20 / this.healthFinal) * this.healingRate.val), false);
-        this.regenPerSec = 0.33 * sqrt(this.regenPerSec) * this.healingRate.val;
-        this.regenPerSecPercent = new Percentage((this.regenPerSec / this.healthFinal), false);
+        effHealingRate = new Percentage(((20 / healthFinal) * healingRate.val), false);
+        regenPerSec = 0.33 * sqrt(regenPerSec) * healingRate.val;
+        regenPerSecPercent = new Percentage((regenPerSec / healthFinal), false);
 
-        this.lifeDrainOnCrit = (sqrt(this.lifeDrainOnCrit)) * this.healingRate.val;
-        this.lifeDrainOnCritPercent = new Percentage((lifeDrainOnCrit / this.healthFinal), false);
+        lifeDrainOnCrit = (sqrt(lifeDrainOnCrit)) * healingRate.val;
+        lifeDrainOnCritPercent = new Percentage((lifeDrainOnCrit / healthFinal), false);
 
-        this.thorns *= (double) this.thornsPercent.val;
+        thorns *= (double) thornsPercent.val;
     }
 
     private Double sumNumberStat(List<ItemStat> itemStats, String statName, double defaultIncrement) {
         if (itemStats == null) return 0.0;
         double statValue = 0.0;
         for (ItemStat stat : itemStats) {
-            if (statName.equals("mainhand")) {
-                System.out.println(stat.statName);
-                System.out.println(stat.statValue);
-                System.out.println();
-            }
             if (stat.statName.equals(statName)) {
                 statValue = stat.statValue;
                 break;
             }
         }
-        return (statValue > 0.0) ? statValue : defaultIncrement;
+        return (statValue != 0.0) ? statValue : defaultIncrement;
     }
 
     private double sumEnchantmentStat(List<ItemStat> itemStats, String enchName, double perLevelMultiplier) {
         if (itemStats == null) return perLevelMultiplier;
-        double enchLevel = 0;
+        double enchLevel = 0.0;
         for (ItemStat stat : itemStats) {
             if (stat.statName.equals(enchName)) {
                 enchLevel = stat.statValue;
                 break;
             }
         }
-        return enchLevel * perLevelMultiplier;
+        return (enchLevel != 0.0) ? enchLevel * perLevelMultiplier : perLevelMultiplier;
     }
     private void sumAllStats() {
-        this.allItemStats.keySet().forEach(type -> {
-            List<ItemStat> itemStats = this.allItemStats.get(type);
-            this.healthPercent.add(sumNumberStat(itemStats, "max_health_percent", 0), true);
-            this.healthFlat += sumNumberStat(itemStats, "max_health_flat", 0);
-            this.agility += sumNumberStat(itemStats, "agility", 0);
-            this.armor += sumNumberStat(itemStats, "armor", 0);
-            this.speedPercent.add(sumNumberStat(itemStats, "speed_percent", 0), true);
-            this.speedFlat += sumNumberStat(itemStats, "speed_flat", 0);
-            this.knockbackRes += sumNumberStat(itemStats, "knockback_resistance_flat", 0);
-            this.thorns += sumNumberStat(itemStats, "thorns_flat", 0);
-            this.throwRatePercent.add(sumNumberStat(itemStats, "throw_rate_percent", 0), true);
+        allItemStats.keySet().forEach(type -> {
+            List<ItemStat> itemStats = allItemStats.get(type);
+            healthPercent.add(sumNumberStat(itemStats, "max_health_percent", 0), true);
+            healthFlat += sumNumberStat(itemStats, "max_health_flat", 0);
+            agility += sumNumberStat(itemStats, "agility", 0);
+            armor += sumNumberStat(itemStats, "armor", 0);
+            speedPercent.add(sumNumberStat(itemStats, "speed_percent", 0), true);
+            speedFlat += sumNumberStat(itemStats, "speed_flat", 0);
+            knockbackRes += sumNumberStat(itemStats, "knockback_resistance_flat", 0);
+            thorns += sumNumberStat(itemStats, "thorns_flat", 0);
+            throwRatePercent.add(sumNumberStat(itemStats, "throw_rate_percent", 0), true);
+            fireTickDamage += sumNumberStat(itemStats, "inferno", 0);
 
-            this.healingRate
-                    .add(this.sumEnchantmentStat(itemStats, "curse_of_anemia", -10), true)
-                    .add(this.sumEnchantmentStat(itemStats, "sustenance", 10), true);
-            this.regenPerSec += this.sumEnchantmentStat(itemStats, "regeneration", 1);
-            this.lifeDrainOnCrit += this.sumEnchantmentStat(itemStats, "life_drain", 1);
+            healingRate
+                    .add(sumEnchantmentStat(itemStats, "curse_of_anemia", -10), true)
+                    .add(sumEnchantmentStat(itemStats, "sustenance", 10), true);
+            regenPerSec += sumEnchantmentStat(itemStats, "regeneration", 1);
+            lifeDrainOnCrit += sumEnchantmentStat(itemStats, "life_drain", 1);
 
-            this.meleeProt += sumNumberStat(itemStats, "melee_protection", 0);
-            this.projectileProt += sumNumberStat(itemStats, "projectile_protection", 0);
-            this.magicProt += sumNumberStat(itemStats, "magic_protection", 0);
-            this.blastProt += sumNumberStat(itemStats, "blast_protection", 0);
-            this.fireProt += sumNumberStat(itemStats, "fire_protection", 0);
-            this.fallProt += sumNumberStat(itemStats, "feather_falling", 0);
+            meleeProt += sumNumberStat(itemStats, "melee_protection", 0);
+            projectileProt += sumNumberStat(itemStats, "projectile_protection", 0);
+            magicProt += sumNumberStat(itemStats, "magic_protection", 0);
+            blastProt += sumNumberStat(itemStats, "blast_protection", 0);
+            fireProt += sumNumberStat(itemStats, "fire_protection", 0);
+            fallProt += sumNumberStat(itemStats, "feather_falling", 0);
 
-            this.meleeFragility += sumNumberStat(itemStats, "melee_fragility", 0);
-            this.projectileFragility += sumNumberStat(itemStats, "projectile_fragility", 0);
-            this.magicFragility += sumNumberStat(itemStats, "magic_fragility", 0);
-            this.blastFragility += sumNumberStat(itemStats, "blast_fragility", 0);
-            this.fireFragility += sumNumberStat(itemStats, "fire_fragility", 0);
+            meleeFragility += sumNumberStat(itemStats, "melee_fragility", 0);
+            projectileFragility += sumNumberStat(itemStats, "projectile_fragility", 0);
+            magicFragility += sumNumberStat(itemStats, "magic_fragility", 0);
+            blastFragility += sumNumberStat(itemStats, "blast_fragility", 0);
+            fireFragility += sumNumberStat(itemStats, "fire_fragility", 0);
 
-            this.attackDamagePercent.add(sumNumberStat(itemStats, "attack_damage_percent", 0), true);
-            this.attackSpeedPercent.add(sumNumberStat(itemStats, "attack_speed_percent", 0), true);
-            this.attackSpeedFlatBonus += sumNumberStat(itemStats, "attack_speed_flat", 0);
+            attackDamagePercent.add(sumNumberStat(itemStats, "attack_damage_percent", 0), true);
+            attackSpeedPercent.add(sumNumberStat(itemStats, "attack_speed_percent", 0), true);
+            attackSpeedFlatBonus += sumNumberStat(itemStats, "attack_speed_flat", 0);
 
-            this.projectileDamagePercent.add(sumNumberStat(itemStats, "projectile_damage_percent", 0), true);
-            this.projectileSpeedPercent.add(sumNumberStat(itemStats, "projectile_speed_percent", 0), true);
+            projectileDamagePercent.add(sumNumberStat(itemStats, "projectile_damage_percent", 0), true);
+            projectileSpeedPercent.add(sumNumberStat(itemStats, "projectile_speed_percent", 0), true);
 
-            this.magicDamagePercent.add(sumNumberStat(itemStats, "magic_damage_percent", 0), true);
+            magicDamagePercent.add(sumNumberStat(itemStats, "magic_damage_percent", 0), true);
 
-            this.aptitude += (double) this.sumEnchantmentStat(itemStats, "aptitude", 1);
-            this.ineptitude += (double) this.sumEnchantmentStat(itemStats, "ineptitude", -1);
+            aptitude += (double) sumEnchantmentStat(itemStats, "aptitude", 1);
+            ineptitude += (double) sumEnchantmentStat(itemStats, "ineptitude", -1);
 
-            this.worldlyProtection += sumNumberStat(itemStats, "worldly_protection", 0);
+            worldlyProtection += sumNumberStat(itemStats, "worldly_protection", 0);
 
-            this.situationals.put("shielding", (int) (this.situationals.get("shielding") + sumNumberStat(itemStats, "shielding", 0))) ;
-            this.situationals.put("poise", (int) (this.situationals.get("poise") + sumNumberStat(itemStats, "poise", 0)));
-            this.situationals.put("inure", (int) (this.situationals.get("inure") + sumNumberStat(itemStats, "inure", 0)));
-            this.situationals.put("steadfast", (int) (this.situationals.get("steadfast") + sumNumberStat(itemStats, "steadfast", 0)));
-            this.situationals.put("guard", (int) (this.situationals.get("guard") + sumNumberStat(itemStats, "guard", 0)));
-            this.situationals.put("ethereal", (int) (this.situationals.get("ethereal") + sumNumberStat(itemStats, "ethereal", 0)));
-            this.situationals.put("reflexes", (int) (this.situationals.get("reflexes") + sumNumberStat(itemStats, "reflexes", 0)));
-            this.situationals.put("evasion", (int) (this.situationals.get("evasion") + sumNumberStat(itemStats, "evasion", 0)));
-            this.situationals.put("tempo", (int) (this.situationals.get("tempo") + sumNumberStat(itemStats, "tempo", 0)));
-            this.situationals.put("cloaked", (int) (this.situationals.get("cloaked") + sumNumberStat(itemStats, "cloaked", 0)));
-            this.situationals.put("adaptability", (int) (this.situationals.get("adaptability") + sumNumberStat(itemStats, "adaptability", 0)));
-            this.situationals.put("second_wind", (int) (this.situationals.get("second_wind") + sumNumberStat(itemStats, "second_wind", 0)));
+            situationals.put("shielding", (int) (situationals.get("shielding") + sumNumberStat(itemStats, "shielding", 0))) ;
+            situationals.put("poise", (int) (situationals.get("poise") + sumNumberStat(itemStats, "poise", 0)));
+            situationals.put("inure", (int) (situationals.get("inure") + sumNumberStat(itemStats, "inure", 0)));
+            situationals.put("steadfast", (int) (situationals.get("steadfast") + sumNumberStat(itemStats, "steadfast", 0)));
+            situationals.put("guard", (int) (situationals.get("guard") + sumNumberStat(itemStats, "guard", 0)));
+            situationals.put("ethereal", (int) (situationals.get("ethereal") + sumNumberStat(itemStats, "ethereal", 0)));
+            situationals.put("reflexes", (int) (situationals.get("reflexes") + sumNumberStat(itemStats, "reflexes", 0)));
+            situationals.put("evasion", (int) (situationals.get("evasion") + sumNumberStat(itemStats, "evasion", 0)));
+            situationals.put("tempo", (int) (situationals.get("tempo") + sumNumberStat(itemStats, "tempo", 0)));
+            situationals.put("cloaked", (int) (situationals.get("cloaked") + sumNumberStat(itemStats, "cloaked", 0)));
+            situationals.put("adaptability", (int) (situationals.get("adaptability") + sumNumberStat(itemStats, "adaptability", 0)));
+            situationals.put("second_wind", (int) (situationals.get("second_wind") + sumNumberStat(itemStats, "second_wind", 0)));
 
-            this.crippling += sumNumberStat(itemStats, "curse_of_crippling", 0);
-            this.corruption += sumNumberStat(itemStats, "curse_of_corruption", 0);
+            crippling += sumNumberStat(itemStats, "curse_of_crippling", 0);
+            corruption += sumNumberStat(itemStats, "curse_of_corruption", 0);
         });
     }
     private void setDefaultValues() {
-        this.agility = 0;
-        this.armor = 0;
-        this.speedPercent = new Percentage(100, true);
-        this.speedFlat = 0.1;
-        this.knockbackRes = 0;
-        this.thorns = 0;
-        this.thornsPercent = new Percentage(100, true);
+        agility = 0;
+        armor = 0;
+        speedPercent = new Percentage(100, true);
+        speedFlat = 0.1;
+        knockbackRes = 0;
+        thorns = 0;
+        fireTickDamage = 1;
+        thornsPercent = new Percentage(100, true);
 
-        this.healthPercent = new Percentage(100, true);
-        this.healthFlat = 20;
-        this.healthFinal = 20;
-        this.currentHealh = 20;
-        this.healingRate = new Percentage(100, true);
-        this.effHealingRate = new Percentage(100, true);
-        this.regenPerSec = 0;
-        this.regenPerSecPercent = new Percentage(100, true);
-        this.lifeDrainOnCrit = 0;
-        this.lifeDrainOnCritPercent = new Percentage(100, true);
+        healthPercent = new Percentage(100, true);
+        healthFlat = 20;
+        healthFinal = 20;
+        currentHealh = 20;
+        healingRate = new Percentage(100, true);
+        effHealingRate = new Percentage(100, true);
+        regenPerSec = 0;
+        regenPerSecPercent = new Percentage(0, true);
+        lifeDrainOnCrit = 0;
+        lifeDrainOnCritPercent = new Percentage(0, true);
 
-        this.meleeProt = 0;
-        this.projectileProt = 0;
-        this.magicProt = 0;
-        this.blastProt = 0;
-        this.fireProt = 0;
-        this.fallProt = 0;
-        this.ailmentProt = 0;
+        meleeProt = 0;
+        projectileProt = 0;
+        magicProt = 0;
+        blastProt = 0;
+        fireProt = 0;
+        fallProt = 0;
+        ailmentProt = 0;
 
-        this.meleeFragility = 0;
-        this.projectileFragility = 0;
-        this.magicFragility = 0;
-        this.blastFragility = 0;
-        this.fireFragility = 0;
+        meleeFragility = 0;
+        projectileFragility = 0;
+        magicFragility = 0;
+        blastFragility = 0;
+        fireFragility = 0;
 
-        this.meleeHNDR = new Percentage(0, true);
-        this.projectileHNDR = new Percentage(0, true);
-        this.magicHNDR = new Percentage(0, true);
-        this.blastHNDR = new Percentage(0, true);
-        this.fireHNDR = new Percentage(0, true);
-        this.fallHNDR = new Percentage(0, true);
-        this.ailmentHNDR = new Percentage(0, true);
+        meleeHNDR = new Percentage(0, true);
+        projectileHNDR = new Percentage(0, true);
+        magicHNDR = new Percentage(0, true);
+        blastHNDR = new Percentage(0, true);
+        fireHNDR = new Percentage(0, true);
+        fallHNDR = new Percentage(0, true);
+        ailmentHNDR = new Percentage(0, true);
 
-        this.meleeDR = new Percentage(0, true);
-        this.projectileDR = new Percentage(0, true);
-        this.magicDR = new Percentage(0, true);
-        this.blastDR = new Percentage(0, true);
-        this.fireDR = new Percentage(0, true);
-        this.fallDR = new Percentage(0, true);
-        this.ailmentDR = new Percentage(0, true);
+        meleeDR = new Percentage(0, true);
+        projectileDR = new Percentage(0, true);
+        magicDR = new Percentage(0, true);
+        blastDR = new Percentage(0, true);
+        fireDR = new Percentage(0, true);
+        fallDR = new Percentage(0, true);
+        ailmentDR = new Percentage(0, true);
 
-        this.meleeEHP = 0;
-        this.projectileEHP = 0;
-        this.magicEHP = 0;
-        this.blastEHP = 0;
-        this.fireEHP = 0;
-        this.fallEHP = 0;
-        this.ailmentEHP = 0;
+        meleeEHP = 0;
+        projectileEHP = 0;
+        magicEHP = 0;
+        blastEHP = 0;
+        fireEHP = 0;
+        fallEHP = 0;
+        ailmentEHP = 0;
 
-        this.hasMoreArmor = false;
-        this.hasMoreAgility = false;
-        this.hasEqualDefenses = false;
-        this.worldlyProtection = 0;
+        worldlyProtection = 0;
 
-        this.attackDamagePercent = new Percentage(100, true);
-        this.attackSpeedPercent = new Percentage(100, true);
-        this.attackSpeed = 4;
-        this.attackSpeedFlatBonus = 0;
-        this.attackDamage = 1;
-        this.attackDamageCrit = 1.5;
-        this.iframeDPS = 2;
-        this.iframeCritDPS = 3;
+        attackDamagePercent = new Percentage(100, true);
+        attackSpeedPercent = new Percentage(100, true);
+        attackSpeed = 4;
+        attackSpeedFlatBonus = 0;
+        attackDamage = 1;
+        attackDamageCrit = 1.5;
+        iframeDPS = 2;
+        iframeCritDPS = 3;
 
-        this.projectileDamagePercent = new Percentage(100, true);
-        this.projectileDamage = 0;
-        this.projectileSpeedPercent = new Percentage(100, true);
-        this.projectileSpeed = 0;
-        this.throwRatePercent = new Percentage(100, true);
-        this.throwRate = 0;
+        projectileDamagePercent = new Percentage(100, true);
+        projectileDamage = 0;
+        projectileSpeedPercent = new Percentage(100, true);
+        projectileSpeed = 0;
+        throwRatePercent = new Percentage(100, true);
+        throwRate = 0;
 
-        this.magicDamagePercent = new Percentage(100, true);
-        this.spellPowerPercent = new Percentage(100, true);
-        this.spellDamage = new Percentage(100, true);
-        this.spellCooldownPercent = new Percentage(100, true);
+        magicDamagePercent = new Percentage(100, true);
+        spellPowerPercent = new Percentage(100, true);
+        spellDamage = new Percentage(100, true);
+        spellCooldownPercent = new Percentage(100, true);
 
-        this.aptitude = 0;
-        this.ineptitude = 0;
-        this.crippling = 0;
-        this.corruption = 0;
-
-        this.twoHanded = allItemStats.containsKey("two_handed");
-        this.weightless = allItemStats.containsKey("weightless");
+        aptitude = 0;
+        ineptitude = 0;
+        crippling = 0;
+        corruption = 0;
     }
 }
