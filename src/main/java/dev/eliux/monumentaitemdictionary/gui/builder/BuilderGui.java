@@ -3,7 +3,6 @@ package dev.eliux.monumentaitemdictionary.gui.builder;
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
-import dev.eliux.monumentaitemdictionary.gui.widgets.BuildButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.BuildCharmButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.BuildItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
@@ -18,7 +17,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
-import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
@@ -30,7 +30,6 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.lang.Math.floor;
 import static net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity;
 
 public class BuilderGui extends Screen {
@@ -52,6 +51,7 @@ public class BuilderGui extends Screen {
     public final int labelMenuHeight = 30;
     public final int itemPadding = 5;
     public final int buttonSize = 50;
+    public final int charmsY = 220;
     private int halfWidth = 0;
     private TextFieldWidget nameBar;
     private ItemIconButtonWidget showBuildDictionaryButton;
@@ -126,41 +126,59 @@ public class BuilderGui extends Screen {
         this.halfWidth = width/2;
         buildItemButtons.clear();
         for (int i = 0; i < 6; i++) {
-            DictionaryItem item = buildItems.get(i);
-            BuildItemButtonWidget itemButton = new BuildItemButtonWidget((i < 2) ? halfWidth + 30 : itemPadding, labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2), buttonSize, Text.literal(""), (b) -> {
-                itemButtonClicked(hasShiftDown(), hasControlDown(), item);
-            }, item, () -> controller.itemGui.generateItemLoreText(item), this);
+            BuildItemButtonWidget itemButton = getBuildItemButtonWidget(i);
             buildItemButtons.add(itemButton);
         }
 
         buildCharmButtons.clear();
         if (charms.isEmpty()) {
-            charmsButton = new BuildCharmButtonWidget(halfWidth + 30, 220, 50, Text.literal(""), (b) -> {
-                controller.getCharmFromDictionary();
-            }, null,  null, this);
-            buildCharmButtons.add(charmsButton);
+            charmsButton = getCharmButtonWidget(0, null);
         } else {
             for (int i = 0; i < charms.size(); i++) {
                 DictionaryCharm charm = charms.get(i);
-                charmsButton = new BuildCharmButtonWidget(halfWidth + 30 + ((i%6)*55), 220 + ((i/6)*55), 50, Text.literal(""), (b) -> {
-                     if (!hasShiftDown() && !hasControlDown()) {
-                         charms.removeAll(Collections.singleton(charm));
-                         controller.getCharmFromDictionary();
-                     } else if (hasShiftDown()) {
-                         charms.removeAll(Collections.singleton(charm));
-                     } else {
-                         String wikiFormatted = charm.name.replace(" ", "_").replace("'", "%27");
-                         Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
-                     }
-                }, charm,  () -> controller.charmGui.generateCharmLoreText(charm), this);
-                buildCharmButtons.add(charmsButton);
+                charmsButton = getCharmButtonWidget(i, charm);
             }
             if (charms.size() < 12) {
-                charmsButton = new BuildCharmButtonWidget(halfWidth + 30 + ((charms.size() % 6) * 55), 220 + ((charms.size() / 6) * 55), 50, Text.literal(""), (b) -> {
-                    controller.getCharmFromDictionary();
-                }, null, null, this);
-                buildCharmButtons.add(charmsButton);
+                charmsButton = getCharmButtonWidget(charms.size() + 1, null);
             }
+        }
+    }
+
+    private BuildCharmButtonWidget getCharmButtonWidget(int i, @Nullable DictionaryCharm charm) {
+        charmsButton = new BuildCharmButtonWidget(halfWidth + 30 + ((i % 6) * (buttonSize + itemPadding)), charmsY + ((i / 6) * (buttonSize + itemPadding)),buttonSize, Text.literal(""), (b) -> {
+            charmButtonclicked(charm, hasShiftDown(), hasControlDown());
+        }, charm,  () -> (charm != null) ? controller.charmGui.generateCharmLoreText(charm) : null, this);
+        buildCharmButtons.add(charmsButton);
+
+        return charmsButton;
+    }
+    private BuildItemButtonWidget getBuildItemButtonWidget(int i) {
+        DictionaryItem item = buildItems.get(i);
+        BuildItemButtonWidget itemButton = new BuildItemButtonWidget(
+                (i < 2) ? halfWidth + 30 : itemPadding,
+                labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2),
+                buttonSize,
+                Text.literal(""),
+                (b) -> {
+                    itemButtonClicked(hasShiftDown(), hasControlDown(), item);
+                },
+                item,
+                () -> controller.itemGui.generateItemLoreText(item),
+                this
+        );
+        return itemButton;
+    }
+
+    private void charmButtonclicked(@Nullable DictionaryCharm charm, boolean shiftDown, boolean ctrlDown) {
+        if (charm == null) controller.setCharmDictionaryScreen();
+        else if (!shiftDown && !ctrlDown) {
+            charms.removeAll(Collections.singleton(charm));
+            controller.getCharmFromDictionary();
+        } else if (shiftDown) {
+            charms.removeAll(Collections.singleton(charm));
+        } else {
+            String wikiFormatted = charm.name.replace(" ", "_").replace("'", "%27");
+            Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
         }
     }
 
@@ -320,7 +338,12 @@ public class BuilderGui extends Screen {
         System.out.println(buildItemButtons.size());
         for (BuildItemButtonWidget button : buildItemButtons) {
             System.out.println(i);
-            drawTextWithShadow(matrices, textRenderer, Text.literal(itemTypesIndex.get(i)).setStyle(Style.EMPTY.withBold(true)), ((i < 2) ? halfWidth + 30 : itemPadding) + buttonSize + 2*itemPadding, labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2), 0xFFFFFFFF);
+            drawTextWithShadow(matrices,
+                    textRenderer,
+                    Text.literal(itemTypesIndex.get(i)).setStyle(Style.EMPTY.withBold(true)),
+                    ((i < 2) ? halfWidth + 30 : itemPadding) + buttonSize + 2*itemPadding,
+                    labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2),
+                    0xFFFFFFFF);
             button.render(matrices, mouseX, mouseY, delta);
             i++;
         }
@@ -335,7 +358,12 @@ public class BuilderGui extends Screen {
         int i = 0;
         for (DictionaryItem item : buildItems) {
             if (item != null) {
-                drawTextWithShadow(matrices, textRenderer, Text.literal(item.name).setStyle(Style.EMPTY.withBold(true).withUnderline(true)), ((i < 2) ? halfWidth + 30 : itemPadding) + buttonSize + 2*itemPadding, 10 + labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2), 0xFF000000 + ItemColors.getColorForLocation(item.location));
+                drawTextWithShadow(matrices,
+                        textRenderer,
+                        Text.literal(item.name).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
+                        ((i < 2) ? halfWidth + 30 : itemPadding) + buttonSize + 2*itemPadding,
+                        10 + labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2),
+                        0xFF000000 + ItemColors.getColorForLocation(item.location));
             }
             i++;
         }
