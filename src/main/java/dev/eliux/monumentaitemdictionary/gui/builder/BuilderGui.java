@@ -139,7 +139,7 @@ public class BuilderGui extends Screen {
                 charmsButton = getCharmButtonWidget(i, charm);
             }
             if (charms.size() < 12) {
-                charmsButton = getCharmButtonWidget(charms.size() + 1, null);
+                charmsButton = getCharmButtonWidget(charms.size(), null);
             }
         }
     }
@@ -154,13 +154,14 @@ public class BuilderGui extends Screen {
     }
     private BuildItemButtonWidget getBuildItemButtonWidget(int i) {
         DictionaryItem item = buildItems.get(i);
+        String itemType = itemTypesIndex.get(i);
         BuildItemButtonWidget itemButton = new BuildItemButtonWidget(
                 (i < 2) ? halfWidth + 30 : itemPadding,
                 labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2),
                 buttonSize,
                 Text.literal(""),
                 (b) -> {
-                    itemButtonClicked(hasShiftDown(), hasControlDown(), item);
+                    itemButtonClicked(item, itemType, hasShiftDown(), hasControlDown());
                 },
                 item,
                 () -> controller.itemGui.generateItemLoreText(item),
@@ -170,24 +171,25 @@ public class BuilderGui extends Screen {
     }
 
     private void charmButtonclicked(@Nullable DictionaryCharm charm, boolean shiftDown, boolean ctrlDown) {
-        if (charm == null) controller.setCharmDictionaryScreen();
+        if (charm == null) controller.getCharmFromDictionary();
         else if (!shiftDown && !ctrlDown) {
             charms.removeAll(Collections.singleton(charm));
             controller.getCharmFromDictionary();
         } else if (shiftDown) {
             charms.removeAll(Collections.singleton(charm));
+            updateStats();
         } else {
             String wikiFormatted = charm.name.replace(" ", "_").replace("'", "%27");
             Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
         }
     }
 
-    private void itemButtonClicked(boolean shiftDown, boolean controlDown, DictionaryItem item) {
-        if (!shiftDown && !controlDown) controller.getItemFromDictionary(item.type);
+    private void itemButtonClicked(@Nullable DictionaryItem item, String itemType, boolean shiftDown, boolean controlDown) {
+        if (!shiftDown && !controlDown) controller.getItemFromDictionary(itemType);
         else if (shiftDown) {
-            System.out.println("hola");
-            buildItems.set(0, null);
-        } else {
+            buildItems.set(itemTypesIndex.indexOf(itemType), null);
+            updateStats();
+        } else if (item != null) {
             String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
             Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
         }
@@ -319,6 +321,7 @@ public class BuilderGui extends Screen {
         int entityMouseY = -(mouseY - y + size + 3*size/4);
         drawEntity(matrices, x, y, size, entityMouseX, entityMouseY, MinecraftClient.getInstance().player);
 
+        updateButtons();
         drawButtons(matrices, mouseX, mouseY, delta);
         drawItemText(matrices);
         drawStats(matrices);
@@ -334,10 +337,7 @@ public class BuilderGui extends Screen {
 
     private void drawButtons(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         int i = 0;
-        System.out.println(buildItemButtons);
-        System.out.println(buildItemButtons.size());
         for (BuildItemButtonWidget button : buildItemButtons) {
-            System.out.println(i);
             drawTextWithShadow(matrices,
                     textRenderer,
                     Text.literal(itemTypesIndex.get(i)).setStyle(Style.EMPTY.withBold(true)),
