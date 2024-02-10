@@ -6,8 +6,6 @@ import java.util.*;
 
 import static java.lang.Math.*;
 public class Stats {
-    private final Map<String, Integer> situationals;
-    private final Map<String, List<ItemStat>> allItemStats = new HashMap<>();
     // Misc Stats
     public double armor;
     public double agility;
@@ -17,7 +15,7 @@ public class Stats {
     public double fireTickDamage;
     // Health Stats
     public double healthFinal;
-    public double currentHealh;
+    public double currentHealth;
     public Percentage effHealingRate;
     public Percentage healingRate;
     public double regenPerSec;
@@ -29,8 +27,8 @@ public class Stats {
     public Percentage projectileDR;
     public Percentage magicDR;
     public Percentage blastDR;
-    public Percentage fallDR;
     public Percentage fireDR;
+    public Percentage fallDR;
     public Percentage ailmentDR;
     // Health Normalized DR Stats
     public Percentage meleeHNDR;
@@ -96,16 +94,35 @@ public class Stats {
     private final double vigor;
     private final double focus;
     private final double perspicacity;
+    private final Map<String, Integer> situationalsLevels;
+    private final Map<String, Boolean> enabledSituationals;
+    private final Map<String, List<ItemStat>> allItemStats = new HashMap<>();
 
-    public Stats(List<DictionaryItem> items, Map<String, Integer> situationals, Map<String, Integer> infusions, double currentHealthPercent) {
-        this.situationals = situationals;
-        vitality = (infusions.get("vitality") != null) ? infusions.get("vitality") : 0;
-        tenacity = (infusions.get("tenacity") != null) ? infusions.get("tenacity") : 0;
-        vigor = (infusions.get("vigor") != null) ? infusions.get("vigor") : 0;
-        focus = (infusions.get("focus") != null) ? infusions.get("focus") : 0;
-        perspicacity = (infusions.get("perspicacity") != null) ? infusions.get("perspicacity") : 0;
+    public Stats(List<DictionaryItem> items, Map<String, Boolean> enabledSituationals, Map<String, Integer> infusions, double currentHealthPercent) {
+        this.enabledSituationals = enabledSituationals;
+        vitality = (infusions.get("vitality") > 0) ? infusions.get("vitality") : 0;
+        tenacity = (infusions.get("tenacity") > 0) ? infusions.get("tenacity") : 0;
+        vigor = (infusions.get("vigor") > 0) ? infusions.get("vigor") : 0;
+        focus = (infusions.get("focus") > 0) ? infusions.get("focus") : 0;
+        perspicacity = (infusions.get("perspicacity") > 0) ? infusions.get("perspicacity") : 0;
 
         this.currentHealthPercent = new Percentage(currentHealthPercent, true);
+
+        this.situationalsLevels = new HashMap<>() {{
+            put("shielding", 0);
+            put("poise", 0);
+            put("inure", 0);
+            put("steadfast", 0);
+            put("guard", 0);
+            put("ethereal", 0);
+            put("reflexes", 0);
+            put("evasion", 0);
+            put("tempo", 0);
+            put("cloaked", 0);
+            put("adaptability", 0);
+            put("second_wind", 0);
+            put("versatile", 0);
+        }};
 
         List<String> itemTypes = new ArrayList<>(Arrays.asList("mainhand", "offhand", "helmet", "chestplate", "leggings", "boots"));
         for (int i = 0; i< itemTypes.size(); i++) {
@@ -115,7 +132,7 @@ public class Stats {
                 this.allItemStats.put(itemTypes.get(i), itemStats);
             }
         }
-        
+
         setDefaultValues();
         sumAllStats();
         adjustStats();
@@ -125,7 +142,7 @@ public class Stats {
 
     private void calculateOffenseStats() {
         List<ItemStat> mainhand = allItemStats.get("mainhand");
-        if (situationals.get("versatile") > 0) {
+        if (enabledSituationals.get("versatile")) {
             double extraAttackDamagePercent = (projectileDamagePercent.perc - 100) * 0.5;
             double extraProjectileDamagePercent = (attackDamagePercent.perc - 100) * 0.4;
             attackDamagePercent.add(extraAttackDamagePercent, true);
@@ -159,7 +176,7 @@ public class Stats {
     private void calculateDefenseStats() {
         Map<String, Map<String, Percentage>> drs =  calculateDamageReductions();
 
-        String drType = (situationals.get("second_wind") > 0) ? "second_wind" : "base";
+        String drType = (enabledSituationals.get("second_wind")) ? "second_wind" : "base";
 
         meleeDR = drs.get("melee").get(drType);
         projectileDR = drs.get("projectile").get(drType);
@@ -169,7 +186,7 @@ public class Stats {
         fallDR = drs.get("fall").get(drType);
         ailmentDR = drs.get("ailment").get(drType);
 
-        if (situationals.get("second_wind") == 0 || drType.equals("base")) {
+        if (situationalsLevels.get("second_wind") == 0 || drType.equals("base")) {
             meleeEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("melee").get("base").val));
             projectileEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("projectile").get("base").val));
             magicEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("magic").get("base").val));
@@ -178,8 +195,8 @@ public class Stats {
             fallEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("fall").get("base").val));
             ailmentEHP = (healthFinal * currentHealthPercent.val / (1 - drs.get("ailment").get("base").val));
         } else {
-            double hpNoSecondWind = max(0, (currentHealh - healthFinal * 0.5));
-            double hpSecondWind = min(currentHealh, healthFinal * 0.5);
+            double hpNoSecondWind = max(0, (currentHealth - healthFinal * 0.5));
+            double hpSecondWind = min(currentHealth, healthFinal * 0.5);
             meleeEHP = (hpNoSecondWind / (1 - drs.get("melee").get("base").val) + hpSecondWind / (1 - drs.get("melee").get("second_wind").val));
             projectileEHP = (hpNoSecondWind / (1 - drs.get("projectile").get("base").val) + hpSecondWind / (1 - drs.get("projectile").get("second_wind").val));
             magicEHP = (hpNoSecondWind / (1 - drs.get("magic").get("base").val) + hpSecondWind / (1 - drs.get("magic").get("second_wind").val));
@@ -207,32 +224,32 @@ public class Stats {
         boolean hasEqual = armor == agility;
         boolean hasNothing = (hasEqual && armor == 0);
 
-        double situationalArmor = (situationals.get("adaptability") > 0) ? min(max(agility, armor), 30) * 0.2 : min(armor, 30) * 0.2;
-        double situationalAgility = (situationals.get("adaptability") > 0) ? min(max(agility, armor), 30) * 0.2 : min(agility, 30) * 0.2;
+        double situationalArmor = (enabledSituationals.get("adaptability")) ? min(max(agility, armor), 30) * 0.2 : min(armor, 30) * 0.2;
+        double situationalAgility = (enabledSituationals.get("adaptability")) ? min(max(agility, armor), 30) * 0.2 : min(agility, 30) * 0.2;
 
-        double etherealSit =    (situationals.get("ethereal") > 0) ? situationalAgility * situationals.get("ethereal") : 0;
-        double tempoSit =       (situationals.get("tempo") > 0) ? situationalAgility * situationals.get("tempo") : 0;
-        double evasionSit =     (situationals.get("evasion") > 0) ? situationalAgility * situationals.get("evasion") : 0;
-        double reflexesSit =    (situationals.get("reflexes") > 0) ? situationalAgility * situationals.get("reflexes") : 0;
-        double shieldingSit =   (situationals.get("shielding") > 0) ? situationalArmor * situationals.get("shielding") : 0;
-        double poiseSit =       (situationals.get("poise") > 0) ? ((currentHealthPercent.val >= 0.9) ? situationalArmor * situationals.get("poise") : 0) : 0;
-        double inureSit =       (situationals.get("inure") > 0) ? situationalArmor * situationals.get("inure") : 0;
-        double guardSit =       (situationals.get("guard") > 0) ? situationalArmor * situationals.get("guard") : 0;
-        double cloakedSit =     (situationals.get("cloaked") > 0) ? situationalAgility * situationals.get("cloaked") : 0;
+        double etherealSit =    (enabledSituationals.get("ethereal")) ? situationalAgility * situationalsLevels.get("ethereal") : 0;
+        double tempoSit =       (enabledSituationals.get("tempo")) ? situationalAgility * situationalsLevels.get("tempo") : 0;
+        double evasionSit =     (enabledSituationals.get("evasion")) ? situationalAgility * situationalsLevels.get("evasion") : 0;
+        double reflexesSit =    (enabledSituationals.get("reflexes")) ? situationalAgility * situationalsLevels.get("reflexes") : 0;
+        double shieldingSit =   (enabledSituationals.get("shielding")) ? situationalArmor * situationalsLevels.get("shielding") : 0;
+        double poiseSit =       (enabledSituationals.get("poise")) ? ((currentHealthPercent.val >= 0.9) ? situationalArmor * situationalsLevels.get("poise") : 0) : 0;
+        double inureSit =       (enabledSituationals.get("inure")) ? situationalArmor * situationalsLevels.get("inure") : 0;
+        double guardSit =       (enabledSituationals.get("guard")) ? situationalArmor * situationalsLevels.get("guard") : 0;
+        double cloakedSit =     (enabledSituationals.get("cloaked")) ? situationalAgility * situationalsLevels.get("cloaked") : 0;
 
         double steadfastScaling = 0.33;
         double steadfastMaxScaling = 20;
         double steadfastLowerBound = 1 - (steadfastMaxScaling / steadfastScaling / 100);
         double steadfastArmor = (1 - max(steadfastLowerBound, min(1, currentHealthPercent.val))) * steadfastScaling *
-                min(((situationals.get("adaptability") > 0 && moreAgility) ? agility : (moreArmor) ? armor : (situationals.get("adaptability") == 0) ? armor : 0), 30);
-        double steadfastSit = (situationals.get("steadfast") > 0) ? steadfastArmor * situationals.get("steadfast") : 0;
+                min(((enabledSituationals.get("adaptability") && moreAgility) ? agility : (moreArmor) ? armor : (situationalsLevels.get("adaptability") == 0) ? armor : 0), 30);
+        double steadfastSit = (enabledSituationals.get("steadfast")) ? steadfastArmor * situationalsLevels.get("steadfast") : 0;
 
         double sumSits = etherealSit + tempoSit + evasionSit + reflexesSit + shieldingSit + poiseSit + inureSit + guardSit + cloakedSit;
         double sumArmorSits = shieldingSit + poiseSit + inureSit + guardSit;
         double sumAgiSits = etherealSit + tempoSit + evasionSit + reflexesSit + cloakedSit;
 
         double armorPlusSits = armor;
-        if (situationals.get("adaptability") > 0) {
+        if (enabledSituationals.get("adaptability")) {
             if (moreArmor) {
                 armorPlusSits += sumSits;
             }
@@ -242,7 +259,7 @@ public class Stats {
         double armorPlusSitsSteadfast = armorPlusSits + steadfastSit;
 
         double agilityPlusSits = agility;
-        if (situationals.get("adaptability") > 0) {
+        if (enabledSituationals.get("adaptability")) {
             if (moreAgility) {
                 agilityPlusSits += sumSits;
             }
@@ -299,7 +316,7 @@ public class Stats {
 
         double baseDmg = (noArmor) ? 100 * (1 - worldlyProtection * 0.1) * pow(0.96, (prot * protModifier - fragility * protModifier)) :
                 100 * (1 - worldlyProtection * 0.1) * pow(0.96, ((prot * protModifier - fragility * protModifier) + earmor + eagility) - (0.5 * earmor * eagility / (earmor + eagility))) * (1 - (tenacity * 0.005));
-        double secondwindDmg = baseDmg * pow(0.9, situationals.get("second_wind")) * (1-(tenacity * 0.005));
+        double secondwindDmg = baseDmg * pow(0.9, situationalsLevels.get("second_wind")) * (1-(tenacity * 0.005));
 
 
         damageTaken.put("base", baseDmg);
@@ -310,7 +327,7 @@ public class Stats {
 
     private void adjustStats() {
         healthFinal = healthFlat * healthPercent.val * (1 + 0.01*vitality);
-        currentHealh = healthFinal * currentHealthPercent.val;
+        currentHealth = healthFinal * currentHealthPercent.val;
         speedPercent = speedPercent
                 .mul((speedFlat)/0.1, false)
                 .mul(((currentHealthPercent.perc <= 50) ? 1 - 0.1 * crippling : 1), false);
@@ -396,18 +413,18 @@ public class Stats {
 
             worldlyProtection += sumNumberStat(itemStats, "worldly_protection", 0);
 
-            situationals.put("shielding", (int) (situationals.get("shielding") + sumNumberStat(itemStats, "shielding", 0))) ;
-            situationals.put("poise", (int) (situationals.get("poise") + sumNumberStat(itemStats, "poise", 0)));
-            situationals.put("inure", (int) (situationals.get("inure") + sumNumberStat(itemStats, "inure", 0)));
-            situationals.put("steadfast", (int) (situationals.get("steadfast") + sumNumberStat(itemStats, "steadfast", 0)));
-            situationals.put("guard", (int) (situationals.get("guard") + sumNumberStat(itemStats, "guard", 0)));
-            situationals.put("ethereal", (int) (situationals.get("ethereal") + sumNumberStat(itemStats, "ethereal", 0)));
-            situationals.put("reflexes", (int) (situationals.get("reflexes") + sumNumberStat(itemStats, "reflexes", 0)));
-            situationals.put("evasion", (int) (situationals.get("evasion") + sumNumberStat(itemStats, "evasion", 0)));
-            situationals.put("tempo", (int) (situationals.get("tempo") + sumNumberStat(itemStats, "tempo", 0)));
-            situationals.put("cloaked", (int) (situationals.get("cloaked") + sumNumberStat(itemStats, "cloaked", 0)));
-            situationals.put("adaptability", (int) (situationals.get("adaptability") + sumNumberStat(itemStats, "adaptability", 0)));
-            situationals.put("second_wind", (int) (situationals.get("second_wind") + sumNumberStat(itemStats, "second_wind", 0)));
+            situationalsLevels.put("shielding", (int) (situationalsLevels.get("shielding") + sumNumberStat(itemStats, "shielding", 0))) ;
+            situationalsLevels.put("poise", (int) (situationalsLevels.get("poise") + sumNumberStat(itemStats, "poise", 0)));
+            situationalsLevels.put("inure", (int) (situationalsLevels.get("inure") + sumNumberStat(itemStats, "inure", 0)));
+            situationalsLevels.put("steadfast", (int) (situationalsLevels.get("steadfast") + sumNumberStat(itemStats, "steadfast", 0)));
+            situationalsLevels.put("guard", (int) (situationalsLevels.get("guard") + sumNumberStat(itemStats, "guard", 0)));
+            situationalsLevels.put("ethereal", (int) (situationalsLevels.get("ethereal") + sumNumberStat(itemStats, "ethereal", 0)));
+            situationalsLevels.put("reflexes", (int) (situationalsLevels.get("reflexes") + sumNumberStat(itemStats, "reflexes", 0)));
+            situationalsLevels.put("evasion", (int) (situationalsLevels.get("evasion") + sumNumberStat(itemStats, "evasion", 0)));
+            situationalsLevels.put("tempo", (int) (situationalsLevels.get("tempo") + sumNumberStat(itemStats, "tempo", 0)));
+            situationalsLevels.put("cloaked", (int) (situationalsLevels.get("cloaked") + sumNumberStat(itemStats, "cloaked", 0)));
+            situationalsLevels.put("adaptability", (int) (situationalsLevels.get("adaptability") + sumNumberStat(itemStats, "adaptability", 0)));
+            situationalsLevels.put("second_wind", (int) (situationalsLevels.get("second_wind") + sumNumberStat(itemStats, "second_wind", 0)));
 
             crippling += sumNumberStat(itemStats, "curse_of_crippling", 0);
             corruption += sumNumberStat(itemStats, "curse_of_corruption", 0);
@@ -426,7 +443,7 @@ public class Stats {
         healthPercent = new Percentage(100, true);
         healthFlat = 20;
         healthFinal = 20;
-        currentHealh = 20;
+        currentHealth = 20;
         healingRate = new Percentage(100, true);
         effHealingRate = new Percentage(100, true);
         regenPerSec = 0;

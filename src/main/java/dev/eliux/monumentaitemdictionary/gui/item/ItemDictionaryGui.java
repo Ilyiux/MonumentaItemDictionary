@@ -259,6 +259,7 @@ public class ItemDictionaryGui extends Screen {
 
         builderGui.buildItems.set(index, item);
 
+        controller.builderGui.updateUserOptions();
         controller.builderGui.updateButtons();
         controller.builderGui.updateStats();
         controller.itemFilterGui.clearFilters();
@@ -328,6 +329,7 @@ public class ItemDictionaryGui extends Screen {
 
     public List<Text> generateItemLoreText(DictionaryItem item) {
         // this is scuffed
+        if (item == null) return new ArrayList<>(List.of(Text.literal("Click to add an item.")));
         int masterworkTier = item.getMaxMasterwork() - 1;
         ItemButtonWidget itemButton = widgetByItem.get(item);
         if (itemButton != null && !(MinecraftClient.getInstance().currentScreen instanceof BuilderGui)) {
@@ -437,19 +439,16 @@ public class ItemDictionaryGui extends Screen {
 
         lines.add(Text.literal(""));
 
-
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player != null && player.getAbilities().creativeMode) {
-            lines.add(Text.literal("[ALT] + Click to generate this item").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
-        }
+        if (player != null && player.getAbilities().creativeMode) lines.add(Text.literal("[ALT] + Click to generate this item").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
 
         Screen currentScreen = MinecraftClient.getInstance().currentScreen;
         if (currentScreen instanceof ItemDictionaryGui || currentScreen instanceof CharmDictionaryGui || currentScreen instanceof BuilderGui) {
             lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+            if (currentScreen instanceof BuilderGui) lines.add(Text.literal("[SHIFT] + Click to delete item").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
             lines.add(Text.literal(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
                     .withColor(ItemColors.TEXT_COLOR)));
         }
-
         return lines;
     }
 

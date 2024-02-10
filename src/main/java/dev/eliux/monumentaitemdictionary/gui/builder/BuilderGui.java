@@ -3,13 +3,14 @@ package dev.eliux.monumentaitemdictionary.gui.builder;
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
+import dev.eliux.monumentaitemdictionary.gui.widgets.BuildButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.BuildCharmButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.BuildItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
-import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import dev.eliux.monumentaitemdictionary.util.Percentage;
 import dev.eliux.monumentaitemdictionary.util.Stats;
+import dev.eliux.monumentaitemdictionary.util.StatsFormats;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -17,14 +18,17 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
+import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.floor;
 import static net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity;
@@ -42,19 +46,21 @@ public class BuilderGui extends Screen {
     public List<DictionaryItem> buildItems = Arrays.asList(null, null, null, null, null, null);
     private Stats buildStats;
     private List<String> statsToRender = new ArrayList<>();
-    private final List<BuildItemButtonWidget> buildItemButtons = new ArrayList<>();
+    private List<BuildItemButtonWidget> buildItemButtons = new ArrayList<>();
     private final List<BuildCharmButtonWidget> buildCharmButtons = new ArrayList<>();
     public final int sideMenuWidth = 40;
     public final int labelMenuHeight = 30;
+    public final int itemPadding = 5;
+    public final int buttonSize = 50;
+    private int halfWidth = 0;
     private TextFieldWidget nameBar;
     private ItemIconButtonWidget showBuildDictionaryButton;
     private final DictionaryController controller;
     private ItemIconButtonWidget setBuildFromClipboardButton;
     private ItemIconButtonWidget addBuildButton;
-    private HashMap<String, Integer> situationals;
+    private HashMap<String, Boolean> situationals;
     private HashMap<String, Integer> infusions;
     private double currentHealthPercent;
-
     public BuilderGui(Text title, DictionaryController controller) {
         super(title);
         this.controller = controller;
@@ -86,20 +92,20 @@ public class BuilderGui extends Screen {
             controller.setBuildDictionaryScreen();
         }, Text.literal("Add Build To Dictionary"), "writable_book", "");
 
-        this.situationals = new HashMap<String, Integer>() {{
-            put("shielding", 0);
-            put("poise", 0);
-            put("inure", 0);
-            put("steadfast", 0);
-            put("guard", 0);
-            put("ethereal", 0);
-            put("reflexes", 0);
-            put("evasion", 0);
-            put("tempo", 0);
-            put("cloaked", 0);
-            put("adaptability", 0);
-            put("second_wind", 0);
-            put("versatile", 0);
+        this.situationals = new HashMap<String, Boolean>() {{
+            put("shielding", false);
+            put("poise", false);
+            put("inure", false);
+            put("steadfast", false);
+            put("guard", false);
+            put("ethereal", false);
+            put("reflexes", false);
+            put("evasion", false);
+            put("tempo", false);
+            put("cloaked", false);
+            put("adaptability", false);
+            put("second_wind", false);
+            put("versatile", false);
         }};
         this.infusions = new HashMap<String, Integer>() {{
             put("vitality", 0);
@@ -108,6 +114,7 @@ public class BuilderGui extends Screen {
             put("focus", 0);
             put("perspicacity", 0);
         }};
+
         this.currentHealthPercent = 100;
 
         this.buildStats = new Stats(buildItems, situationals, infusions, currentHealthPercent);
@@ -116,69 +123,31 @@ public class BuilderGui extends Screen {
     }
 
     public void updateButtons() {
-        mainhandButton = new BuildItemButtonWidget((width/2), 40, 50, Text.literal(""), (b) -> {
-            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Mainhand");
-            else if (hasShiftDown() && hasControlDown()){
-                String wikiFormatted = buildItems.get(0).name.replace(" ", "_").replace("'", "%27");
-                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
-            }
-        }, buildItems.get(0), () -> controller.itemGui.generateItemLoreText(buildItems.get(0)), this);
-
-        offhandButton = new BuildItemButtonWidget((width/2), 100, 50, Text.literal(""), (b) -> {
-            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Offhand");
-            else if (hasShiftDown() && hasControlDown()){
-                String wikiFormatted = buildItems.get(1).name.replace(" ", "_").replace("'", "%27");
-                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
-            }
-        }, buildItems.get(1), () -> controller.itemGui.generateItemLoreText(buildItems.get(1)), this);
-
-        headButton = new BuildItemButtonWidget(10, 40, 50, Text.literal(""), (b) -> {
-            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Helmet");
-            else if (hasShiftDown() && hasControlDown()){
-                String wikiFormatted = buildItems.get(2).name.replace(" ", "_").replace("'", "%27");
-                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
-            }
-        }, buildItems.get(2), () -> controller.itemGui.generateItemLoreText(buildItems.get(2)), this);
-
-        chestplateButton = new BuildItemButtonWidget(10, 100, 50, Text.literal(""), (b) -> {
-            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Chestplate");
-            else if (hasShiftDown() && hasControlDown()){
-                String wikiFormatted = buildItems.get(3).name.replace(" ", "_").replace("'", "%27");
-                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
-            }
-        }, buildItems.get(3), () -> controller.itemGui.generateItemLoreText(buildItems.get(3)), this);
-
-        leggingsButton = new BuildItemButtonWidget(10, 160, 50, Text.literal(""), (b) -> {
-            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Leggings");
-            else if (hasShiftDown() && hasControlDown()){
-                String wikiFormatted = buildItems.get(4).name.replace(" ", "_").replace("'", "%27");
-                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
-            }
-        }, buildItems.get(4), () -> controller.itemGui.generateItemLoreText(buildItems.get(4)), this);
-
-        bootsButton = new BuildItemButtonWidget(10, 220, 50, Text.literal(""), (b) -> {
-            if (!hasShiftDown() && !hasControlDown()) controller.getItemFromDictionary("Boots");
-            else if (hasShiftDown() && hasControlDown()){
-                String wikiFormatted = buildItems.get(5).name.replace(" ", "_").replace("'", "%27");
-                Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
-            }
-        }, buildItems.get(5), () -> controller.itemGui.generateItemLoreText(buildItems.get(5)), this);
+        this.halfWidth = width/2;
+        buildItemButtons.clear();
+        for (int i = 0; i < 6; i++) {
+            DictionaryItem item = buildItems.get(i);
+            BuildItemButtonWidget itemButton = new BuildItemButtonWidget((i < 2) ? halfWidth + 30 : itemPadding, labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2), buttonSize, Text.literal(""), (b) -> {
+                itemButtonClicked(hasShiftDown(), hasControlDown(), item);
+            }, item, () -> controller.itemGui.generateItemLoreText(item), this);
+            buildItemButtons.add(itemButton);
+        }
 
         buildCharmButtons.clear();
         if (charms.isEmpty()) {
-            charmsButton = new BuildCharmButtonWidget(width/2, 220, 50, Text.literal(""), (b) -> {
+            charmsButton = new BuildCharmButtonWidget(halfWidth + 30, 220, 50, Text.literal(""), (b) -> {
                 controller.getCharmFromDictionary();
             }, null,  null, this);
             buildCharmButtons.add(charmsButton);
         } else {
             for (int i = 0; i < charms.size(); i++) {
                 DictionaryCharm charm = charms.get(i);
-                charmsButton = new BuildCharmButtonWidget(width/2 + ((i%6)*60), 220 + ((i/6)*60), 50, Text.literal(""), (b) -> {
-                     if (!Screen.hasShiftDown() && !Screen.hasControlDown()) {
-                         do {
-                             charms.remove(charm);
-                         } while (charms.contains(charm));
+                charmsButton = new BuildCharmButtonWidget(halfWidth + 30 + ((i%6)*55), 220 + ((i/6)*55), 50, Text.literal(""), (b) -> {
+                     if (!hasShiftDown() && !hasControlDown()) {
+                         charms.removeAll(Collections.singleton(charm));
                          controller.getCharmFromDictionary();
+                     } else if (hasShiftDown()) {
+                         charms.removeAll(Collections.singleton(charm));
                      } else {
                          String wikiFormatted = charm.name.replace(" ", "_").replace("'", "%27");
                          Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
@@ -187,26 +156,31 @@ public class BuilderGui extends Screen {
                 buildCharmButtons.add(charmsButton);
             }
             if (charms.size() < 12) {
-                charmsButton = new BuildCharmButtonWidget(width / 2 + ((charms.size() % 6) * 60), 220 + ((charms.size() / 6) * 60), 50, Text.literal(""), (b) -> {
+                charmsButton = new BuildCharmButtonWidget(halfWidth + 30 + ((charms.size() % 6) * 55), 220 + ((charms.size() / 6) * 55), 50, Text.literal(""), (b) -> {
                     controller.getCharmFromDictionary();
                 }, null, null, this);
                 buildCharmButtons.add(charmsButton);
             }
         }
-
-        buildItemButtons.clear();
-        buildItemButtons.add(mainhandButton);
-        buildItemButtons.add(offhandButton);
-        buildItemButtons.add(headButton);
-        buildItemButtons.add(chestplateButton);
-        buildItemButtons.add(leggingsButton);
-        buildItemButtons.add(bootsButton);
     }
+
+    private void itemButtonClicked(boolean shiftDown, boolean controlDown, DictionaryItem item) {
+        if (!shiftDown && !controlDown) controller.getItemFromDictionary(item.type);
+        else if (shiftDown) {
+            System.out.println("hola");
+            buildItems.set(0, null);
+        } else {
+            String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
+            Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+        }
+    }
+
     private boolean verifyUrl(String buildUrl) {
-        return buildUrl.contains("ohthemisery.tk/builder");
+        return buildUrl.contains("ohthemisery.tk/builder") || buildUrl.contains("ohthemisery.vercel.app/builder");
     }
 
     private void getBuildFromUrl(String buildUrl) {
+        updateUserOptions();
         buildUrl = buildUrl.substring(buildUrl.indexOf("m="));
         DictionaryItem item;
 
@@ -257,15 +231,24 @@ public class BuilderGui extends Screen {
         updateStats();
     }
 
+    public void updateUserOptions() {
+    }
+
     public void updateStats() {
         buildStats = new Stats(buildItems, situationals, infusions, currentHealthPercent);
         statsToRender.clear();
-        Field[] fields = Stats.class.getDeclaredFields();
+        Map<String, String> statFormatter = StatsFormats.getStatFormats();
+        Field[] allFields = Stats.class.getFields();
+        List<Field> fields = Arrays.asList(allFields).stream().filter(field -> Modifier.isPublic(field.getModifiers())).collect(Collectors.toList());
 
-        for (int i=0;i<fields.length;i++) {
-            Field field = fields[i];
+        for (int i=0;i<fields.size();i++) {
+            Field field = fields.get(i);
             try {
-                String statName = formatStatName(field.getName());
+                String statName = field.getName();
+                if (statName.contains("EHP")) statName =statName.substring(0, statName.indexOf("EHP"));
+                else if (statName.contains("HNDR")) statName = statName.substring(0, statName.indexOf("HNDR"));
+                else if (statName.contains("DR")) statName = statName.substring(0, statName.indexOf("DR"));
+                String formattedStatName = statFormatter.get(statName);
                 int intStatValue = 0;
                 double doubleStatValue = 0.0;
                 String formattedStatValue;
@@ -280,16 +263,12 @@ public class BuilderGui extends Screen {
                     formattedStatValue = String.valueOf(String.format("%.2f", doubleStatValue));
                 }
 
-                String formattedStat = statName + " " + formattedStatValue;
+                String formattedStat = formattedStatName + formattedStatValue;
                 statsToRender.add(formattedStat);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    private String formatStatName(String rawStat) {
-        return "";
     }
 
     @Override
@@ -314,8 +293,9 @@ public class BuilderGui extends Screen {
         showBuildDictionaryButton.render(matrices, mouseX, mouseY, delta);
 
         assert MinecraftClient.getInstance().player != null;
-        int size = 130;
-        int x = (width / 2) - 100;
+        this.halfWidth = width/2;
+        int size = 100;
+        int x = halfWidth - 100;
         int y = size*2 + 20;
         int entityMouseX = -(mouseX - x);
         int entityMouseY = -(mouseY - y + size + 3*size/4);
@@ -336,8 +316,11 @@ public class BuilderGui extends Screen {
 
     private void drawButtons(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         int i = 0;
+        System.out.println(buildItemButtons);
+        System.out.println(buildItemButtons.size());
         for (BuildItemButtonWidget button : buildItemButtons) {
-            drawTextWithShadow(matrices, textRenderer, Text.literal(itemTypesIndex.get(i)).setStyle(Style.EMPTY.withBold(true)), (i > 1 ? 70 : width/2 + 60), 40 + (i > 1 ? ((i-2)*60) : (i*60)), 0xFFFFFFFF);
+            System.out.println(i);
+            drawTextWithShadow(matrices, textRenderer, Text.literal(itemTypesIndex.get(i)).setStyle(Style.EMPTY.withBold(true)), ((i < 2) ? halfWidth + 30 : itemPadding) + buttonSize + 2*itemPadding, labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2), 0xFFFFFFFF);
             button.render(matrices, mouseX, mouseY, delta);
             i++;
         }
@@ -352,16 +335,17 @@ public class BuilderGui extends Screen {
         int i = 0;
         for (DictionaryItem item : buildItems) {
             if (item != null) {
-                drawTextWithShadow(matrices, textRenderer, Text.literal(item.name).setStyle(Style.EMPTY.withBold(true).withUnderline(true)), (i > 1 ? 70 : width/2 + 60), 50 + (i > 1 ? ((i-2)*60) : (i*60)), 0xFF000000 + ItemColors.getColorForLocation(item.location));
+                drawTextWithShadow(matrices, textRenderer, Text.literal(item.name).setStyle(Style.EMPTY.withBold(true).withUnderline(true)), ((i < 2) ? halfWidth + 30 : itemPadding) + buttonSize + 2*itemPadding, 10 + labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2), 0xFF000000 + ItemColors.getColorForLocation(item.location));
             }
             i++;
         }
 
-        drawTextWithShadow(matrices, textRenderer, Text.literal("Charms").setStyle(Style.EMPTY.withBold(true)), width/2, 200, 0xFFFFFFFF);
+        drawTextWithShadow(matrices, textRenderer, Text.literal("Charms").setStyle(Style.EMPTY.withBold(true)), halfWidth + 30, 200, 0xFFFFFFFF);
         String stars = "★".repeat(charms.size()) + "☆".repeat(12 - charms.size());
-        drawTextWithShadow(matrices, textRenderer, Text.literal(stars).setStyle(Style.EMPTY.withBold(true)), width/2 + 50, 200, 0xFFFFFF00);
+        drawTextWithShadow(matrices, textRenderer, Text.literal(stars).setStyle(Style.EMPTY.withBold(true)), halfWidth + 80, 200, 0xFFFFFF00);
+        drawTextWithShadow(matrices, textRenderer, Text.literal(charms.size() + "/12").setStyle(Style.EMPTY.withBold(true)), halfWidth + 190, 200, 0xFFFFFF00);
         if (charms.size() == 12) {
-            drawTextWithShadow(matrices, textRenderer, Text.literal("FULL CHARM POWER").setStyle(Style.EMPTY.withBold(true).withUnderline(true)), width/2 + 170, 200, 0xFFFF0000);
+            drawTextWithShadow(matrices, textRenderer, Text.literal("FULL CHARM POWER").setStyle(Style.EMPTY.withBold(true).withUnderline(true)), halfWidth + 250, 200, 0xFFFF0000);
         }
     }
 
@@ -370,22 +354,22 @@ public class BuilderGui extends Screen {
         List<String> statsTypes = new ArrayList<>(Arrays.asList("Misc Stats", "Health Stats", "DR Stats", "HP Normalized DR Stats", "EHP Stats", "Melee Stats", "Projectile Stats", "Magic Stats"));
         List<List<String>> statsByType = new ArrayList<>();
 
-        statsByType.add(statsToRender.subList(0 ,  5)); // Misc Stats
-        statsByType.add(statsToRender.subList(6 , 13)); // Health Stats
-        statsByType.add(statsToRender.subList(14, 20)); // Damage Reduction Stats
-        statsByType.add(statsToRender.subList(21, 27)); // Health Normalized Damage Reduction Stats
-        statsByType.add(statsToRender.subList(28, 34)); // EHP Stats
-        statsByType.add(statsToRender.subList(35, 41)); // Melee Stats
+        statsByType.add(statsToRender.subList(0 ,  6)); // Misc Stats
+        statsByType.add(statsToRender.subList(6 , 14)); // Health Stats
+        statsByType.add(statsToRender.subList(14, 21)); // Damage Reduction Stats
+        statsByType.add(statsToRender.subList(21, 28)); // Health Normalized Damage Reduction Stats
+        statsByType.add(statsToRender.subList(28, 35)); // EHP Stats
+        statsByType.add(statsToRender.subList(35, 42)); // Melee Stats
         statsByType.add(statsToRender.subList(42, 48)); // Projectile Stats
         statsByType.add(statsToRender.subList(48, 52)); // Magic Stats
 
         int i = 0;
         int j = 0;
         for (List<String> stats : statsByType) {
-            drawTextWithShadow(matrices, textRenderer, Text.literal(statsTypes.get(i)).setStyle(Style.EMPTY.withBold(true)), 10 + ((i/3)*150), 290 + (j*10)%240, 0xFF92BDA3);
+            drawTextWithShadow(matrices, textRenderer, Text.literal(statsTypes.get(i)).setStyle(Style.EMPTY.withBold(true)), 5 + ((i/3)*170), 260 + (j*10)%270, 0xFF92BDA3);
             for (String stat : stats) {
                 j++;
-                drawTextWithShadow(matrices, textRenderer, Text.literal(stat).setStyle(Style.EMPTY.withBold(true)), 10 + ((i/3)*150), 290 + (j*10)%240, 0xFFA1BA89);
+                drawTextWithShadow(matrices, textRenderer, Text.literal(stat).setStyle(Style.EMPTY.withBold(true)), 5 + ((i/3)*170), 260 + (j*10)%270, 0xFFA1BA89);
             }
             j += 2;
             i++;
@@ -446,6 +430,7 @@ public class BuilderGui extends Screen {
     private void resetBuild() {
         buildItems = Arrays.asList(null, null, null, null, null, null);
         charms = new ArrayList<>();
+        buildStats = new Stats(buildItems, situationals, infusions, currentHealthPercent);
         updateButtons();
     }
 }
