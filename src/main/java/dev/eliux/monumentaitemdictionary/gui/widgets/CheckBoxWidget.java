@@ -18,7 +18,6 @@ import net.minecraft.util.math.MathHelper;
 public class CheckBoxWidget extends CheckboxWidget {
     private final BuilderGui gui;
     private static final Identifier TEXTURE = new Identifier("textures/gui/checkbox.png");
-    private static final int TEXT_COLOR = 14737632;
     private boolean checked;
     private final boolean showMessage;
     public CheckBoxWidget(int x, int y, int width, int height, Text message, boolean checked, boolean showMessage, BuilderGui gui) {

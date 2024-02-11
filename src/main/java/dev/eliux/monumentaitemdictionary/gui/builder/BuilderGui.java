@@ -13,7 +13,6 @@ import dev.eliux.monumentaitemdictionary.util.Stats;
 import dev.eliux.monumentaitemdictionary.util.StatsFormats;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.CheckboxWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;

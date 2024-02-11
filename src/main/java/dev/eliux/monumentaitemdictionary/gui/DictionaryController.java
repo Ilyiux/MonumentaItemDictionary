@@ -526,14 +526,6 @@ public class DictionaryController {
         itemFilters = new ArrayList<>(filters);
     }
 
-    public void resetItemFilters() {
-        itemFilters = new ArrayList<>();
-    }
-
-    public ArrayList<String> getAllCharmRegions() {
-        return allCharmRegions;
-    }
-
     public ArrayList<String> getAllCharmTiers() {
         return allCharmTiers;
     }
@@ -570,11 +562,6 @@ public class DictionaryController {
     public void updateCharmFilters(ArrayList<Filter> filters) {
         charmFilters = new ArrayList<>(filters);
     }
-
-    public void resetCharmFilters() {
-        charmFilters = new ArrayList<>();
-    }
-
     public void refreshItems() {
         ArrayList<DictionaryItem> filteredItems = new ArrayList<>(items);
 
@@ -828,12 +815,6 @@ public class DictionaryController {
         }
         return null;
     }
-
-    public void addBuild(DictionaryBuild build) {
-        buildDictionaryGui.buildsList.add(build);
-        buildDictionaryGui.buildBuildsList();
-    }
-
     public void getItemFromDictionary(String itemType) {
         itemGui.isGettingBuildItem = true;
         itemGui.itemTypeLookingFor = itemType;

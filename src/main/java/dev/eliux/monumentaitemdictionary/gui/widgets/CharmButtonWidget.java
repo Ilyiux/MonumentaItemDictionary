@@ -65,15 +65,6 @@ public class CharmButtonWidget extends ButtonWidget {
 
 
     }
-
-    public boolean isCharm(DictionaryCharm charm) {
-        return this.charm == charm;
-    }
-
-    public void scrolled(double mouseX, double mouseY, double amount) {
-
-    }
-
     @Override
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         int yPixelOffset = -gui.getScrollPixels();
