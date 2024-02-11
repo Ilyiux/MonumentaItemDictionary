@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.eliux.monumentaitemdictionary.gui.builder.BuildDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
-import dev.eliux.monumentaitemdictionary.util.ItemColors;
+import dev.eliux.monumentaitemdictionary.util.ItemColours;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import net.minecraft.client.MinecraftClient;
@@ -79,7 +79,7 @@ public class BuildButtonWidget extends ButtonWidget {
             for (DictionaryItem item : build.allItems) {
                 String itemTier = item.hasMasterwork ? item.getTierFromMasterwork(item.getMaxMasterwork() - 1) : item.getTierNoMasterwork();
                 lines.add(Text.literal(item.name).setStyle(Style.EMPTY
-                        .withColor(0xFF000000 + ItemColors.getColorForLocation(item.location))
+                        .withColor(0xFF000000 + ItemColours.getColorForLocation(item.location))
                         .withBold(ItemFormatter.shouldBold(itemTier))
                         .withUnderline(ItemFormatter.shouldUnderline(itemTier))));
                 lines.add(Text.literal(""));
