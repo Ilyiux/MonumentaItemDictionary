@@ -62,7 +62,10 @@ public class BuildItemButtonWidget extends ButtonWidget {
         drawVerticalLine(matrices, minX, minY, maxY, outlineColor);
         drawVerticalLine(matrices, maxX, minY, maxY, outlineColor);
 
-        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, minX + (width / 2) - 7, minY + (height / 2) - 7);
+        matrices.push();
+        matrices.scale(2F, 2F, 2F);
+        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, (minX + (width / 2) - 15)/2, (minY + (height / 2) - 16)/2);
+        matrices.pop();
 
         if (hovered) {
             List<Text> lines = new ArrayList<>();

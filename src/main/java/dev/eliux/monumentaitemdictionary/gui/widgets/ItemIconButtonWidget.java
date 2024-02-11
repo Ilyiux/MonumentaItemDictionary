@@ -23,7 +23,7 @@ public class ItemIconButtonWidget extends ButtonWidget {
         this.tooltipText = tooltipText;
 
         iconItem = ItemFactory.fromEncoding(itemEncoding);
-        if (!displayInfo.equals("")) {
+        if (!displayInfo.isEmpty()) {
             NbtCompound baseNbt = iconItem.getOrCreateNbt();
             NbtCompound plain = new NbtCompound();
             NbtCompound display = new NbtCompound();
