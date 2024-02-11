@@ -13,11 +13,11 @@ import dev.eliux.monumentaitemdictionary.util.StatsFormats;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -28,31 +28,28 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity;
 
+@SuppressWarnings("CallToPrintStackTrace")
 public class BuilderGui extends Screen {
     public final List<String> itemTypesIndex = Arrays.asList("Mainhand", "Offhand", "Helmet", "Chestplate", "Leggings", "Boots");
-    private BuildItemButtonWidget mainhandButton;
-    private BuildItemButtonWidget offhandButton;
-    private BuildItemButtonWidget headButton;
-    private BuildItemButtonWidget chestplateButton;
-    private BuildItemButtonWidget leggingsButton;
-    private BuildItemButtonWidget bootsButton;
     public List<DictionaryCharm> charms = new ArrayList<>();
     private BuildCharmButtonWidget charmsButton;
     public List<DictionaryItem> buildItems = Arrays.asList(null, null, null, null, null, null);
     private Stats buildStats;
-    private List<String> statsToRender = new ArrayList<>();
-    private List<BuildItemButtonWidget> buildItemButtons = new ArrayList<>();
+    private final List<String> statsToRender = new ArrayList<>();
+    private final List<BuildItemButtonWidget> buildItemButtons = new ArrayList<>();
     private final List<BuildCharmButtonWidget> buildCharmButtons = new ArrayList<>();
     public final int sideMenuWidth = 40;
     public final int labelMenuHeight = 30;
     public final int itemPadding = 5;
     public final int buttonSize = 50;
     public final int charmsY = 220;
+    public final int statsY = 260;
     private int halfWidth = 0;
+    private final int statsRow = 270;
+    private final int statsColumn = 170;
     private TextFieldWidget nameBar;
     private ItemIconButtonWidget showBuildDictionaryButton;
     private final DictionaryController controller;
@@ -61,6 +58,7 @@ public class BuilderGui extends Screen {
     private HashMap<String, Boolean> situationals;
     private HashMap<String, Integer> infusions;
     private double currentHealthPercent;
+
     public BuilderGui(Text title, DictionaryController controller) {
         super(title);
         this.controller = controller;
@@ -75,24 +73,29 @@ public class BuilderGui extends Screen {
                 if (verifyUrl(buildUrl)) {
                     getBuildFromUrl(buildUrl);
                 }
-            } catch (UnsupportedFlavorException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
+            } catch (UnsupportedFlavorException | IOException e) {
                 e.printStackTrace();
             }
         }, Text.literal("Add Build From Clipboard"), "name_tag", "");
 
-        showBuildDictionaryButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, Text.literal(""), (button) -> {
-            controller.setBuildDictionaryScreen();
-        }, Text.literal("Builds Data"), "diamond_chestplate", "");
+        showBuildDictionaryButton = new ItemIconButtonWidget(
+                width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20,
+                Text.literal(""),
+                (button) -> controller.setBuildDictionaryScreen(),
+                Text.literal("Builds Data"),
+                "diamond_chestplate", "");
 
-        addBuildButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> {
-            controller.buildDictionaryGui.addBuild(nameBar.getText(), buildItems, charms);
-            resetBuild();
-            controller.setBuildDictionaryScreen();
-        }, Text.literal("Add Build To Dictionary"), "writable_book", "");
+        addBuildButton = new ItemIconButtonWidget(
+                5, 5, 20, 20,
+                Text.literal(""),
+                (button) -> {
+                    controller.buildDictionaryGui.addBuild(nameBar.getText(), buildItems, charms);
+                    resetBuild();
+                    controller.setBuildDictionaryScreen();
+                    },
+                Text.literal("Add Build To Dictionary"), "writable_book", "");
 
-        this.situationals = new HashMap<String, Boolean>() {{
+        this.situationals = new HashMap<>() {{
             put("shielding", false);
             put("poise", false);
             put("inure", false);
@@ -107,7 +110,7 @@ public class BuilderGui extends Screen {
             put("second_wind", false);
             put("versatile", false);
         }};
-        this.infusions = new HashMap<String, Integer>() {{
+        this.infusions = new HashMap<>() {{
             put("vitality", 0);
             put("tenacity", 0);
             put("vigor", 0);
@@ -145,9 +148,11 @@ public class BuilderGui extends Screen {
     }
 
     private BuildCharmButtonWidget getCharmButtonWidget(int i, @Nullable DictionaryCharm charm) {
-        charmsButton = new BuildCharmButtonWidget(halfWidth + 30 + ((i % 6) * (buttonSize + itemPadding)), charmsY + ((i / 6) * (buttonSize + itemPadding)),buttonSize, Text.literal(""), (b) -> {
-            charmButtonclicked(charm, hasShiftDown(), hasControlDown());
-        }, charm,  () -> (charm != null) ? controller.charmGui.generateCharmLoreText(charm) : null, this);
+        charmsButton = new BuildCharmButtonWidget(
+                halfWidth + 30 + ((i % 6) * (buttonSize + itemPadding)), charmsY + ((i / 6) * (buttonSize + itemPadding)),buttonSize,
+                Text.literal(""),
+                (b) -> charmButtonClicked(charm, hasShiftDown(), hasControlDown()), charm,  () -> (charm != null) ? controller.charmGui.generateCharmLoreText(charm) : null,
+                this);
         buildCharmButtons.add(charmsButton);
 
         return charmsButton;
@@ -155,22 +160,19 @@ public class BuilderGui extends Screen {
     private BuildItemButtonWidget getBuildItemButtonWidget(int i) {
         DictionaryItem item = buildItems.get(i);
         String itemType = itemTypesIndex.get(i);
-        BuildItemButtonWidget itemButton = new BuildItemButtonWidget(
+        return new BuildItemButtonWidget(
                 (i < 2) ? halfWidth + 30 : itemPadding,
                 labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2),
                 buttonSize,
                 Text.literal(""),
-                (b) -> {
-                    itemButtonClicked(item, itemType, hasShiftDown(), hasControlDown());
-                },
+                (b) -> itemButtonClicked(item, itemType, hasShiftDown(), hasControlDown()),
                 item,
                 () -> controller.itemGui.generateItemLoreText(item),
                 this
         );
-        return itemButton;
     }
 
-    private void charmButtonclicked(@Nullable DictionaryCharm charm, boolean shiftDown, boolean ctrlDown) {
+    private void charmButtonClicked(@Nullable DictionaryCharm charm, boolean shiftDown, boolean ctrlDown) {
         if (charm == null) controller.getCharmFromDictionary();
         else if (!shiftDown && !ctrlDown) {
             charms.removeAll(Collections.singleton(charm));
@@ -259,36 +261,39 @@ public class BuilderGui extends Screen {
         statsToRender.clear();
         Map<String, String> statFormatter = StatsFormats.getStatFormats();
         Field[] allFields = Stats.class.getFields();
-        List<Field> fields = Arrays.asList(allFields).stream().filter(field -> Modifier.isPublic(field.getModifiers())).collect(Collectors.toList());
+        List<Field> fields = Arrays.stream(allFields).filter(field -> Modifier.isPublic(field.getModifiers())).toList();
 
-        for (int i=0;i<fields.size();i++) {
-            Field field = fields.get(i);
+        for (Field field : fields) {
             try {
                 String statName = field.getName();
-                if (statName.contains("EHP")) statName =statName.substring(0, statName.indexOf("EHP"));
+                if (statName.contains("EHP")) statName = statName.substring(0, statName.indexOf("EHP"));
                 else if (statName.contains("HNDR")) statName = statName.substring(0, statName.indexOf("HNDR"));
                 else if (statName.contains("DR")) statName = statName.substring(0, statName.indexOf("DR"));
                 String formattedStatName = statFormatter.get(statName);
-                int intStatValue = 0;
-                double doubleStatValue = 0.0;
-                String formattedStatValue;
-                if (field.get(buildStats) instanceof Percentage) {
-                    doubleStatValue = (((Percentage) field.get(buildStats)).perc);
-                    formattedStatValue = String.format("%.2f", doubleStatValue) + "%";
-                } else if (field.get(buildStats) instanceof Integer){
-                    intStatValue = field.getInt(buildStats);
-                    formattedStatValue = String.valueOf(intStatValue);
-                } else {
-                    doubleStatValue = field.getDouble(buildStats);
-                    formattedStatValue = String.valueOf(String.format("%.2f", doubleStatValue));
-                }
-
-                String formattedStat = formattedStatName + formattedStatValue;
+                String formattedStat = getFormattedStat(field, formattedStatName);
                 statsToRender.add(formattedStat);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private String getFormattedStat(Field field, String formattedStatName) throws IllegalAccessException {
+        int intStatValue;
+        double doubleStatValue;
+        String formattedStatValue;
+        if (field.get(buildStats) instanceof Percentage) {
+            doubleStatValue = (((Percentage) field.get(buildStats)).perc);
+            formattedStatValue = String.format("%.2f", doubleStatValue) + "%";
+        } else if (field.get(buildStats) instanceof Integer) {
+            intStatValue = field.getInt(buildStats);
+            formattedStatValue = String.valueOf(intStatValue);
+        } else {
+            doubleStatValue = field.getDouble(buildStats);
+            formattedStatValue = String.valueOf(String.format("%.2f", doubleStatValue));
+        }
+
+        return formattedStatName + formattedStatValue;
     }
 
     @Override
@@ -319,6 +324,7 @@ public class BuilderGui extends Screen {
         int y = size*2 + 20;
         int entityMouseX = -(mouseX - x);
         int entityMouseY = -(mouseY - y + size + 3*size/4);
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
         drawEntity(matrices, x, y, size, entityMouseX, entityMouseY, MinecraftClient.getInstance().player);
 
         updateButtons();
@@ -370,8 +376,8 @@ public class BuilderGui extends Screen {
 
         drawTextWithShadow(matrices, textRenderer, Text.literal("Charms").setStyle(Style.EMPTY.withBold(true)), halfWidth + 30, 200, 0xFFFFFFFF);
         String stars = "★".repeat(charms.size()) + "☆".repeat(12 - charms.size());
-        drawTextWithShadow(matrices, textRenderer, Text.literal(stars).setStyle(Style.EMPTY.withBold(true)), halfWidth + 80, 200, 0xFFFFFF00);
-        drawTextWithShadow(matrices, textRenderer, Text.literal(charms.size() + "/12").setStyle(Style.EMPTY.withBold(true)), halfWidth + 190, 200, 0xFFFFFF00);
+        drawTextWithShadow(matrices, textRenderer, Text.literal(stars), halfWidth + 80, 200, 0xFFFFFF00);
+        drawTextWithShadow(matrices, textRenderer, Text.literal(charms.size() + "/12"), halfWidth + 190, 200, 0xFFFFFF00);
         if (charms.size() == 12) {
             drawTextWithShadow(matrices, textRenderer, Text.literal("FULL CHARM POWER").setStyle(Style.EMPTY.withBold(true).withUnderline(true)), halfWidth + 250, 200, 0xFFFF0000);
         }
@@ -394,10 +400,10 @@ public class BuilderGui extends Screen {
         int i = 0;
         int j = 0;
         for (List<String> stats : statsByType) {
-            drawTextWithShadow(matrices, textRenderer, Text.literal(statsTypes.get(i)).setStyle(Style.EMPTY.withBold(true)), 5 + ((i/3)*170), 260 + (j*10)%270, 0xFF92BDA3);
+            drawTextWithShadow(matrices, textRenderer, Text.literal(statsTypes.get(i)).setStyle(Style.EMPTY.withBold(true)), itemPadding + ((i/3)*statsColumn), statsY + (j*10)%statsRow, 0xFF92BDA3);
             for (String stat : stats) {
                 j++;
-                drawTextWithShadow(matrices, textRenderer, Text.literal(stat).setStyle(Style.EMPTY.withBold(true)), 5 + ((i/3)*170), 260 + (j*10)%270, 0xFFA1BA89);
+                drawTextWithShadow(matrices, textRenderer, Text.literal(stat), itemPadding + ((i/3)*statsColumn), statsY + (j*10)%statsRow, 0xFFA1BA89);
             }
             j += 2;
             i++;

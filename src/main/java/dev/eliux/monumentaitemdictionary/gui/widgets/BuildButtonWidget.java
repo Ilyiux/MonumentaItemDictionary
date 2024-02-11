@@ -8,7 +8,6 @@ import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
@@ -23,14 +22,13 @@ import java.util.function.Supplier;
 public class BuildButtonWidget extends ButtonWidget {
     private final DictionaryBuild build;
     private final BuildDictionaryGui gui;
-    private final DictionaryItem displayingItem;
     private final ItemStack builtItem;
     public BuildButtonWidget(int x, int y, int itemSize, Text message, PressAction onPress, DictionaryBuild build, BuildDictionaryGui gui, Supplier<List<Text>> tooltipTextSupplier) {
         super(x, y, itemSize, itemSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
         this.build = build;
         this.gui = gui;
 
-        displayingItem = build.allItems.get(0);
+        DictionaryItem displayingItem = build.allItems.get(0);
 
         if (displayingItem != null) {
             builtItem = ItemFactory.fromEncoding(displayingItem.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_"));

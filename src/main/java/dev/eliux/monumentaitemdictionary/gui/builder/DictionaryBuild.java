@@ -2,12 +2,9 @@ package dev.eliux.monumentaitemdictionary.gui.builder;
 
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
-import dev.eliux.monumentaitemdictionary.util.ItemStat;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DictionaryBuild {
     public String name;

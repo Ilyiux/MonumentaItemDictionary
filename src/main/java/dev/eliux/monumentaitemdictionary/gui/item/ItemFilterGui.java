@@ -17,6 +17,8 @@ import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class ItemFilterGui extends Screen {
     private final int labelMenuHeight = 30;
@@ -25,14 +27,14 @@ public class ItemFilterGui extends Screen {
 
     private ItemIconButtonWidget backButton;
     private ButtonWidget addFilterButton;
-    private ArrayList<DropdownWidget> filterListOption;
-    private ArrayList<DropdownWidget> filterListValue;
-    private ArrayList<ButtonWidget> filterListComparator;
-    private ArrayList<TextFieldWidget> filterListConstant;
-    private ArrayList<ItemIconButtonWidget> filterListDelete;
+    private final ArrayList<DropdownWidget> filterListOption;
+    private final ArrayList<DropdownWidget> filterListValue;
+    private final ArrayList<ButtonWidget> filterListComparator;
+    private final ArrayList<TextFieldWidget> filterListConstant;
+    private final ArrayList<ItemIconButtonWidget> filterListDelete;
     //private ArrayList<ItemIconButtonWidget> filterListDuplicate;
 
-    private ArrayList<Filter> itemFilters = new ArrayList<>();
+    private final ArrayList<Filter> itemFilters = new ArrayList<>();
 
     private int removeIndex = -1;
 
@@ -53,9 +55,7 @@ public class ItemFilterGui extends Screen {
     }
 
     public void postInit() {
-        backButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> {
-            controller.setItemDictionaryScreen();
-        }, Text.literal("Go Back"), "arrow", "");
+        backButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> controller.setItemDictionaryScreen(), Text.literal("Go Back"), "arrow", "");
 
         addFilterButton = ButtonWidget.builder(Text.literal("Add New Filter"), (button) -> {
             int index = filterListOption.size();
@@ -81,7 +81,7 @@ public class ItemFilterGui extends Screen {
                 updateFilterOutput();
             }).position(280, labelMenuHeight + 5 + index * 25).size(60, 20).tooltip(Tooltip.of(Text.literal("Click to cycle"))).build();
 
-            DropdownWidget value = new DropdownWidget(textRenderer, 125, labelMenuHeight + 7 + index * 25, 150, Text.literal(""), "", Arrays.asList(), (v) -> {
+            DropdownWidget value = new DropdownWidget(textRenderer, 125, labelMenuHeight + 7 + index * 25, 150, Text.literal(""), "", List.of(), (v) -> {
                 filter.value = v;
                 updateFilterOutput();
             });
@@ -127,12 +127,12 @@ public class ItemFilterGui extends Screen {
                     }
                     case "Type" -> {
                         ArrayList<String> allTypes = controller.getAllItemTypes();
-                        ArrayList<String> mainhandTypes = new ArrayList<String>(Arrays.asList("Mainhand",
+                        ArrayList<String> mainhandTypes = new ArrayList<>(Arrays.asList("Mainhand",
                                 "Mainhand Sword", "Mainhand Shield", "Wand", "Axe", "Pickaxe", "Trident",
                                 "Snowball", "Shovel", "Scythe", "Bow", "Crossbow"));
-                        ArrayList<String> offhandTypes = new ArrayList<String>(Arrays.asList("Offhand",
+                        ArrayList<String> offhandTypes = new ArrayList<>(Arrays.asList("Offhand",
                                 "Offhand Sword", "Offhand Shield"));
-                        ArrayList<String> oneType = new ArrayList<String>(Arrays.asList(itemGui.itemTypeLookingFor));
+                        ArrayList<String> oneType = new ArrayList<>(Collections.singletonList(itemGui.itemTypeLookingFor));
                         if (itemGui.isGettingBuildItem && itemGui.itemTypeLookingFor.equals("Mainhand")) value.setChoices(mainhandTypes);
                         else if (itemGui.isGettingBuildItem && itemGui.itemTypeLookingFor.equals("Offhand")) value.setChoices(offhandTypes);
                         else if (itemGui.isGettingBuildItem) value.setChoices(oneType);
@@ -144,9 +144,7 @@ public class ItemFilterGui extends Screen {
 
                 updateFilterOutput();
             });
-            ItemIconButtonWidget delete = new ItemIconButtonWidget(5, labelMenuHeight + 5 + index * 25, 20, 20, Text.literal(""), b -> {
-                removeIndex = filterListOption.indexOf(options);
-            }, Text.literal("Delete").setStyle(Style.EMPTY.withColor(0xFF0000)), "orange_stained_glass_pane", "Cancel");
+            ItemIconButtonWidget delete = new ItemIconButtonWidget(5, labelMenuHeight + 5 + index * 25, 20, 20, Text.literal(""), b -> removeIndex = filterListOption.indexOf(options), Text.literal("Delete").setStyle(Style.EMPTY.withColor(0xFF0000)), "orange_stained_glass_pane", "Cancel");
             /*
             ItemIconButtonWidget duplicate = new ItemIconButtonWidget(30, labelMenuHeight + 5 + index * 25, 20, 20, Text.literal(""), b -> {
 
@@ -213,7 +211,7 @@ public class ItemFilterGui extends Screen {
             o.renderMain(matrices, mouseX, mouseY, delta);
         }
         for (DropdownWidget v : filterListValue) {
-            if (!filterListOption.get(filterListValue.indexOf(v)).getLastChoice().equals(""))
+            if (!filterListOption.get(filterListValue.indexOf(v)).getLastChoice().isEmpty())
                 v.renderMain(matrices, mouseX, mouseY, delta);
         }
         for (TextFieldWidget c : filterListConstant) {
@@ -221,7 +219,7 @@ public class ItemFilterGui extends Screen {
                 c.render(matrices, mouseX, mouseY, delta);
         }
         for (ButtonWidget c : filterListComparator) {
-            if (!filterListOption.get(filterListComparator.indexOf(c)).getLastChoice().equals(""))
+            if (!filterListOption.get(filterListComparator.indexOf(c)).getLastChoice().isEmpty())
                 c.render(matrices, mouseX, mouseY, delta);
         }
         filterListDelete.forEach(i -> i.render(matrices, mouseX, mouseY, delta));
@@ -231,7 +229,7 @@ public class ItemFilterGui extends Screen {
             o.renderDropdown(matrices, mouseX, mouseY, delta);
         }
         for (DropdownWidget v : filterListValue) {
-            if (!filterListOption.get(filterListValue.indexOf(v)).getLastChoice().equals(""))
+            if (!filterListOption.get(filterListValue.indexOf(v)).getLastChoice().isEmpty())
                 v.renderDropdown(matrices, mouseX, mouseY, delta);
         }
 
@@ -271,15 +269,15 @@ public class ItemFilterGui extends Screen {
         }
         for (DropdownWidget v : filterListValue) {
             if (v.willClick(mouseX, mouseY)) {
-                if (!filterListOption.get(filterListValue.indexOf(v)).getLastChoice().equals(""))
+                if (!filterListOption.get(filterListValue.indexOf(v)).getLastChoice().isEmpty())
                     v.mouseClicked(mouseX, mouseY, button);
                 return false;
             }
-            if (!filterListOption.get(filterListValue.indexOf(v)).getLastChoice().equals(""))
+            if (!filterListOption.get(filterListValue.indexOf(v)).getLastChoice().isEmpty())
                 v.mouseClicked(mouseX, mouseY, button);
         }
         for (ButtonWidget c : filterListComparator) {
-            if (!filterListOption.get(filterListComparator.indexOf(c)).getLastChoice().equals(""))
+            if (!filterListOption.get(filterListComparator.indexOf(c)).getLastChoice().isEmpty())
                 c.mouseClicked(mouseX, mouseY, button);
         }
         for (TextFieldWidget c : filterListConstant) {

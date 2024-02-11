@@ -12,13 +12,11 @@ import dev.eliux.monumentaitemdictionary.gui.generator.GeneratorGui;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
 import dev.eliux.monumentaitemdictionary.gui.item.ItemDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.item.ItemFilterGui;
-import dev.eliux.monumentaitemdictionary.gui.widgets.ItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.*;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
 import java.util.Map;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.apache.commons.io.FileUtils;
 
@@ -30,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@SuppressWarnings("CallToPrintStackTrace")
 public class DictionaryController {
     private String itemNameFilter;
     private boolean hasItemNameFilter = false;
@@ -150,8 +149,6 @@ public class DictionaryController {
         if (!itemFilterGuiPreviouslyOpened) {
             itemFilterGui.postInit();
             itemFilterGuiPreviouslyOpened = true;
-        } else {
-            //filterGui.updateGuiPositions();
         }
     }
 
@@ -174,8 +171,6 @@ public class DictionaryController {
         if (!charmFilterGuiPreviouslyOpened) {
             charmFilterGui.postInit();
             charmFilterGuiPreviouslyOpened = true;
-        } else {
-            //charmFilterGui.updateGuiPositions();
         }
     }
 
@@ -300,7 +295,7 @@ public class DictionaryController {
                     List<String> plainSplit = Arrays.asList(tierPrimitive.getAsString().replace("_", " ").split(" ")); // janky code to patch Event Currency appearing as Event_currency and other future similar events
                     StringBuilder formattedSplit = new StringBuilder();
                     for (String s : plainSplit) {
-                        if (s.length() > 0)
+                        if (!s.isEmpty())
                             formattedSplit.append(s.substring(0, 1).toUpperCase()).append(s.substring(1).toLowerCase());
                         if (plainSplit.indexOf(s) != plainSplit.size() - 1)
                             formattedSplit.append(" ");
@@ -587,7 +582,7 @@ public class DictionaryController {
             if (filter != null) {
                 switch (filter.getOption()) {
                     case "Stat" -> {
-                        if (!filter.value.equals("")) {
+                        if (!filter.value.isEmpty()) {
                             switch (filter.comparator) {
                                 case 0 -> filteredItems.removeIf(i -> !i.hasStat(filter.value));
                                 case 1 -> filteredItems.removeIf(i -> i.hasStat(filter.value));
@@ -605,7 +600,7 @@ public class DictionaryController {
                         }
                     }
                     case "Tier" -> {
-                        if (!filter.value.equals("")) {
+                        if (!filter.value.isEmpty()) {
                             switch (filter.comparator) {
                                 case 0 -> filteredItems.removeIf(i -> !i.hasTier() || !i.tier.contains(filter.value));
                                 case 1 -> filteredItems.removeIf(i -> i.hasTier() && i.tier.contains(filter.value));
@@ -613,7 +608,7 @@ public class DictionaryController {
                         }
                     }
                     case "Region" -> {
-                        if (!filter.value.equals("")) {
+                        if (!filter.value.isEmpty()) {
                             switch (filter.comparator) {
                                 case 0 -> filteredItems.removeIf(i -> !i.hasRegion() || !i.region.equals(filter.value));
                                 case 1 -> filteredItems.removeIf(i -> i.hasRegion() && i.region.equals(filter.value));
@@ -621,7 +616,7 @@ public class DictionaryController {
                         }
                     }
                     case "Type" -> {
-                        if (!filter.value.equals("")) {
+                        if (!filter.value.isEmpty()) {
                             switch (filter.comparator) {
                                 case 0 -> filteredItems.removeIf(i -> !i.type.equals(filter.value));
                                 case 1 -> filteredItems.removeIf(i -> i.type.equals(filter.value));
@@ -629,7 +624,7 @@ public class DictionaryController {
                         }
                     }
                     case "Location" -> {
-                        if (!filter.value.equals("")) {
+                        if (!filter.value.isEmpty()) {
                             switch (filter.comparator) {
                                 case 0 ->
                                         filteredItems.removeIf(i -> !i.hasLocation() || !i.location.equals(filter.value));
@@ -639,7 +634,7 @@ public class DictionaryController {
                         }
                     }
                     case "Base Item" -> {
-                        if (!filter.value.equals("")) {
+                        if (!filter.value.isEmpty()) {
                             switch (filter.comparator) {
                                 case 0 -> filteredItems.removeIf(i -> !i.baseItem.equals(filter.value));
                                 case 1 -> filteredItems.removeIf(i -> i.baseItem.equals(filter.value));
@@ -687,59 +682,72 @@ public class DictionaryController {
 
         for (Filter filter : charmFilters) {
             if (filter != null) {
-                if (filter.getOption().equals("Stat")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.hasStat(filter.value));
-                            case 2 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
-                            case 3 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
-                            case 4 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
-                            case 5 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
-                            case 6 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                switch (filter.getOption()) {
+                    case "Stat" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.hasStat(filter.value));
+                                case 2 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
+                                case 3 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
+                                case 4 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
+                                case 5 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
+                                case 6 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Tier")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.tier.equals(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.tier.equals(filter.value));
+                    case "Tier" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.tier.equals(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.tier.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Class")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.className.equals(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.className.equals(filter.value));
+                    case "Class" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.className.equals(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.className.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Skill Modifier")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.hasStatModifier(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.hasStatModifier(filter.value));
+                    case "Skill Modifier" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.hasStatModifier(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.hasStatModifier(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Charm Power")) {
-                    switch (filter.comparator) {
-                        case 2 -> filteredCharms.removeIf(i -> !(i.power >= filter.constant));
-                        case 3 -> filteredCharms.removeIf(i -> !(i.power > filter.constant));
-                        case 4 -> filteredCharms.removeIf(i -> !(i.power == filter.constant));
-                        case 5 -> filteredCharms.removeIf(i -> !(i.power < filter.constant));
-                        case 6 -> filteredCharms.removeIf(i -> !(i.power <= filter.constant));
-                    }
-                } else if (filter.getOption().equals("Location")) {
-                    if (!filter.value.equals("")) {
+                    case "Charm Power" -> {
                         switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.location.equals(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.location.equals(filter.value));
+                            case 2 -> filteredCharms.removeIf(i -> !(i.power >= filter.constant));
+                            case 3 -> filteredCharms.removeIf(i -> !(i.power > filter.constant));
+                            case 4 -> filteredCharms.removeIf(i -> !(i.power == filter.constant));
+                            case 5 -> filteredCharms.removeIf(i -> !(i.power < filter.constant));
+                            case 6 -> filteredCharms.removeIf(i -> !(i.power <= filter.constant));
                         }
                     }
-                } else if (filter.getOption().equals("Base Item")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.baseItem.equals(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.baseItem.equals(filter.value));
+                    case "Location" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.location.equals(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.location.equals(filter.value));
+                            }
+                        }
+                    }
+                    case "Base Item" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.baseItem.equals(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.baseItem.equals(filter.value));
+                            }
                         }
                     }
                 }
@@ -776,11 +784,11 @@ public class DictionaryController {
     }
 
     public boolean anyItems() {
-        return items.size() == 0;
+        return items.isEmpty();
     }
 
     public boolean anyCharms() {
-        return charms.size() == 0;
+        return charms.isEmpty();
     }
 
     public DictionaryItem getItemByName(String itemName, boolean isExalted) {

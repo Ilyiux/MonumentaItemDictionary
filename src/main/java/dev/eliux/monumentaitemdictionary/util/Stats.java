@@ -66,7 +66,7 @@ public class Stats {
     public Percentage spellPowerPercent;
     public Percentage spellDamage;
     public Percentage spellCooldownPercent;
-    private Percentage currentHealthPercent;
+    private final Percentage currentHealthPercent;
     private double speedFlat;
     private Percentage healthPercent;
     private double attackSpeedFlatBonus;
@@ -84,11 +84,9 @@ public class Stats {
     private double fireFragility;
     private double worldlyProtection;
     private Percentage thornsPercent;
-    private double ailmentProt;
     private double aptitude;
     private double ineptitude;
     private double crippling;
-    private double corruption;
     private final double vitality;
     private final double tenacity;
     private final double vigor;
@@ -279,31 +277,31 @@ public class Stats {
         Map<String, Double> ailmentDamage =     calculateDamageTaken(true,          0,                      0,                          0, 0,                       0);
 
         Map<String, Map<String, Percentage>> reductions = new HashMap<>();
-        reductions.put("melee", new HashMap<String, Percentage>() {{
+        reductions.put("melee", new HashMap<>() {{
             put("base", new Percentage(100 - meleeDamage.get("base"), true));
             put("second_wind", new Percentage(100 - meleeDamage.get("second_wind"), true));
         }});
-        reductions.put("projectile", new HashMap<String, Percentage>() {{
+        reductions.put("projectile", new HashMap<>() {{
             put("base", new Percentage(100 - projectileDamage.get("base"), true));
             put("second_wind", new Percentage(100 - projectileDamage.get("second_wind"), true));
         }});
-        reductions.put("magic", new HashMap<String, Percentage>() {{
+        reductions.put("magic", new HashMap<>() {{
             put("base", new Percentage(100 - magicDamage.get("base"), true));
             put("second_wind", new Percentage(100 - magicDamage.get("second_wind"), true));
         }});
-        reductions.put("blast", new HashMap<String, Percentage>() {{
+        reductions.put("blast", new HashMap<>() {{
             put("base", new Percentage(100 - blastDamage.get("base"), true));
             put("second_wind", new Percentage(100 - blastDamage.get("second_wind"), true));
         }});
-        reductions.put("fire", new HashMap<String, Percentage>() {{
+        reductions.put("fire", new HashMap<>() {{
             put("base", new Percentage(100 - fireDamage.get("base"), true));
             put("second_wind", new Percentage(100 - fireDamage.get("second_wind"), true));
         }});
-        reductions.put("fall", new HashMap<String, Percentage>() {{
+        reductions.put("fall", new HashMap<>() {{
             put("base", new Percentage(100 - fallDamage.get("base"), true));
             put("second_wind", new Percentage(100 - fallDamage.get("second_wind"), true));
         }});
-        reductions.put("ailment", new HashMap<String, Percentage>() {{
+        reductions.put("ailment", new HashMap<>() {{
             put("base", new Percentage(100 - ailmentDamage.get("base"), true));
             put("second_wind", new Percentage(100 - ailmentDamage.get("second_wind"), true));
         }});
@@ -340,7 +338,7 @@ public class Stats {
         lifeDrainOnCrit = (sqrt(lifeDrainOnCrit)) * healingRate.val;
         lifeDrainOnCritPercent = new Percentage((lifeDrainOnCrit / healthFinal), false);
 
-        thorns *= (double) thornsPercent.val;
+        thorns *= (int) thornsPercent.val;
     }
 
     private Double sumNumberStat(List<ItemStat> itemStats, String statName, double defaultIncrement) {
@@ -408,8 +406,8 @@ public class Stats {
 
             magicDamagePercent.add(sumNumberStat(itemStats, "magic_damage_percent", 0), true);
 
-            aptitude += (double) sumEnchantmentStat(itemStats, "aptitude", 1);
-            ineptitude += (double) sumEnchantmentStat(itemStats, "ineptitude", -1);
+            aptitude += sumEnchantmentStat(itemStats, "aptitude", 1);
+            ineptitude += sumEnchantmentStat(itemStats, "ineptitude", -1);
 
             worldlyProtection += sumNumberStat(itemStats, "worldly_protection", 0);
 
@@ -427,7 +425,6 @@ public class Stats {
             situationalsLevels.put("second_wind", (int) (situationalsLevels.get("second_wind") + sumNumberStat(itemStats, "second_wind", 0)));
 
             crippling += sumNumberStat(itemStats, "curse_of_crippling", 0);
-            corruption += sumNumberStat(itemStats, "curse_of_corruption", 0);
         });
     }
     private void setDefaultValues() {
@@ -457,7 +454,6 @@ public class Stats {
         blastProt = 0;
         fireProt = 0;
         fallProt = 0;
-        ailmentProt = 0;
 
         meleeFragility = 0;
         projectileFragility = 0;
@@ -515,6 +511,5 @@ public class Stats {
         aptitude = 0;
         ineptitude = 0;
         crippling = 0;
-        corruption = 0;
     }
 }

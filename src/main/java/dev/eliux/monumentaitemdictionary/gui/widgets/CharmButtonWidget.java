@@ -17,7 +17,6 @@ import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
 
 public class CharmButtonWidget extends ButtonWidget {
-    private final int charmSize;
     private final DictionaryCharm charm;
     private final ItemStack builtItem;
     public final int index;
@@ -28,7 +27,6 @@ public class CharmButtonWidget extends ButtonWidget {
     public CharmButtonWidget(int x, int y, int charmSize, int index, Text message, PressAction onPress, DictionaryCharm charm, Supplier<List<Text>> tooltipTextSupplier, CharmDictionaryGui gui) {
         super(x, y, charmSize, charmSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
         this.tooltipTextSupplier = tooltipTextSupplier;
-        this.charmSize = charmSize;
         this.charm = charm;
         this.index = index;
 

@@ -28,24 +28,34 @@ public class BuildDictionaryGui extends Screen {
         super(title);
         this.controller = controller;
     }
-
     public void postInit() {
         buildsList = new ArrayList<>();
 
-        addBuildButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> {
-            controller.setBuilderScreen();
-        }, Text.literal("Add Build"), "paper", "");
+        addBuildButton = new ItemIconButtonWidget(
+                5, 5, 20, 20,
+                Text.literal(""),
+                (button) -> {
+                    controller.builderGui.buildItems = Arrays.asList(null, null, null, null, null, null);
+                    controller.setBuilderScreen();
+                    },
+                Text.literal("Add Build"),
+                "paper", "");
 
-        showItemsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, Text.literal(""), (button) -> {
-            controller.setItemDictionaryScreen();
-        }, Text.literal("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), "iron_chestplate", "");
+        showItemsButton = new ItemIconButtonWidget(
+                width - sideMenuWidth + 10,labelMenuHeight + 10, 20, 20,
+                Text.literal(""),
+                (button) -> controller.setItemDictionaryScreen(),
+                Text.literal("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)),
+                "iron_chestplate", "");
 
-        showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 30, 20, 20, Text.literal(""), (button) -> {
-            controller.setCharmDictionaryScreen();
-        }, Text.literal("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)), "glowstone_dust", "");
+        showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 30, 20, 20,
+                Text.literal(""),
+                (button) -> controller.setCharmDictionaryScreen(),
+                Text.literal("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)),
+                "glowstone_dust", "");
     }
-
-    public void buildBuildsList() {
+    public void buildBuildsList()
+    {
         for (DictionaryBuild build : buildsList) {
             int index = buildsList.indexOf(build);
             int row = index / ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
@@ -57,12 +67,12 @@ public class BuildDictionaryGui extends Screen {
             BuildButtonWidget button = new BuildButtonWidget(x, y, itemSize, Text.literal(build.name), (b) -> {
                 controller.builderGui.loadItems(build);
                 controller.setBuilderScreen();
+
             }, build, this, () -> getBuildDescription(build));
 
             buildsButtons.put(build, button);
         }
     }
-
     private List<Text> getBuildDescription(DictionaryBuild build) {
         List<Text> lines = new ArrayList<>();
 
@@ -72,7 +82,6 @@ public class BuildDictionaryGui extends Screen {
 
         return lines;
     }
-
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
@@ -86,9 +95,7 @@ public class BuildDictionaryGui extends Screen {
         drawVerticalLine(matrices, width - sideMenuWidth - 1, labelMenuHeight, height, 0x77AAAAAA); // called twice to make the scroll bar render wider (janky, but I don't really care)
         drawVerticalLine(matrices, width - sideMenuWidth - 2, labelMenuHeight, height, 0x77AAAAAA);
 
-        buildsButtons.forEach((build, button) -> {
-            button.renderButton(matrices, mouseX, mouseY, delta);
-        });
+        buildsButtons.forEach((build, button) -> button.renderButton(matrices, mouseX, mouseY, delta));
 
         if (buildsButtons.isEmpty()) {
             drawCenteredTextWithShadow(matrices, textRenderer, "Found No Builds", width / 2, labelMenuHeight + 10, 0xFF2222);
@@ -107,7 +114,6 @@ public class BuildDictionaryGui extends Screen {
             e.printStackTrace();
         }
     }
-
     @Override
     public void resize(MinecraftClient client, int width, int height) {
         super.resize(client, width, height);
@@ -116,9 +122,7 @@ public class BuildDictionaryGui extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         super.mouseClicked(mouseX, mouseY, button);
 
-        buildsButtons.forEach((build, b) -> {
-            b.mouseClicked(mouseX, mouseY, button);
-        });
+        buildsButtons.forEach((build, b) -> b.mouseClicked(mouseX, mouseY, button));
 
         addBuildButton.mouseClicked(mouseX, mouseY, button);
         showCharmsButton.mouseClicked(mouseX, mouseY, button);
@@ -126,10 +130,8 @@ public class BuildDictionaryGui extends Screen {
 
         return true;
     }
-
     public void updateGuiPositions() {
     }
-
     public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms) {
         if (name.isEmpty()) name = "No Name";
         DictionaryBuild build = new DictionaryBuild(name, items, charms);
