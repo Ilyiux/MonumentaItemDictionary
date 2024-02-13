@@ -16,16 +16,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
+
 public class BuildItemButtonWidget extends ButtonWidget {
     private final Supplier<List<Text>> lore;
     private final DictionaryItem item;
     private final BuilderGui gui;
     private final ItemStack builtItem;
+    private final float scale;
+
     public BuildItemButtonWidget(int x, int y, int itemSize, Text message, PressAction onPress, DictionaryItem item, Supplier<List<Text>> lore, BuilderGui gui) {
         super(x, y, itemSize, itemSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
         this.lore = lore;
         this.item = item;
         this.gui = gui;
+        this.scale = (float) width/18;
 
         builtItem = ItemFactory.fromEncoding(item != null ? (item.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_")) : "barrier");
         NbtCompound baseNbt = builtItem.getOrCreateNbt();
@@ -50,6 +56,7 @@ public class BuildItemButtonWidget extends ButtonWidget {
         int minY = getY();
         int maxX = minX + width;
         int maxY = minY + height;
+        int itemSize = (int) (16*scale);
 
         boolean hovered = (mouseX >= minX) && (mouseX <= maxX) && (mouseY >= minY) && (mouseY <= maxY) && (mouseY > gui.labelMenuHeight);
 
@@ -63,8 +70,8 @@ public class BuildItemButtonWidget extends ButtonWidget {
         drawVerticalLine(matrices, maxX, minY, maxY, outlineColor);
 
         matrices.push();
-        matrices.scale(2F, 2F, 2F);
-        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, (minX + (width / 2) - 15)/2, (minY + (height / 2) - 16)/2);
+        matrices.scale(scale, scale, scale);
+        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, (int) floor((minX + width/2 - ceil(itemSize/2))/scale), (int) floor((minY + height/2 - ceil(itemSize/2))/scale));
         matrices.pop();
 
         if (hovered) {

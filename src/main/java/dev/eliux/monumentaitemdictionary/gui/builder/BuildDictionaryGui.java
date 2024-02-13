@@ -35,8 +35,8 @@ public class BuildDictionaryGui extends Screen {
                 5, 5, 20, 20,
                 Text.literal(""),
                 (button) -> {
-                    controller.builderGui.buildItems = Arrays.asList(null, null, null, null, null, null);
                     controller.setBuilderScreen();
+                    controller.builderGui.resetBuild();
                     },
                 Text.literal("Add Build"),
                 "paper", "");
@@ -117,6 +117,7 @@ public class BuildDictionaryGui extends Screen {
     @Override
     public void resize(MinecraftClient client, int width, int height) {
         super.resize(client, width, height);
+        updateGuiPositions();
     }
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -131,6 +132,11 @@ public class BuildDictionaryGui extends Screen {
         return true;
     }
     public void updateGuiPositions() {
+        showItemsButton.setX(width - sideMenuWidth + 10);
+        showItemsButton.setY(labelMenuHeight + 10);
+
+        showCharmsButton.setX(width - sideMenuWidth + 10);
+        showCharmsButton.setY(labelMenuHeight + 30);
     }
     public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms) {
         if (name.isEmpty()) name = "No Name";
