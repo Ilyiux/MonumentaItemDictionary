@@ -10,6 +10,8 @@ import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.OptionSliderWidget;
+import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
@@ -31,6 +33,7 @@ public class BuilderGui extends Screen {
     private final DictionaryController controller;
     public final List<String> itemTypesIndex = Arrays.asList("Mainhand", "Offhand", "Helmet", "Chestplate", "Leggings", "Boots");
     public final List<String> situationals = Arrays.asList("Shielding", "Poise", "Inure", "Steadfast", "Guard", "Second Wind", "Ethereal", "Reflexes", "Evasion", "Tempo", "Cloaked", "Versatile");
+    public final List<String> infusions = Arrays.asList("Vigor", "Focus", "Tenacity", "Vitality", "Perspicacity");
     private final List<BuildItemButtonWidget> buildItemButtons = new ArrayList<>();
     private final List<BuildCharmButtonWidget> buildCharmButtons = new ArrayList<>();
     public List<DictionaryCharm> charms = new ArrayList<>();
@@ -48,16 +51,19 @@ public class BuilderGui extends Screen {
     public int statsRow = 350;
     public int statsColumn = 170;
     public int charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 3;
+    public int charmsButtonY;
     public int charmsX = 2*statsColumn + itemPadding;
     private int halfWidth;
     private int halfWidthPadding;
     private TextFieldWidget nameBar;
+    private SliderWidget currentHealthSlider;
     private ItemIconButtonWidget showBuildDictionaryButton;
     private ItemIconButtonWidget setBuildFromClipboardButton;
     private ItemIconButtonWidget addBuildButton;
     private Map<String, Boolean> enabledSituationals;
-    private HashMap<String, Integer> infusions;
+    private HashMap<String, Boolean> enabledInfusions;
     private final List<CheckBoxWidget> situationalCheckBoxList = new ArrayList<>();
+    private final List<CheckBoxWidget> infusionsCheckBoxList = new ArrayList<>();
     private double currentHealthPercent;
     private int scrollPixels = 0;
     public BuilderGui(Text title, DictionaryController controller) {
@@ -65,8 +71,30 @@ public class BuilderGui extends Screen {
         this.controller = controller;
     }
     public void postInit() {
+        this.charmsButtonY = (int) (charms.size()/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
+                (buttonSize + itemPadding) - scrollPixels + buttonSize + itemPadding;
         this.halfWidth = width/2;
-        nameBar = new TextFieldWidget(textRenderer, width / 2 +90, 7, width / 2 - 100, 15, Text.literal("Build Name"));
+
+        nameBar = new TextFieldWidget(textRenderer, charmsX + 1, charmsY + charmsButtonY, width / 2 - 100, 15, Text.literal("Build Name"));
+
+        currentHealthSlider = new SliderWidget(
+                charmsX,
+                charmsY + charmsButtonY + 20,
+                (width - sideMenuWidth) - charmsX - itemPadding,
+                20,
+                Text.literal("Current Health: 100%"),
+                1) {
+            @Override
+            protected void updateMessage() {
+                this.setMessage(Text.literal("Current Health: " + (float) this.value * 100 + "%"));
+            }
+
+            @Override
+            protected void applyValue() {
+                currentHealthPercent = this.value * 100;
+                updateStats();
+            }
+        };
 
         setBuildFromClipboardButton = new ItemIconButtonWidget(30, 5, 20, 20, Text.literal(""), (button) -> {
             try {
@@ -111,20 +139,20 @@ public class BuilderGui extends Screen {
             put("second_wind", false);
             put("versatile", false);
         }};
-        infusions = new HashMap<>() {{
-            put("vitality", 0);
-            put("tenacity", 0);
-            put("vigor", 0);
-            put("focus", 0);
-            put("perspicacity", 0);
+        enabledInfusions = new HashMap<>() {{
+            put("vigor", false);
+            put("focus", false);
+            put("tenacity", false);
+            put("vitality", false);
+            put("perspicacity", false);
         }};
-        currentHealthPercent = 100;
 
-        this.buildStats = new Stats(buildItems, enabledSituationals, infusions, currentHealthPercent);
+        this.buildStats = new Stats(buildItems, enabledSituationals, enabledInfusions, currentHealthPercent);
 
         updateButtons();
         updateGuiPositions();
     }
+
     private void getBuildFromUrl(String buildUrl) {
         updateUserOptions();
         buildUrl = buildUrl.substring(buildUrl.indexOf("m="));
@@ -182,7 +210,7 @@ public class BuilderGui extends Screen {
     private BuildCharmButtonWidget getCharmButtonWidget(int i, @Nullable DictionaryCharm charm) {
         charmsButton = new BuildCharmButtonWidget(
                 charmsX + (int) (i % floor((double) (width - sideMenuWidth - charmsX) / (buttonSize + itemPadding))) * (buttonSize + itemPadding),
-                (charmsY + (int) (i / floor((double) (width - sideMenuWidth - charmsX) / (buttonSize + itemPadding))) * (buttonSize + itemPadding) - scrollPixels),
+                charmsY + (int) (i / floor((double) (width - sideMenuWidth - charmsX) / (buttonSize + itemPadding))) * (buttonSize + itemPadding) - scrollPixels,
                 buttonSize,
                 Text.literal(""),
                 (b) -> charmButtonClicked(charm, hasShiftDown(), hasControlDown()), charm,  () -> (charm != null) ? controller.charmGui.generateCharmLoreText(charm) : null,
@@ -230,16 +258,25 @@ public class BuilderGui extends Screen {
     }
     public void updateGuiPositions() {
         halfWidth = width/2;
-        halfWidthPadding = textRenderer.getWidth(situationalCheckBoxList.get(6).getMessage()) + buttonSize + 3*itemPadding;
-
+        halfWidthPadding = textRenderer.getWidth(situationalCheckBoxList.get(6).getMessage()) + 3*(checkBoxSise + itemPadding);
         buttonSize = width/18; // 50
         itemPadding = buttonSize/10; // 5
-        charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 5 ; // 240
-        statsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4; // 260
+
+        charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 2 + (checkBoxSise + itemPadding) * 5 + 30; // 240
+        charmsButtonY = (int) (charms.size()/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
+                (buttonSize + itemPadding) - scrollPixels + buttonSize + 2*itemPadding;
+        statsY = Math.max(labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4, labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*6); // 260
+
         showBuildDictionaryButton.setX(width - sideMenuWidth + 10);
         showBuildDictionaryButton.setY(labelMenuHeight + 10);
 
-        updateButtons();
+        nameBar.setX(charmsX + 1);
+        nameBar.setY(charmsY + charmsButtonY);
+        nameBar.setWidth(width - sideMenuWidth - charmsX - 2*itemPadding);
+
+        currentHealthSlider.setX(charmsX);
+        currentHealthSlider.setY(charmsY + charmsButtonY + 20);
+        currentHealthSlider.setWidth(width - sideMenuWidth - charmsX - 2*itemPadding);
     }
     public void updateButtons() {
         situationalCheckBoxList.clear();
@@ -256,7 +293,24 @@ public class BuilderGui extends Screen {
                     this);
             situationalCheckBoxList.add(situationalCheckBox);
         }
-        halfWidthPadding = textRenderer.getWidth(situationalCheckBoxList.get(6).getMessage()) + buttonSize + itemPadding;
+
+        infusionsCheckBoxList.clear();
+        for (int i = 0; i < infusions.size() ; i++) {
+            String infusion = infusions.get(i);
+
+            CheckBoxWidget infusionCheckBox = new CheckBoxWidget(
+                    halfWidth + halfWidthPadding + (i/6)*90,
+                    labelMenuHeight + itemPadding + 2*(buttonSize + itemPadding) + (checkBoxSise + itemPadding)*(i%6) - scrollPixels,
+                    checkBoxSise,
+                    checkBoxSise,
+                    Text.literal(infusion),
+                    enabledInfusions.get(infusion.toLowerCase()),
+                    true,
+                    this);
+            infusionsCheckBoxList.add(infusionCheckBox);
+        }
+
+        halfWidthPadding = textRenderer.getWidth(situationalCheckBoxList.get(6).getMessage()) + 3*(checkBoxSise + itemPadding);
 
         buildItemButtons.clear();
         for (int i = 0; i < 6; i++) {
@@ -275,19 +329,28 @@ public class BuilderGui extends Screen {
                 charmsButton = getCharmButtonWidget(charms.size(), null);
             }
         }
+
+
+        updateGuiPositions();
     }
     public void updateUserOptions() {
     }
-    public void updateSituationals () {
-        System.out.println(enabledSituationals);
+    public void updateCheckBoxes() {
         Iterator<CheckBoxWidget> checkBox = situationalCheckBoxList.iterator();
-        Iterator<String> situational = situationals.iterator();
-        while (checkBox.hasNext() && situational.hasNext()) {
-            enabledSituationals.put(situational.next().replace(" ", "_").toLowerCase(), checkBox.next().isChecked());
+        Iterator<String> text = situationals.iterator();
+        while (checkBox.hasNext() && text.hasNext()) {
+            enabledSituationals.put(text.next().replace(" ", "_").toLowerCase(), checkBox.next().isChecked());
+        }
+
+        checkBox = infusionsCheckBoxList.iterator();
+        text = infusions.iterator();
+        while (checkBox.hasNext() && text.hasNext()) {
+            enabledInfusions.put(text.next().toLowerCase(), checkBox.next().isChecked());
         }
     }
     public void updateStats() {
-        buildStats = new Stats(buildItems, enabledSituationals, infusions, currentHealthPercent);
+        updateCheckBoxes();
+        buildStats = new Stats(buildItems, enabledSituationals, enabledInfusions, currentHealthPercent);
         statsToRender.clear();
         Map<String, String> statFormatter = StatsFormats.getStatFormats();
         Field[] allFields = Stats.class.getFields();
@@ -336,14 +399,16 @@ public class BuilderGui extends Screen {
     public void resetBuild() {
         buildItems = Arrays.asList(null, null, null, null, null, null);
         charms = new ArrayList<>();
-        updateSituationals();
-        buildStats = new Stats(buildItems, enabledSituationals, infusions, currentHealthPercent);
+        updateCheckBoxes();
+        buildStats = new Stats(buildItems, enabledSituationals, enabledInfusions, currentHealthPercent);
+        updateStats();
         updateButtons();
     }
     private void drawButtons(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         buildItemButtons.forEach((b) -> b.render(matrices, mouseX, mouseY, delta));
         buildCharmButtons.forEach((b) -> b.render(matrices, mouseX, mouseY, delta));
         situationalCheckBoxList.forEach((b) -> b.render(matrices, mouseX, mouseY, delta));
+        infusionsCheckBoxList.forEach((b) -> b.render(matrices, mouseX, mouseY, delta));
     }
     private void drawItemText(MatrixStack matrices) {
         for (int i = 0;i < buildItems.size(); i++) {
@@ -381,7 +446,7 @@ public class BuilderGui extends Screen {
         if (charms.size() == 12) {
             drawTextWithShadow(matrices, textRenderer,
                     Text.literal("FULL CHARM POWER").setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
-                    halfWidth + halfWidthPadding, charmsY-30 - scrollPixels, 0xFFFF0000);
+                    charmsX, charmsY-30 - scrollPixels, 0xFFFF0000);
         }
     }
     private void drawStats(MatrixStack matrices) {
@@ -414,7 +479,7 @@ public class BuilderGui extends Screen {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
 
-        int totalRows = 50;
+        int totalRows = 10;
         int totalPixelHeight = totalRows * buttonSize + (totalRows + 1) * itemPadding;
         double bottomPercent = (double)scrollPixels / totalPixelHeight;
         double screenPercent = (double)(height - labelMenuHeight) / totalPixelHeight;
@@ -423,6 +488,7 @@ public class BuilderGui extends Screen {
         drawVerticalLine(matrices, width - sideMenuWidth - 1, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
         drawVerticalLine(matrices, width - sideMenuWidth - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
 
+        updateGuiPositions();
         updateButtons();
         drawButtons(matrices, mouseX, mouseY, delta);
         drawItemText(matrices);
@@ -438,6 +504,7 @@ public class BuilderGui extends Screen {
         matrices.push();
         matrices.translate(0, 0, 110);
         nameBar.render(matrices, mouseX, mouseY, delta);
+        currentHealthSlider.render(matrices, mouseX, mouseY, delta);
         addBuildButton.render(matrices, mouseX, mouseY, delta);
         setBuildFromClipboardButton.render(matrices, mouseX, mouseY, delta);
         showBuildDictionaryButton.render(matrices, mouseX, mouseY, delta);
@@ -460,11 +527,13 @@ public class BuilderGui extends Screen {
         super.mouseClicked(mouseX, mouseY, button);
 
         nameBar.mouseClicked(mouseX, mouseY, button);
+        currentHealthSlider.mouseClicked(mouseX, mouseY, button);
         addBuildButton.mouseClicked(mouseX, mouseY, button);
         setBuildFromClipboardButton.mouseClicked(mouseX, mouseY, button);
         showBuildDictionaryButton.mouseClicked(mouseX, mouseY, button);
 
         situationalCheckBoxList.forEach((b) -> b.mouseClicked(mouseX, mouseY, button));
+        infusionsCheckBoxList.forEach((b) -> b.mouseClicked(mouseX, mouseY, button));
         buildItemButtons.forEach((b) -> b.mouseClicked(mouseX, mouseY, button));
         buildCharmButtons.forEach((b) -> b.mouseClicked(mouseX, mouseY, button));
 
@@ -479,6 +548,14 @@ public class BuilderGui extends Screen {
             }
         return true;
     }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (currentHealthSlider.isMouseOver(mouseX, mouseY)) currentHealthSlider.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+
     private void updateScrollLimits () {
         int maxScroll = 4*(buttonSize + itemPadding) + labelMenuHeight + statsRow - height + 10;
         if (scrollPixels > maxScroll) scrollPixels = maxScroll;

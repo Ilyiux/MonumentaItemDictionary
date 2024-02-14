@@ -96,13 +96,13 @@ public class Stats {
     private final Map<String, Boolean> enabledSituationals;
     private final Map<String, List<ItemStat>> allItemStats = new HashMap<>();
 
-    public Stats(List<DictionaryItem> items, Map<String, Boolean> enabledSituationals, Map<String, Integer> infusions, double currentHealthPercent) {
+    public Stats(List<DictionaryItem> items, Map<String, Boolean> enabledSituationals, Map<String, Boolean> infusions, double currentHealthPercent) {
         this.enabledSituationals = enabledSituationals;
-        vitality = (infusions.get("vitality") > 0) ? infusions.get("vitality") : 0;
-        tenacity = (infusions.get("tenacity") > 0) ? infusions.get("tenacity") : 0;
-        vigor = (infusions.get("vigor") > 0) ? infusions.get("vigor") : 0;
-        focus = (infusions.get("focus") > 0) ? infusions.get("focus") : 0;
-        perspicacity = (infusions.get("perspicacity") > 0) ? infusions.get("perspicacity") : 0;
+        vitality = (infusions.get("vitality")) ? 24 : 0;
+        tenacity = (infusions.get("tenacity")) ? 24 : 0;
+        vigor = (infusions.get("vigor")) ? 24 : 0;
+        focus = (infusions.get("focus")) ? 24 : 0;
+        perspicacity = (infusions.get("perspicacity")) ? 24 : 0;
 
         this.currentHealthPercent = new Percentage(currentHealthPercent, true);
 

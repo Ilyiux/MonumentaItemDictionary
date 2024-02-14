@@ -30,7 +30,7 @@ public class CheckBoxWidget extends CheckboxWidget {
     @Override
     public void onPress() {
         this.checked = !this.checked;
-        gui.updateSituationals();
+        gui.updateCheckBoxes();
         gui.updateStats();
     }
     @Override
