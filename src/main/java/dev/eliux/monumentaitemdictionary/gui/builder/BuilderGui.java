@@ -10,7 +10,6 @@ import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.OptionSliderWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -53,6 +52,8 @@ public class BuilderGui extends Screen {
     public int charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 3;
     public int charmsButtonY;
     public int charmsX = 2*statsColumn + itemPadding;
+    public int textTimeOffset = 1;
+    public float deltaTicks = 0;
     private int halfWidth;
     private int halfWidthPadding;
     private TextFieldWidget nameBar;
@@ -272,7 +273,7 @@ public class BuilderGui extends Screen {
 
         nameBar.setX(charmsX + 1);
         nameBar.setY(charmsY + charmsButtonY);
-        nameBar.setWidth(width - sideMenuWidth - charmsX - 2*itemPadding);
+        nameBar.setWidth(width - sideMenuWidth - charmsX - 2*itemPadding - 2);
 
         currentHealthSlider.setX(charmsX);
         currentHealthSlider.setY(charmsY + charmsButtonY + 20);
@@ -283,7 +284,8 @@ public class BuilderGui extends Screen {
         for (int i = 0; i < situationals.size(); i++) {
             String situational = situationals.get(i);
 
-            CheckBoxWidget situationalCheckBox = new CheckBoxWidget(width/3 + (i/6)*90,
+            CheckBoxWidget situationalCheckBox = new CheckBoxWidget(
+                    width/3 + (i/6)*90,
                     labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*(i%6) - scrollPixels,
                     checkBoxSise,
                     checkBoxSise,
@@ -414,11 +416,14 @@ public class BuilderGui extends Screen {
         for (int i = 0;i < buildItems.size(); i++) {
             DictionaryItem item = buildItems.get(i);
             if (item != null) {
+                int x = ((i < 2) ? halfWidth + halfWidthPadding : itemPadding) + buttonSize + 2*itemPadding;
+                int y = 10 + labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2) - scrollPixels;
+                String itemText = getFormattedText(item.name, x, (i < 2) ? width - sideMenuWidth : width/3, true);
                 drawTextWithShadow(matrices,
                         textRenderer,
-                        Text.literal(item.name).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
-                        ((i < 2) ? halfWidth + halfWidthPadding : itemPadding) + buttonSize + 2*itemPadding,
-                        10 + labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2) - scrollPixels,
+                        Text.literal(itemText).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
+                        x,
+                        y,
                         0xFF000000 + ItemColours.getColorForLocation(item.location));
             }
         }
@@ -432,23 +437,33 @@ public class BuilderGui extends Screen {
                     0xFFFFFFFF);
         }
 
-        String stars = "★".repeat(charms.size()) + "☆".repeat(12 - charms.size());
-        String starsNumber = charms.size() + "/12";
+        String stars = "★".repeat(charms.size()) + "☆".repeat(12 - charms.size()) + " " + charms.size() + "/12";
+        stars = (textRenderer.getWidth(stars) > width - sideMenuWidth - charmsX) ? charms.size() + "/12" : stars;
         drawTextWithShadow(matrices, textRenderer,
                 Text.literal("Charms"),
                 charmsX, charmsY-20 - scrollPixels, 0xFFFFFFFF);
         drawTextWithShadow(matrices, textRenderer,
                 Text.literal(stars),
-                charmsX, charmsY-10 - scrollPixels, 0xFFFFFF00);
-        drawTextWithShadow(matrices, textRenderer,
-                Text.literal(starsNumber),
-                charmsX + textRenderer.getWidth(stars) + 5, charmsY-10 - scrollPixels, 0xFFFFFF00);
+                charmsX, charmsY - 10 - scrollPixels, 0xFFFFFF00);
         if (charms.size() == 12) {
             drawTextWithShadow(matrices, textRenderer,
-                    Text.literal("FULL CHARM POWER").setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
+                    Text.literal(getFormattedText("FULL CHARMS", charmsX, width - labelMenuHeight, true)).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
                     charmsX, charmsY-30 - scrollPixels, 0xFFFF0000);
         }
     }
+
+    private String getFormattedText(String text, int xi, int xf, boolean bold) {
+        int textWidth = xf - xi;
+        System.out.println(textWidth);
+        if (textWidth >= textRenderer.getWidth(Text.literal(text).setStyle(Style.EMPTY.withBold(bold))) + 30) return text;
+        int charWidth = textRenderer.getWidth(Text.literal("M").setStyle(Style.EMPTY.withBold(bold)));
+        int textLength = (int) floor((double) textWidth/charWidth);
+
+        int start = textTimeOffset % textLength;
+
+        return (text + " " + text + " " + text).substring(start, start + textLength);
+    }
+
     private void drawStats(MatrixStack matrices) {
         if (statsToRender.isEmpty()) return;
         List<String> statsTypes = new ArrayList<>(Arrays.asList("Misc Stats", "Health Stats", "DR Stats", "HP Normalized DR Stats", "EHP Stats", "Melee Stats", "Projectile Stats", "Magic Stats"));
@@ -478,6 +493,11 @@ public class BuilderGui extends Screen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
+
+        deltaTicks += delta;
+        textTimeOffset += (deltaTicks >= 20) ? 1 : 0;
+        deltaTicks = (deltaTicks >= 20) ? 0 : deltaTicks;
+        textTimeOffset = (textTimeOffset >= 100) ? 1 : textTimeOffset;
 
         int totalRows = 10;
         int totalPixelHeight = totalRows * buttonSize + (totalRows + 1) * itemPadding;
