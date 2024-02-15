@@ -298,7 +298,7 @@ public class BuilderGui extends Screen {
 
         infusionsCheckBoxList.clear();
         for (int i = 0; i < infusions.size() ; i++) {
-            String infusion = infusions.get(i);
+            String infusion = getFormattedText(infusions.get(i), halfWidth + halfWidthPadding + (i/6)*90 + checkBoxSise, width - sideMenuWidth, false);
 
             CheckBoxWidget infusionCheckBox = new CheckBoxWidget(
                     halfWidth + halfWidthPadding + (i/6)*90,
@@ -306,7 +306,7 @@ public class BuilderGui extends Screen {
                     checkBoxSise,
                     checkBoxSise,
                     Text.literal(infusion),
-                    enabledInfusions.get(infusion.toLowerCase()),
+                    enabledInfusions.get(infusions.get(i).toLowerCase()),
                     true,
                     this);
             infusionsCheckBoxList.add(infusionCheckBox);
@@ -429,11 +429,14 @@ public class BuilderGui extends Screen {
         }
 
         for (int i = 0; i < buildItemButtons.size(); i++) {
+            int x = ((i < 2) ? halfWidth + halfWidthPadding : itemPadding) + buttonSize + 2*itemPadding;
+            int y = labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2) - scrollPixels;
+            String text = getFormattedText(itemTypesIndex.get(i), x, (i < 2) ? width - sideMenuWidth : width/3, true);
             drawTextWithShadow(matrices,
                     textRenderer,
-                    Text.literal(itemTypesIndex.get(i)).setStyle(Style.EMPTY.withBold(true)),
-                    ((i < 2) ? halfWidth + halfWidthPadding : itemPadding) + buttonSize + 2*itemPadding,
-                    labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2) - scrollPixels,
+                    Text.literal(text).setStyle(Style.EMPTY.withBold(true)),
+                    x,
+                    y,
                     0xFFFFFFFF);
         }
 
@@ -447,23 +450,22 @@ public class BuilderGui extends Screen {
                 charmsX, charmsY - 10 - scrollPixels, 0xFFFFFF00);
         if (charms.size() == 12) {
             drawTextWithShadow(matrices, textRenderer,
-                    Text.literal(getFormattedText("FULL CHARMS", charmsX, width - labelMenuHeight, true)).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
+                    Text.literal(getFormattedText("Full Charms", charmsX, width - labelMenuHeight, true)).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
                     charmsX, charmsY-30 - scrollPixels, 0xFFFF0000);
         }
     }
-
     private String getFormattedText(String text, int xi, int xf, boolean bold) {
-        int textWidth = xf - xi;
+        int textWidth = xf - xi - 10;
         System.out.println(textWidth);
-        if (textWidth >= textRenderer.getWidth(Text.literal(text).setStyle(Style.EMPTY.withBold(bold))) + 30) return text;
+        if (textWidth >= textRenderer.getWidth(Text.literal(text).setStyle(Style.EMPTY.withBold(bold))) + 20) return text;
         int charWidth = textRenderer.getWidth(Text.literal("M").setStyle(Style.EMPTY.withBold(bold)));
         int textLength = (int) floor((double) textWidth/charWidth);
+
 
         int start = textTimeOffset % textLength;
 
         return (text + " " + text + " " + text).substring(start, start + textLength);
     }
-
     private void drawStats(MatrixStack matrices) {
         if (statsToRender.isEmpty()) return;
         List<String> statsTypes = new ArrayList<>(Arrays.asList("Misc Stats", "Health Stats", "DR Stats", "HP Normalized DR Stats", "EHP Stats", "Melee Stats", "Projectile Stats", "Magic Stats"));
@@ -508,6 +510,8 @@ public class BuilderGui extends Screen {
         drawVerticalLine(matrices, width - sideMenuWidth - 1, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
         drawVerticalLine(matrices, width - sideMenuWidth - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
 
+        nameBar.render(matrices, mouseX, mouseY, delta); // for some reason it renders in front of items tooltip so i had to move it up
+
         updateGuiPositions();
         updateButtons();
         drawButtons(matrices, mouseX, mouseY, delta);
@@ -523,7 +527,6 @@ public class BuilderGui extends Screen {
 
         matrices.push();
         matrices.translate(0, 0, 110);
-        nameBar.render(matrices, mouseX, mouseY, delta);
         currentHealthSlider.render(matrices, mouseX, mouseY, delta);
         addBuildButton.render(matrices, mouseX, mouseY, delta);
         setBuildFromClipboardButton.render(matrices, mouseX, mouseY, delta);

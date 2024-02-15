@@ -72,7 +72,8 @@ public class BuildCharmButtonWidget extends ButtonWidget {
 
         matrices.push();
         matrices.scale(scale, scale, scale);
-        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, (int) floor((minX + width/2 - ceil(itemSize/2))/scale), (int) floor((minY + height/2 - ceil(itemSize/2))/scale));
+        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, (int) ceil((minX + (double) width/2 - ceil(
+                (double) itemSize/2))/scale), (int) ceil((minY + (double) height/2 - ceil((double) itemSize/2))/scale));
         matrices.pop();
 
         if (hovered) {
