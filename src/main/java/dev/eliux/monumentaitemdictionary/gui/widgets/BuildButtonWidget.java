@@ -28,7 +28,7 @@ public class BuildButtonWidget extends ButtonWidget {
         this.build = build;
         this.gui = gui;
 
-        DictionaryItem displayingItem = build.allItems.get(0);
+        DictionaryItem displayingItem = build.itemOnButton;
 
         if (displayingItem != null) {
             builtItem = ItemFactory.fromEncoding(displayingItem.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_"));
@@ -74,7 +74,7 @@ public class BuildButtonWidget extends ButtonWidget {
 
         if (hovered) {
             List<Text> lines = new ArrayList<>();
-            lines.add(Text.literal(build.name));
+            lines.add(Text.literal(build.name).setStyle(Style.EMPTY.withBold(true)));
 
             for (DictionaryItem item : build.allItems) {
                 String itemTier = item.hasMasterwork ? item.getTierFromMasterwork(item.getMaxMasterwork() - 1) : item.getTierNoMasterwork();
@@ -82,7 +82,6 @@ public class BuildButtonWidget extends ButtonWidget {
                         .withColor(0xFF000000 + ItemColours.getColorForLocation(item.location))
                         .withBold(ItemFormatter.shouldBold(itemTier))
                         .withUnderline(ItemFormatter.shouldUnderline(itemTier))));
-                lines.add(Text.literal(""));
             }
             gui.renderTooltip(matrices, lines, mouseX, mouseY);
         }

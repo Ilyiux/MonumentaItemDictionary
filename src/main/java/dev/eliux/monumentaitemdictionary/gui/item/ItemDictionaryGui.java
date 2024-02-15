@@ -471,7 +471,11 @@ public class ItemDictionaryGui extends Screen {
         Screen currentScreen = MinecraftClient.getInstance().currentScreen;
         if (currentScreen instanceof ItemDictionaryGui || currentScreen instanceof CharmDictionaryGui || currentScreen instanceof BuilderGui) {
             lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
-            if (currentScreen instanceof BuilderGui) lines.add(Text.literal("[SHIFT] + Click to delete item").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+            if (currentScreen instanceof BuilderGui) {
+                lines.add(Text.literal("[SHIFT] + Click to delete item")
+                        .setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+                lines.add(Text.literal("[CTRL] + CLick to set the item as Build Item").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+            }
             lines.add(Text.literal(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
                     .withColor(ItemColours.TEXT_COLOR)));
         }

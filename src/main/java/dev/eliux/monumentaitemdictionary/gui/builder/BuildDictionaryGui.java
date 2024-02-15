@@ -138,9 +138,9 @@ public class BuildDictionaryGui extends Screen {
         showCharmsButton.setX(width - sideMenuWidth + 10);
         showCharmsButton.setY(labelMenuHeight + 30);
     }
-    public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms) {
+    public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton) {
         if (name.isEmpty()) name = "No Name";
-        DictionaryBuild build = new DictionaryBuild(name, items, charms);
+        DictionaryBuild build = new DictionaryBuild(name, items, charms, itemOnBuildButton);
         buildsList.add(build);
         buildBuildsList();
     }

@@ -39,6 +39,7 @@ public class BuilderGui extends Screen {
     public List<DictionaryCharm> charms = new ArrayList<>();
     public List<DictionaryItem> buildItems = Arrays.asList(null, null, null, null, null, null);
     private Regions region = Regions.NO_REGION;
+    public DictionaryItem itemOnBuildButton;
     private BuildCharmButtonWidget charmsButton;
     private Stats buildStats;
     private final List<String> statsToRender = new ArrayList<>();
@@ -70,7 +71,8 @@ public class BuilderGui extends Screen {
     private final List<CheckBoxWidget> infusionsCheckBoxList = new ArrayList<>();
     private double currentHealthPercent;
     private int scrollPixels = 0;
-
+    private int statusY;
+    private String statusText = "";
 
     public BuilderGui(Text title, DictionaryController controller) {
         super(title);
@@ -131,9 +133,14 @@ public class BuilderGui extends Screen {
                 5, 5, 20, 20,
                 Text.literal(""),
                 (button) -> {
-                    controller.buildDictionaryGui.addBuild(nameBar.getText(), buildItems, charms);
-                    resetBuild();
-                    controller.setBuildDictionaryScreen();
+                    if (itemOnBuildButton == null) statusText = "Please select an item to appear on your Build Icon";
+                    else if (nameBar.getText().isBlank()) statusText = "Please put a name to your Build";
+                    else {
+                        controller.buildDictionaryGui.addBuild(nameBar.getText(), buildItems, charms,
+                                itemOnBuildButton);
+                        resetBuild();
+                        controller.setBuildDictionaryScreen();
+                    }
                 },
                 Text.literal("Add Build To Dictionary"), "writable_book", "");
 
@@ -170,7 +177,6 @@ public class BuilderGui extends Screen {
         updateButtons();
         updateGuiPositions();
     }
-
     private void getBuildFromUrl(String buildUrl) {
         updateUserOptions();
         buildUrl = buildUrl.substring(buildUrl.indexOf("m="));
@@ -266,9 +272,11 @@ public class BuilderGui extends Screen {
     }
     private void itemButtonClicked(@Nullable DictionaryItem item, String itemType, boolean shiftDown, boolean controlDown) {
         if (!shiftDown && !controlDown) controller.getItemFromDictionary(itemType);
-        else if (shiftDown) {
+        else if (shiftDown && !controlDown) {
             buildItems.set(itemTypesIndex.indexOf(itemType), null);
             updateStats();
+        } else if (!shiftDown && item != null) {
+            itemOnBuildButton = item;
         } else if (item != null) {
             String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
             Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
@@ -283,7 +291,8 @@ public class BuilderGui extends Screen {
         charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 2 + (checkBoxSise + itemPadding) * 5 + 30; // 240
         charmsButtonY = (int) ((charms.size())/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + 2*itemPadding;
-        statsY = Math.max(labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4, labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*6); // 260
+        statsY = Math.max(labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4, labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*6) + 20; // 260
+        statusY = statsY - 20;
 
         showBuildDictionaryButton.setX(width - sideMenuWidth + 10);
         showBuildDictionaryButton.setY(labelMenuHeight + 10);
@@ -467,10 +476,13 @@ public class BuilderGui extends Screen {
                     Text.literal(getFormattedText("Full Charms", charmsX, width - labelMenuHeight, true)).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
                     charmsX, charmsY-30 - scrollPixels, 0xFFFF0000);
         }
+
+        if (!statusText.isEmpty()) {
+            drawTextWithShadow(matrices, textRenderer, Text.literal(statusText), itemPadding, statusY, 0xFFFF0000);
+        }
     }
     private String getFormattedText(String text, int xi, int xf, boolean bold) {
         int textWidth = xf - xi - 10;
-        System.out.println(textWidth);
         if (textWidth >= textRenderer.getWidth(Text.literal(text).setStyle(Style.EMPTY.withBold(bold))) + 20) return text;
         int charWidth = textRenderer.getWidth(Text.literal("M").setStyle(Style.EMPTY.withBold(bold)));
         int textLength = (int) floor((double) textWidth/charWidth);

@@ -17,11 +17,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
 
 public class BuildItemButtonWidget extends ButtonWidget {
     private final Supplier<List<Text>> lore;
-    private final DictionaryItem item;
+    public final DictionaryItem item;
     private final BuilderGui gui;
     private final ItemStack builtItem;
     private final float scale;
@@ -32,6 +31,7 @@ public class BuildItemButtonWidget extends ButtonWidget {
         this.item = item;
         this.gui = gui;
         this.scale = (float) width/18;
+
 
         builtItem = ItemFactory.fromEncoding(item != null ? (item.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_")) : "barrier");
         NbtCompound baseNbt = builtItem.getOrCreateNbt();
@@ -60,10 +60,10 @@ public class BuildItemButtonWidget extends ButtonWidget {
 
         boolean hovered = (mouseX >= minX) && (mouseX <= maxX) && (mouseY >= minY) && (mouseY <= maxY) && (mouseY > gui.labelMenuHeight);
 
-        int outlineColor = hovered ? 0xFFC6C6C6 : 0xFFFFFFFF;
+        int outlineColor = hovered ?  0xFFC6C6C6 : 0xFFFFFFFF;
         int fillOpacity = hovered ? 0x6B000000 : 0x88000000;
 
-        fill(matrices, minX, minY, maxX, maxY, fillOpacity | (item != null ? (ItemColours.getColorForTier(item.hasMasterwork ? item.getTierFromMasterwork(item.getMinMasterwork()) : item.getTierNoMasterwork())) : 0x00000000));
+        fill(matrices, minX, minY, maxX, maxY, fillOpacity | (gui.itemOnBuildButton == item && item != null ? 0x000FF000 : 0x00000000) | (item != null ? (ItemColours.getColorForTier(item.hasMasterwork ? item.getTierFromMasterwork(item.getMinMasterwork()) : item.getTierNoMasterwork())) : 0x00000000));
         drawHorizontalLine(matrices, minX, maxX, minY, outlineColor);
         drawHorizontalLine(matrices, minX, maxX, maxY, outlineColor);
         drawVerticalLine(matrices, minX, minY, maxY, outlineColor);
