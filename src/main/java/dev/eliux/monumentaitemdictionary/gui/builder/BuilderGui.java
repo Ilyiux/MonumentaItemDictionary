@@ -10,6 +10,7 @@ import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -27,7 +28,7 @@ import java.util.*;
 import java.util.List;
 
 import static java.lang.Math.floor;
-
+import static java.lang.Math.max;
 public class BuilderGui extends Screen {
     private final DictionaryController controller;
     public final List<String> itemTypesIndex = Arrays.asList("Mainhand", "Offhand", "Helmet", "Chestplate", "Leggings", "Boots");
@@ -37,6 +38,7 @@ public class BuilderGui extends Screen {
     private final List<BuildCharmButtonWidget> buildCharmButtons = new ArrayList<>();
     public List<DictionaryCharm> charms = new ArrayList<>();
     public List<DictionaryItem> buildItems = Arrays.asList(null, null, null, null, null, null);
+    private Regions region = Regions.NO_REGION;
     private BuildCharmButtonWidget charmsButton;
     private Stats buildStats;
     private final List<String> statsToRender = new ArrayList<>();
@@ -61,26 +63,36 @@ public class BuilderGui extends Screen {
     private ItemIconButtonWidget showBuildDictionaryButton;
     private ItemIconButtonWidget setBuildFromClipboardButton;
     private ItemIconButtonWidget addBuildButton;
+    private CyclingButtonWidget<Regions> regionButton;
     private Map<String, Boolean> enabledSituationals;
     private HashMap<String, Boolean> enabledInfusions;
     private final List<CheckBoxWidget> situationalCheckBoxList = new ArrayList<>();
     private final List<CheckBoxWidget> infusionsCheckBoxList = new ArrayList<>();
     private double currentHealthPercent;
     private int scrollPixels = 0;
+
+
     public BuilderGui(Text title, DictionaryController controller) {
         super(title);
         this.controller = controller;
+
     }
     public void postInit() {
+
         this.charmsButtonY = (int) (charms.size()/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + itemPadding;
         this.halfWidth = width/2;
 
-        nameBar = new TextFieldWidget(textRenderer, charmsX + 1, charmsY + charmsButtonY, width / 2 - 100, 15, Text.literal("Build Name"));
+        nameBar = new TextFieldWidget(textRenderer,
+                190 + textRenderer.getWidth(Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true))),
+                itemPadding,
+                width - itemPadding - (185 + textRenderer.getWidth(Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)))),
+                20, Text.literal("Build Name"));
+        nameBar.setPlaceholder(Text.literal("Build Name: "));
 
         currentHealthSlider = new SliderWidget(
                 charmsX,
-                charmsY + charmsButtonY + 20,
+                charmsY + charmsButtonY,
                 (width - sideMenuWidth) - charmsX - itemPadding,
                 20,
                 Text.literal("Current Health: 100%"),
@@ -125,6 +137,11 @@ public class BuilderGui extends Screen {
                 },
                 Text.literal("Add Build To Dictionary"), "writable_book", "");
 
+        regionButton = CyclingButtonWidget.builder(Regions::getText)
+                .values(Regions.values())
+                .initially(Regions.NO_REGION)
+                .build(55, 5, 125, 20, Text.literal("Region"),
+                        (button, region) -> this.region = region);
         enabledSituationals = new HashMap<>() {{
             put("shielding", false);
             put("poise", false);
@@ -206,7 +223,7 @@ public class BuilderGui extends Screen {
         updateStats();
     }
     private boolean verifyUrl(String buildUrl) {
-        return buildUrl.contains("ohthemisery.tk/builder") || buildUrl.contains("ohthemisery.vercel.app/builder");
+        return buildUrl.contains("ohthemisery.tk/builder") || buildUrl.contains("ohthemisery.vercel.app/builder") || buildUrl.contains("ohthemisery-psi.vercel.app/builder");
     }
     private BuildCharmButtonWidget getCharmButtonWidget(int i, @Nullable DictionaryCharm charm) {
         charmsButton = new BuildCharmButtonWidget(
@@ -264,19 +281,17 @@ public class BuilderGui extends Screen {
         itemPadding = buttonSize/10; // 5
 
         charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 2 + (checkBoxSise + itemPadding) * 5 + 30; // 240
-        charmsButtonY = (int) (charms.size()/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
+        charmsButtonY = (int) ((charms.size())/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + 2*itemPadding;
         statsY = Math.max(labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4, labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*6); // 260
 
         showBuildDictionaryButton.setX(width - sideMenuWidth + 10);
         showBuildDictionaryButton.setY(labelMenuHeight + 10);
 
-        nameBar.setX(charmsX + 1);
-        nameBar.setY(charmsY + charmsButtonY);
-        nameBar.setWidth(width - sideMenuWidth - charmsX - 2*itemPadding - 2);
+        nameBar.setWidth(width - 2*itemPadding - (190 + textRenderer.getWidth(Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)))));
 
         currentHealthSlider.setX(charmsX);
-        currentHealthSlider.setY(charmsY + charmsButtonY + 20);
+        currentHealthSlider.setY(charmsY + charmsButtonY);
         currentHealthSlider.setWidth(width - sideMenuWidth - charmsX - 2*itemPadding);
     }
     public void updateButtons() {
@@ -331,7 +346,6 @@ public class BuilderGui extends Screen {
                 charmsButton = getCharmButtonWidget(charms.size(), null);
             }
         }
-
 
         updateGuiPositions();
     }
@@ -510,7 +524,6 @@ public class BuilderGui extends Screen {
         drawVerticalLine(matrices, width - sideMenuWidth - 1, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
         drawVerticalLine(matrices, width - sideMenuWidth - 2, (int) (labelMenuHeight + (height - labelMenuHeight) * bottomPercent), (int) (labelMenuHeight + (height - labelMenuHeight) * (bottomPercent + screenPercent)), 0xFFC3C3C3);
 
-        nameBar.render(matrices, mouseX, mouseY, delta); // for some reason it renders in front of items tooltip so i had to move it up
 
         updateGuiPositions();
         updateButtons();
@@ -522,11 +535,13 @@ public class BuilderGui extends Screen {
         matrices.translate(0, 0, 110);
         fill(matrices, 0, 0, width, labelMenuHeight, 0xFF555555);
         drawHorizontalLine(matrices, 0, width, labelMenuHeight, 0xFFFFFFFF);
-        drawCenteredTextWithShadow(matrices, textRenderer, Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)), width / 2, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFF2ca9d3);
+        drawTextWithShadow(matrices, textRenderer, Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)), 185, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFF2ca9d3);
         matrices.pop();
 
         matrices.push();
         matrices.translate(0, 0, 110);
+        regionButton.render(matrices, mouseX, mouseY, delta);
+        nameBar.render(matrices, mouseX, mouseY, delta);
         currentHealthSlider.render(matrices, mouseX, mouseY, delta);
         addBuildButton.render(matrices, mouseX, mouseY, delta);
         setBuildFromClipboardButton.render(matrices, mouseX, mouseY, delta);
@@ -550,6 +565,7 @@ public class BuilderGui extends Screen {
         super.mouseClicked(mouseX, mouseY, button);
 
         nameBar.mouseClicked(mouseX, mouseY, button);
+        regionButton.mouseClicked(mouseX, mouseY, button);
         currentHealthSlider.mouseClicked(mouseX, mouseY, button);
         addBuildButton.mouseClicked(mouseX, mouseY, button);
         setBuildFromClipboardButton.mouseClicked(mouseX, mouseY, button);
@@ -580,7 +596,7 @@ public class BuilderGui extends Screen {
     }
 
     private void updateScrollLimits () {
-        int maxScroll = 4*(buttonSize + itemPadding) + labelMenuHeight + statsRow - height + 10;
+        int maxScroll = max(4*(buttonSize + itemPadding) + labelMenuHeight + statsRow - height + 10, charmsButtonY + 50);
         if (scrollPixels > maxScroll) scrollPixels = maxScroll;
 
         if (scrollPixels < 0) scrollPixels = 0;
@@ -600,5 +616,20 @@ public class BuilderGui extends Screen {
         nameBar.charTyped(chr, modifiers);
 
         return true;
+    }
+    enum Regions {
+        NO_REGION(Text.literal("No Region")),
+        KINGS_VALLEY(Text.literal("King's Valley")),
+        CELSIAN_ISLES(Text.literal("Celsian Isles")),
+        ARCHITECTS_RING(Text.literal("Architect's Ring"));
+
+        private final Text text;
+        private Regions(Text text) {
+            this.text = text;
+        }
+
+        public Text getText() {
+            return this.text;
+        }
     }
 }
