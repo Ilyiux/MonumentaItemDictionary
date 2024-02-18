@@ -3,6 +3,7 @@ package dev.eliux.monumentaitemdictionary.gui;
 import com.google.gson.*;
 import dev.eliux.monumentaitemdictionary.Mid;
 import dev.eliux.monumentaitemdictionary.gui.builder.BuildDictionaryGui;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuildFilterGui;
 import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
 import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
@@ -14,7 +15,9 @@ import dev.eliux.monumentaitemdictionary.gui.item.ItemDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.item.ItemFilterGui;
 import dev.eliux.monumentaitemdictionary.util.*;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
-import java.util.Map;
+
+import java.util.*;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -24,9 +27,6 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @SuppressWarnings("CallToPrintStackTrace")
 public class DictionaryController {
@@ -34,8 +34,11 @@ public class DictionaryController {
     private boolean hasItemNameFilter = false;
     private String charmNameFilter;
     private boolean hasCharmNameFilter = false;
+    private String buildNameFilter;
+    private boolean hasBuildNameFilter = false;
     private ArrayList<Filter> itemFilters = new ArrayList<>();
     private ArrayList<Filter> charmFilters = new ArrayList<>();
+    private ArrayList<Filter> buildFilters = new ArrayList<>();
 
     private ArrayList<String> allItemTypes;
     private ArrayList<String> allItemRegions;
@@ -56,6 +59,8 @@ public class DictionaryController {
     private ArrayList<DictionaryItem> validItems;
     private final ArrayList<DictionaryCharm> charms;
     private ArrayList<DictionaryCharm> validCharms;
+    private ArrayList<DictionaryBuild> builds;
+    private ArrayList<DictionaryBuild> validBuilds;
 
     // private @Nullable CompletableFuture<ItemApiResponse> itemResponseFuture = null;
 
@@ -73,6 +78,8 @@ public class DictionaryController {
     public CharmFilterGui charmFilterGui;
     public boolean charmFilterGuiPreviouslyOpened = false;
     public BuildDictionaryGui buildDictionaryGui;
+    public boolean buildFilterGuiPreviouslyOpened = false;
+    public BuildFilterGui buildFilterGui;
     public boolean buildDictionaryGuiPreviouslyOpened = false;
     public BuilderGui builderGui;
     public boolean builderGuiPreviouslyOpened = false;
@@ -86,9 +93,12 @@ public class DictionaryController {
         validItems = new ArrayList<>();
         charms = new ArrayList<>();
         validCharms = new ArrayList<>();
+        builds = new ArrayList<>();
+        validBuilds = new ArrayList<>();
 
         loadItems();
         loadCharms();
+        loadBuilds();
 
         itemGui = new ItemDictionaryGui(Text.literal("Monumenta Item Dictionary"), this);
         itemFilterGui = new ItemFilterGui(Text.literal("Item Filter Menu"), this);
@@ -96,6 +106,7 @@ public class DictionaryController {
         charmFilterGui = new CharmFilterGui(Text.literal("Charm Filter Menu"), this);
         buildDictionaryGui = new BuildDictionaryGui(Text.literal("Build Dictionary Menu"), this);
         builderGui = new BuilderGui(Text.literal("Builder Menu"), this);
+        buildFilterGui = new BuildFilterGui(Text.literal("Build Filter Menu"), this);
 
         generatorGui = new GeneratorGui(Text.literal("Item Generator Options"), this);
     }
@@ -194,6 +205,16 @@ public class DictionaryController {
         }
     }
 
+    public void setBuildFilterScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
+        MinecraftClient.getInstance().setScreen(buildFilterGui);
+        if (!buildFilterGuiPreviouslyOpened) {
+            buildFilterGui.postInit();
+            buildFilterGuiPreviouslyOpened = true;
+        }
+    }
+
     public void setBuilderScreen() {
         lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
 
@@ -229,6 +250,32 @@ public class DictionaryController {
         }
     }
 
+    public String readJsonBuild() {
+        try {
+            File buildsFile = new File("config/mid/builds.json");
+            buildsFile.createNewFile();
+            return Files.readString(buildsFile.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public void writeJsonBuild(JsonObject jsonBuild) {
+        try {
+            File file = new File("config/mid/builds.json");
+
+            JsonObject fileBuilds = JsonParser.parseString((readJsonBuild().isEmpty()) ? "{}" : readJsonBuild()).getAsJsonObject();
+            int index = fileBuilds.size();
+            fileBuilds.add(String.valueOf(index), jsonBuild);
+
+            FileUtils.writeStringToFile(file, fileBuilds.toString(), Charset.defaultCharset());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void requestAndUpdate() {
         Mid.LOGGER.info("Started Data Request");
 
@@ -248,6 +295,49 @@ public class DictionaryController {
 
             Mid.LOGGER.info("Finished Data Request - Failure");
         });
+    }
+
+    private void loadBuilds() {
+        try {
+            ArrayList<DictionaryBuild> buildsInFile = new ArrayList<>();
+
+            String jsonBuilds = String.valueOf(JsonParser.parseString(readJsonBuild()));
+            JsonObject data = new Gson().fromJson(jsonBuilds, JsonObject.class);
+            for (JsonElement buildElement : data.asMap().values()) {
+                JsonObject buildData = (JsonObject) buildElement;
+                String buildName = buildData.get("name").getAsString();
+                String buildRegion = buildData.get("region").getAsString();
+                String buildClass = buildData.get("class").getAsString();
+                String buildSpecialization = buildData.get("specialization").getAsString();
+
+                JsonObject itemToShow = buildData.get("item_to_show").getAsJsonObject();
+                String itemToShowName = itemToShow.get("name").getAsString();
+                boolean itemToShowIsExalted = itemToShow.get("exalted").getAsBoolean();;
+
+                DictionaryItem buildItemToShow = getItemByName(itemToShowName, itemToShowIsExalted);
+
+                ArrayList<DictionaryItem> buildItems = new ArrayList<>();
+                JsonObject rawItems = buildData.get("items").getAsJsonObject();
+                for (String item : rawItems.asMap().keySet()) {
+                    boolean isExalted = rawItems.get(item).getAsJsonObject().get("exalted").getAsBoolean();
+                    String itemName = rawItems.get(item).getAsJsonObject().get("name").getAsString();
+
+                    buildItems.add(getItemByName(itemName, isExalted));
+                }
+
+                ArrayList<DictionaryCharm> buildCharms = new ArrayList<>();
+                JsonArray rawCharms = buildData.get("charms").getAsJsonArray();
+                for (JsonElement charm : rawCharms.asList()) {
+                    buildCharms.add(getCharmByName(charm.getAsString()));
+                }
+
+                buildsInFile.add(new DictionaryBuild(buildName, buildItems, buildCharms, buildItemToShow, buildRegion, buildClass, buildSpecialization));
+            }
+
+            builds = buildsInFile;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void loadItems() {
@@ -518,12 +608,22 @@ public class DictionaryController {
         hasItemNameFilter = true;
     }
 
+    public void setBuildNameFilter(String nameFilter) {
+        this.buildNameFilter = nameFilter;
+        hasBuildNameFilter = true;
+    }
+
+    public void clearBuildNameFilter() { hasBuildNameFilter = false; }
+
     public void clearItemNameFilter() {
         hasItemNameFilter = false;
     }
 
     public void updateItemFilters(ArrayList<Filter> filters) {
         itemFilters = new ArrayList<>(filters);
+    }
+    public void updateBuildFilters(ArrayList<Filter> filters){
+        buildFilters = new ArrayList<>(filters);
     }
 
     public ArrayList<String> getAllCharmTiers() {
@@ -540,6 +640,27 @@ public class DictionaryController {
 
     public ArrayList<String> getAllCharmClasses() {
         return allCharmClasses;
+    }
+
+    public ArrayList<String> getAllSpecializations() {
+        return new ArrayList<>(Arrays.asList(
+                "Arcanist",
+                "Elementalist",
+                "Berskerker",
+                "Guardian",
+                "Hierophant",
+                "Paladin",
+                "Assassin",
+                "Swordsage",
+                "Apothecary",
+                "Harbinger",
+                "Hunter",
+                "Ranger",
+                "Reaper",
+                "Tenebrist",
+                "Hexbreaker",
+                "Soothslayer"
+        ));
     }
 
     public ArrayList<String> getAllCharmStats() {
@@ -762,12 +883,58 @@ public class DictionaryController {
         validCharms = filteredCharms;
     }
 
+    public void refreshBuilds() {
+        ArrayList<DictionaryBuild> filteredBuilds = new ArrayList<>(builds);
+
+        for (Filter filter : buildFilters) {
+            if (filter != null) {
+                switch (filter.getOption()) {
+                    case "Region" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredBuilds.removeIf(build -> !build.region.equals(filter.value));
+                                case 1 -> filteredBuilds.removeIf(build -> build.region.equals(filter.value));
+                            }
+                        }
+                    }
+                    case "Class" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredBuilds.removeIf(build -> !build.className.equals(filter.value));
+                                case 1 -> filteredBuilds.removeIf(build -> build.className.equals(filter.value));
+                            }
+                        }
+                    }
+                    case "Specialization" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredBuilds.removeIf(build -> !build.specialization.equals(filter.value));
+                                case 1 -> filteredBuilds.removeIf(build -> build.specialization.equals(filter.value));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (hasBuildNameFilter) filteredBuilds.removeIf(build -> !build.name.toLowerCase().contains(buildNameFilter.toLowerCase()));
+
+        validBuilds = filteredBuilds;
+    }
+
     public ArrayList<DictionaryItem> getItems() {
         return validItems;
     }
 
     public ArrayList<DictionaryCharm> getCharms() {
         return validCharms;
+    }
+
+    public ArrayList<DictionaryBuild> getBuilds() {
+        return validBuilds;
+    }
+    public void addBuild(DictionaryBuild build) {
+        builds.add(build);
     }
 
     public boolean anyItems() {
@@ -799,7 +966,7 @@ public class DictionaryController {
         }
         return null;
     }
-    public DictionaryCharm getCharmByName(String rawCharm) {
+    public DictionaryCharm getCharmByWeirdName(String rawCharm) {
         String[] rawCharmParts = rawCharm.split("-");
 
         String preffix = rawCharmParts[0].replaceAll("_", " ");
@@ -815,6 +982,17 @@ public class DictionaryController {
         }
         return null;
     }
+
+    public DictionaryCharm getCharmByName(String charmName) {
+        for (DictionaryCharm charm : charms) {
+            String name = charm.name;
+            if (name.equals(charmName)) {
+                return charm;
+            }
+        }
+        return null;
+    }
+
     public void getItemFromDictionary(String itemType) {
         itemGui.isGettingBuildItem = true;
         itemGui.itemTypeLookingFor = itemType;

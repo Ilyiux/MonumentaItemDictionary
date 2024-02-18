@@ -39,6 +39,8 @@ public class BuilderGui extends Screen {
     public List<DictionaryCharm> charms = new ArrayList<>();
     public List<DictionaryItem> buildItems = Arrays.asList(null, null, null, null, null, null);
     private Regions region = Regions.NO_REGION;
+    private ClassName className = ClassName.NO_CLASS;
+    private Specializations specialization = Specializations.NO_SPECIALIZATION;
     public DictionaryItem itemOnBuildButton;
     private BuildCharmButtonWidget charmsButton;
     private Stats buildStats;
@@ -73,6 +75,8 @@ public class BuilderGui extends Screen {
     private int scrollPixels = 0;
     private int statusY;
     private String statusText = "";
+    private CyclingButtonWidget<ClassName> classButton;
+    private CyclingButtonWidget<Specializations> specializationButton;
 
     public BuilderGui(Text title, DictionaryController controller) {
         super(title);
@@ -80,10 +84,11 @@ public class BuilderGui extends Screen {
 
     }
     public void postInit() {
-
         this.charmsButtonY = (int) (charms.size()/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + itemPadding;
         this.halfWidth = width/2;
+        this.scrollPixels = 0;
+        this.statusText = "";
 
         nameBar = new TextFieldWidget(textRenderer,
                 190 + textRenderer.getWidth(Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true))),
@@ -91,6 +96,8 @@ public class BuilderGui extends Screen {
                 width - itemPadding - (185 + textRenderer.getWidth(Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)))),
                 20, Text.literal("Build Name"));
         nameBar.setPlaceholder(Text.literal("Build Name: "));
+        nameBar.setChangedListener(text -> statusText = "");
+        nameBar.setText("");
 
         currentHealthSlider = new SliderWidget(
                 charmsX,
@@ -120,7 +127,7 @@ public class BuilderGui extends Screen {
             } catch (UnsupportedFlavorException | IOException e) {
                 e.printStackTrace();
             }
-        }, Text.literal("Add Build From Clipboard"), "name_tag", "");
+        }, Text.literal("Set Build From Clipboard"), "name_tag", "");
 
         showBuildDictionaryButton = new ItemIconButtonWidget(
                 width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20,
@@ -137,7 +144,7 @@ public class BuilderGui extends Screen {
                     else if (nameBar.getText().isBlank()) statusText = "Please put a name to your Build";
                     else {
                         controller.buildDictionaryGui.addBuild(nameBar.getText(), buildItems, charms,
-                                itemOnBuildButton);
+                                itemOnBuildButton, region.name(), className.name(), specialization.name());
                         resetBuild();
                         controller.setBuildDictionaryScreen();
                     }
@@ -149,6 +156,27 @@ public class BuilderGui extends Screen {
                 .initially(Regions.NO_REGION)
                 .build(55, 5, 125, 20, Text.literal("Region"),
                         (button, region) -> this.region = region);
+        regionButton.setValue(Regions.NO_REGION);
+
+        classButton = CyclingButtonWidget.builder(ClassName::getText)
+                .values(ClassName.values())
+                .initially(ClassName.NO_CLASS)
+                .build(halfWidth + halfWidthPadding,
+                        labelMenuHeight + itemPadding + (itemPadding+buttonSize)*2,
+                        width - sideMenuWidth - halfWidth - halfWidthPadding, 20,
+                        Text.literal("Class"),
+                        (button, className) -> this.className = className);
+        classButton.setValue(ClassName.NO_CLASS);
+
+        specializationButton = CyclingButtonWidget.builder(Specializations::getText)
+                .values(Specializations.values())
+                .initially(Specializations.NO_SPECIALIZATION)
+                .build(halfWidth + halfWidthPadding,
+                        labelMenuHeight + itemPadding + (itemPadding+buttonSize)*2 + 25,
+                        width - sideMenuWidth - halfWidth - halfWidthPadding, 20,
+                        Text.literal("Spec"),
+                        (button, specialization) -> this.specialization = specialization);
+        specializationButton.setValue(Specializations.NO_SPECIALIZATION);
         enabledSituationals = new HashMap<>() {{
             put("shielding", false);
             put("poise", false);
@@ -173,7 +201,6 @@ public class BuilderGui extends Screen {
         }};
 
         this.buildStats = new Stats(buildItems, enabledSituationals, enabledInfusions, currentHealthPercent);
-
         updateButtons();
         updateGuiPositions();
     }
@@ -216,7 +243,7 @@ public class BuilderGui extends Screen {
         String[] rawCharms = buildUrl.substring(buildUrl.indexOf("charm=") + 6).split(",");
         if (!rawCharms[0].equals("None")) {
             for (String charm : rawCharms) {
-                DictionaryCharm charmToAdd = controller.getCharmByName(charm);
+                DictionaryCharm charmToAdd = controller.getCharmByWeirdName(charm);
                 if (charmToAdd != null) {
                     for (int i = 0; i < charmToAdd.power; i++) {
                         charms.add(charmToAdd);
@@ -277,6 +304,7 @@ public class BuilderGui extends Screen {
             updateStats();
         } else if (!shiftDown && item != null) {
             itemOnBuildButton = item;
+            statusText = "";
         } else if (item != null) {
             String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
             Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
@@ -285,19 +313,25 @@ public class BuilderGui extends Screen {
     public void updateGuiPositions() {
         halfWidth = width/2;
         halfWidthPadding = textRenderer.getWidth(situationalCheckBoxList.get(6).getMessage()) + 3*(checkBoxSise + itemPadding);
-        buttonSize = width/18; // 50
-        itemPadding = buttonSize/10; // 5
+        buttonSize = width/18;
+        itemPadding = buttonSize/10;
 
-        charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 2 + (checkBoxSise + itemPadding) * 5 + 30; // 240
+        charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 2 + (checkBoxSise + itemPadding) * 5 + 85;
         charmsButtonY = (int) ((charms.size())/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + 2*itemPadding;
-        statsY = Math.max(labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4, labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*6) + 20; // 260
+        statsY = Math.max(labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4, labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*6) + 20;
         statusY = statsY - 20;
 
         showBuildDictionaryButton.setX(width - sideMenuWidth + 10);
         showBuildDictionaryButton.setY(labelMenuHeight + 10);
 
         nameBar.setWidth(width - 2*itemPadding - (190 + textRenderer.getWidth(Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)))));
+
+        classButton.setPosition(halfWidth + halfWidthPadding, labelMenuHeight + itemPadding + (itemPadding+buttonSize)*2 - scrollPixels);
+        classButton.setWidth(width - sideMenuWidth - halfWidth - halfWidthPadding - itemPadding);
+
+        specializationButton.setPosition(halfWidth + halfWidthPadding, labelMenuHeight + itemPadding + (itemPadding+buttonSize)*2 + 25 - scrollPixels);
+        specializationButton.setWidth(width - sideMenuWidth - halfWidth - halfWidthPadding - itemPadding);
 
         currentHealthSlider.setX(charmsX);
         currentHealthSlider.setY(charmsY + charmsButtonY);
@@ -322,11 +356,11 @@ public class BuilderGui extends Screen {
 
         infusionsCheckBoxList.clear();
         for (int i = 0; i < infusions.size() ; i++) {
-            String infusion = getFormattedText(infusions.get(i), halfWidth + halfWidthPadding + (i/6)*90 + checkBoxSise, width - sideMenuWidth, false);
+            String infusion = getSlidingText(infusions.get(i), halfWidth + halfWidthPadding + (i/6)*90 + checkBoxSise, width - sideMenuWidth, false);
 
             CheckBoxWidget infusionCheckBox = new CheckBoxWidget(
                     halfWidth + halfWidthPadding + (i/6)*90,
-                    labelMenuHeight + itemPadding + 2*(buttonSize + itemPadding) + (checkBoxSise + itemPadding)*(i%6) - scrollPixels,
+                    labelMenuHeight + itemPadding + 2*(buttonSize + itemPadding) + (checkBoxSise + itemPadding)*(i%6) - scrollPixels + 55,
                     checkBoxSise,
                     checkBoxSise,
                     Text.literal(infusion),
@@ -417,7 +451,21 @@ public class BuilderGui extends Screen {
             buildItems.set(i, build.allItems.get(i));
         }
 
-        charms = build.charms;
+        regionButton.setValue(switch (build.region) {
+            case "kings_valley" -> Regions.KINGS_VALLEY;
+            case "celsian_isles" -> Regions.CELSIAN_ISLES;
+            case "architects_ring" -> Regions.ARCHITECTS_RING;
+            default -> Regions.NO_REGION;
+        });
+
+        nameBar.setText(build.name);
+
+        charms.clear();
+        for (DictionaryCharm charm : build.charms) {
+            for (int i = 0; i < charm.power; i++) {
+                charms.add(charm);
+            }
+        }
 
         updateButtons();
     }
@@ -430,10 +478,10 @@ public class BuilderGui extends Screen {
         updateButtons();
     }
     private void drawButtons(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        buildItemButtons.forEach((b) -> b.render(matrices, mouseX, mouseY, delta));
-        buildCharmButtons.forEach((b) -> b.render(matrices, mouseX, mouseY, delta));
-        situationalCheckBoxList.forEach((b) -> b.render(matrices, mouseX, mouseY, delta));
-        infusionsCheckBoxList.forEach((b) -> b.render(matrices, mouseX, mouseY, delta));
+        buildItemButtons.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
+        buildCharmButtons.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
+        situationalCheckBoxList.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
+        infusionsCheckBoxList.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
     }
     private void drawItemText(MatrixStack matrices) {
         for (int i = 0;i < buildItems.size(); i++) {
@@ -441,7 +489,7 @@ public class BuilderGui extends Screen {
             if (item != null) {
                 int x = ((i < 2) ? halfWidth + halfWidthPadding : itemPadding) + buttonSize + 2*itemPadding;
                 int y = 10 + labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2) - scrollPixels;
-                String itemText = getFormattedText(item.name, x, (i < 2) ? width - sideMenuWidth : width/3, true);
+                String itemText = getSlidingText(item.name, x, (i < 2) ? width - sideMenuWidth : width/3, true);
                 drawTextWithShadow(matrices,
                         textRenderer,
                         Text.literal(itemText).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
@@ -454,7 +502,7 @@ public class BuilderGui extends Screen {
         for (int i = 0; i < buildItemButtons.size(); i++) {
             int x = ((i < 2) ? halfWidth + halfWidthPadding : itemPadding) + buttonSize + 2*itemPadding;
             int y = labelMenuHeight + itemPadding + (buttonSize+itemPadding)*(i < 2 ? i : i - 2) - scrollPixels;
-            String text = getFormattedText(itemTypesIndex.get(i), x, (i < 2) ? width - sideMenuWidth : width/3, true);
+            String text = getSlidingText(itemTypesIndex.get(i), x, (i < 2) ? width - sideMenuWidth : width/3, true);
             drawTextWithShadow(matrices,
                     textRenderer,
                     Text.literal(text).setStyle(Style.EMPTY.withBold(true)),
@@ -473,15 +521,15 @@ public class BuilderGui extends Screen {
                 charmsX, charmsY - 10 - scrollPixels, 0xFFFFFF00);
         if (charms.size() == 12) {
             drawTextWithShadow(matrices, textRenderer,
-                    Text.literal(getFormattedText("Full Charms", charmsX, width - labelMenuHeight, true)).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
+                    Text.literal(getSlidingText("Full Charms", charmsX, width - labelMenuHeight, true)).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
                     charmsX, charmsY-30 - scrollPixels, 0xFFFF0000);
         }
 
         if (!statusText.isEmpty()) {
-            drawTextWithShadow(matrices, textRenderer, Text.literal(statusText), itemPadding, statusY, 0xFFFF0000);
+            drawTextWithShadow(matrices, textRenderer, Text.literal(statusText), itemPadding, statusY - scrollPixels, 0xFFFF0000);
         }
     }
-    private String getFormattedText(String text, int xi, int xf, boolean bold) {
+    private String getSlidingText(String text, int xi, int xf, boolean bold) {
         int textWidth = xf - xi - 10;
         if (textWidth >= textRenderer.getWidth(Text.literal(text).setStyle(Style.EMPTY.withBold(bold))) + 20) return text;
         int charWidth = textRenderer.getWidth(Text.literal("M").setStyle(Style.EMPTY.withBold(bold)));
@@ -539,19 +587,23 @@ public class BuilderGui extends Screen {
 
         updateGuiPositions();
         updateButtons();
+        classButton.render(matrices, mouseX, mouseY, delta);
+        specializationButton.render(matrices, mouseX, mouseY, delta);
         drawButtons(matrices, mouseX, mouseY, delta);
         drawItemText(matrices);
         drawStats(matrices);
 
         matrices.push();
-        matrices.translate(0, 0, 110);
+        matrices.translate(0, 0, 440);
         fill(matrices, 0, 0, width, labelMenuHeight, 0xFF555555);
         drawHorizontalLine(matrices, 0, width, labelMenuHeight, 0xFFFFFFFF);
         drawTextWithShadow(matrices, textRenderer, Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)), 185, (labelMenuHeight - textRenderer.fontHeight) / 2, 0xFF2ca9d3);
         matrices.pop();
+        drawVerticalLine(matrices, width - sideMenuWidth - 1, labelMenuHeight, height, 0x77AAAAAA);
+        drawVerticalLine(matrices, width - sideMenuWidth - 2, labelMenuHeight, height, 0x77AAAAAA);
 
         matrices.push();
-        matrices.translate(0, 0, 110);
+        matrices.translate(0, 0, 440);
         regionButton.render(matrices, mouseX, mouseY, delta);
         nameBar.render(matrices, mouseX, mouseY, delta);
         currentHealthSlider.render(matrices, mouseX, mouseY, delta);
@@ -578,6 +630,8 @@ public class BuilderGui extends Screen {
 
         nameBar.mouseClicked(mouseX, mouseY, button);
         regionButton.mouseClicked(mouseX, mouseY, button);
+        classButton.mouseClicked(mouseX, mouseY, button);
+        specializationButton.mouseClicked(mouseX, mouseY, button);
         currentHealthSlider.mouseClicked(mouseX, mouseY, button);
         addBuildButton.mouseClicked(mouseX, mouseY, button);
         setBuildFromClipboardButton.mouseClicked(mouseX, mouseY, button);
@@ -637,6 +691,54 @@ public class BuilderGui extends Screen {
 
         private final Text text;
         private Regions(Text text) {
+            this.text = text;
+        }
+
+        public Text getText() {
+            return this.text;
+        }
+    }
+    enum ClassName {
+        NO_CLASS(Text.literal("No Class")),
+        MAGE(Text.literal("Mage")),
+        SCOUT(Text.literal("Scout")),
+        ROGUE(Text.literal("Rogue")),
+        WARRIOR(Text.literal("Warrior")),
+        ALCHEMIST(Text.literal("Alchemist")),
+        WARLOCK(Text.literal("Warlock")),
+        SHAMAN(Text.literal("Shaman")),
+        CLERIC(Text.literal("Cleric"));
+
+        private final Text text;
+        private ClassName(Text text) {
+            this.text = text;
+        }
+
+        public Text getText() {
+            return this.text;
+        }
+    }
+    enum Specializations {
+        NO_SPECIALIZATION(Text.literal("No Specialization")),
+        ARCANIST(Text.literal("Arcanist")),
+        ELEMENTALIST(Text.literal("Elementalist")),
+        RANGER(Text.literal("Ranger")),
+        HUNTER(Text.literal("Hunter")),
+        SWORDSAGE(Text.literal("Swordsage")),
+        ASSASSIN(Text.literal("Assassin")),
+        BERSERKER(Text.literal("Berserker")),
+        GUARDIAN(Text.literal("Guardian")),
+        HARBINGER(Text.literal("Harbinger")),
+        APOTHECARY(Text.literal("Apothecary")),
+        REAPER(Text.literal("Reaper")),
+        TENEBRIST(Text.literal("Tenebrist")),
+        SOOTHSLAYER(Text.literal("Soothslayer")),
+        HEXBREAKER(Text.literal("Hexbreaker")),
+        PALADIN(Text.literal("Paladin")),
+        HIEROPHANT(Text.literal("Hierophant"));
+
+        private final Text text;
+        private Specializations(Text text) {
             this.text = text;
         }
 

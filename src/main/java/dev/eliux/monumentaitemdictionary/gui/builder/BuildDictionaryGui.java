@@ -1,5 +1,7 @@
 package dev.eliux.monumentaitemdictionary.gui.builder;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
@@ -7,6 +9,7 @@ import dev.eliux.monumentaitemdictionary.gui.widgets.BuildButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -24,11 +27,24 @@ public class BuildDictionaryGui extends Screen {
     public final DictionaryController controller;
     public ArrayList<DictionaryBuild> buildsList;
     public HashMap<DictionaryBuild, BuildButtonWidget> buildsButtons = new HashMap<>();
+    private TextFieldWidget searchBar;
+    private ItemIconButtonWidget filterButton;
+
     public BuildDictionaryGui(Text title, DictionaryController controller) {
         super(title);
         this.controller = controller;
     }
     public void postInit() {
+        searchBar = new TextFieldWidget(textRenderer, width / 2 + 90, 7, width / 2 - 100, 15, Text.literal("Search"));
+        searchBar.setChangedListener(t -> {
+            controller.setBuildNameFilter(searchBar.getText());
+            if (searchBar.getText().isEmpty())
+                controller.clearBuildNameFilter();
+
+            buildBuildsList();
+        });
+        searchBar.setFocused(true);
+
         buildsList = new ArrayList<>();
 
         addBuildButton = new ItemIconButtonWidget(
@@ -48,14 +64,28 @@ public class BuildDictionaryGui extends Screen {
                 Text.literal("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)),
                 "iron_chestplate", "");
 
-        showCharmsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 30, 20, 20,
+        showCharmsButton = new ItemIconButtonWidget(
+                width - sideMenuWidth + 10, labelMenuHeight + 35, 20, 20,
                 Text.literal(""),
                 (button) -> controller.setCharmDictionaryScreen(),
                 Text.literal("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)),
                 "glowstone_dust", "");
+
+        filterButton = new ItemIconButtonWidget(
+                width - sideMenuWidth + 10, height - 30, 20, 20,
+                Text.literal(""),
+                button -> controller.setBuildFilterScreen(),
+                Text.literal("Filter"), "chest", "");
+
+        buildBuildsList();
+
     }
     public void buildBuildsList()
     {
+        controller.refreshBuilds();
+        buildsList = controller.getBuilds();
+
+        buildsButtons.clear();
         for (DictionaryBuild build : buildsList) {
             int index = buildsList.indexOf(build);
             int row = index / ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
@@ -65,8 +95,9 @@ public class BuildDictionaryGui extends Screen {
             int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
 
             BuildButtonWidget button = new BuildButtonWidget(x, y, itemSize, Text.literal(build.name), (b) -> {
-                controller.builderGui.loadItems(build);
                 controller.setBuilderScreen();
+                controller.builderGui.loadItems(build);
+                controller.builderGui.updateStats();
 
             }, build, this, () -> getBuildDescription(build));
 
@@ -106,6 +137,8 @@ public class BuildDictionaryGui extends Screen {
         addBuildButton.render(matrices, mouseX, mouseY, delta);
         showCharmsButton.render(matrices, mouseX, mouseY, delta);
         showItemsButton.render(matrices, mouseX, mouseY, delta);
+        filterButton.render(matrices, mouseX, mouseY, delta);
+        searchBar.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
 
         try {
@@ -128,6 +161,8 @@ public class BuildDictionaryGui extends Screen {
         addBuildButton.mouseClicked(mouseX, mouseY, button);
         showCharmsButton.mouseClicked(mouseX, mouseY, button);
         showItemsButton.mouseClicked(mouseX, mouseY, button);
+        filterButton.mouseClicked(mouseX, mouseY, button);
+        searchBar.mouseClicked(mouseX, mouseY, button);
 
         return true;
     }
@@ -137,11 +172,85 @@ public class BuildDictionaryGui extends Screen {
 
         showCharmsButton.setX(width - sideMenuWidth + 10);
         showCharmsButton.setY(labelMenuHeight + 30);
+
+        filterButton.setX(width - sideMenuWidth + 10);
+        filterButton.setY(height - 30);
     }
-    public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton) {
+    public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton, String region, String className, String specialization) {
         if (name.isEmpty()) name = "No Name";
-        DictionaryBuild build = new DictionaryBuild(name, items, charms, itemOnBuildButton);
-        buildsList.add(build);
+        DictionaryBuild build = new DictionaryBuild(name, items, charms, itemOnBuildButton, region, className, specialization);
+        JsonObject jsonBuild = getBuildAsJSON(build);
+
+        controller.writeJsonBuild(jsonBuild);
+
+        controller.addBuild(build);
         buildBuildsList();
+
     }
+
+    private JsonObject getBuildAsJSON(DictionaryBuild build) {
+        JsonObject jsonBuild = new JsonObject();
+
+        JsonObject itemsJson = new JsonObject();
+        build.allItems.forEach(item -> {
+            JsonObject itemJson = new JsonObject();
+            itemJson.addProperty("name", item.name);
+            itemJson.addProperty("exalted", item.region.equals("Ring"));
+
+            itemsJson.add(item.type, itemJson);
+        });
+
+        ArrayList<DictionaryCharm> charmsWithoutDuplicates = new ArrayList<>(new HashSet<>(build.charms));
+        JsonArray charmsArray = new JsonArray();
+        for (DictionaryCharm charm : charmsWithoutDuplicates) {
+            charmsArray.add(charm.name);
+        }
+
+        jsonBuild.addProperty("name", build.name);
+        jsonBuild.add("items", itemsJson);
+        jsonBuild.add("charms", charmsArray);
+        jsonBuild.addProperty("region", build.region);
+        jsonBuild.addProperty("class", build.className);
+        jsonBuild.addProperty("specialization", build.specialization);
+
+        JsonObject itemToShowJson = new JsonObject();
+        itemToShowJson.addProperty("name", build.itemOnButton.name);
+        itemToShowJson.addProperty("exalted", build.itemOnButton.region.equals("Ring"));
+        jsonBuild.add("item_to_show", itemToShowJson);
+
+        return jsonBuild;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        super.keyPressed(keyCode, scanCode, modifiers);
+
+        searchBar.keyPressed(keyCode, scanCode, modifiers);
+        if (keyCode == 258) { // tab key pressed
+            searchBar.setFocused(!searchBar.isFocused());
+        }
+
+        // reset filters shortcut
+        if (keyCode == 342 || keyCode == 346) { // left or right alt pressed
+            long lastAltPressed = 0;
+            if (System.currentTimeMillis() - lastAltPressed < 1000) {
+                controller.itemFilterGui.clearFilters();
+                searchBar.setText("");
+                buildBuildsList();
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean charTyped(char chr, int modifiers) {
+        super.charTyped(chr, modifiers);
+
+        searchBar.charTyped(chr, modifiers);
+
+        return true;
+    }
+
 }
+

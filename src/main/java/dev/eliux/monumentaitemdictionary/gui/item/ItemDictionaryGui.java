@@ -474,7 +474,7 @@ public class ItemDictionaryGui extends Screen {
             if (currentScreen instanceof BuilderGui) {
                 lines.add(Text.literal("[SHIFT] + Click to delete item")
                         .setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
-                lines.add(Text.literal("[CTRL] + CLick to set the item as Build Item").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+                lines.add(Text.literal("[CTRL] + Click to set the item as Build Icon").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
             }
             lines.add(Text.literal(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
                     .withColor(ItemColours.TEXT_COLOR)));
