@@ -456,7 +456,7 @@ public class BuilderGui extends Screen {
     }
     public void loadItems(DictionaryBuild build) {
         buildItems = build.allItems;
-        charms = build.charms;
+        charms = build.charms.isEmpty() ? new ArrayList<>() : build.charms;
 
         regionButton.setValue(region.getRegion(build.region));
         classButton.setValue(className.getClass(build.className));
