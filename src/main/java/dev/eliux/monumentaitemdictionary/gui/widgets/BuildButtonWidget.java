@@ -17,16 +17,19 @@ import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Objects;
 
 public class BuildButtonWidget extends ButtonWidget {
     private final DictionaryBuild build;
     private final BuildDictionaryGui gui;
     private final ItemStack builtItem;
-    public BuildButtonWidget(int x, int y, int itemSize, Text message, PressAction onPress, DictionaryBuild build, BuildDictionaryGui gui, Supplier<List<Text>> tooltipTextSupplier) {
+    private boolean favorite;
+
+    public BuildButtonWidget(int x, int y, int itemSize, Text message, PressAction onPress, DictionaryBuild build, BuildDictionaryGui gui) {
         super(x, y, itemSize, itemSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
         this.build = build;
         this.gui = gui;
+        this.favorite = build.favorite;
 
         DictionaryItem displayingItem = build.itemOnButton;
 
@@ -64,7 +67,7 @@ public class BuildButtonWidget extends ButtonWidget {
         int outlineColor = hovered ? 0xFFC6C6C6 : 0xFFFFFFFF;
         int fillOpacity = hovered ? 0x6B000000 : 0x88000000;
 
-        fill(matrices, minX, minY, maxX, maxY, fillOpacity);
+        fill(matrices, minX, minY, maxX, maxY, favorite ? 0x88FFFF00 : fillOpacity | (!Objects.equals(build.className, "No Class") ? ItemColours.getColorForClass(build.className) : 0x00000000));
         drawHorizontalLine(matrices, minX, maxX, minY, outlineColor);
         drawHorizontalLine(matrices, minX, maxX, maxY, outlineColor);
         drawVerticalLine(matrices, minX, minY, maxY, outlineColor);
@@ -77,13 +80,21 @@ public class BuildButtonWidget extends ButtonWidget {
             lines.add(Text.literal(build.name).setStyle(Style.EMPTY.withBold(true)));
 
             for (DictionaryItem item : build.allItems) {
+                if (item == null) continue;
                 String itemTier = item.hasMasterwork ? item.getTierFromMasterwork(item.getMaxMasterwork() - 1) : item.getTierNoMasterwork();
                 lines.add(Text.literal(item.name).setStyle(Style.EMPTY
                         .withColor(0xFF000000 + ItemColours.getColorForLocation(item.location))
                         .withBold(ItemFormatter.shouldBold(itemTier))
                         .withUnderline(ItemFormatter.shouldUnderline(itemTier))));
             }
+
+            lines.add(Text.literal("SHIFT + Click to toggle favorite on this build").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+            lines.add(Text.literal("CTRL + SHIFT + Click to delete this build").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
             gui.renderTooltip(matrices, lines, mouseX, mouseY);
         }
+    }
+
+    public void updateFavorite() {
+        favorite = !favorite;
     }
 }

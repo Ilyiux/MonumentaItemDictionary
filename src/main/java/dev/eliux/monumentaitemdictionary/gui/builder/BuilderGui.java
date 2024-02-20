@@ -71,7 +71,7 @@ public class BuilderGui extends Screen {
     private HashMap<String, Boolean> enabledInfusions;
     private final List<CheckBoxWidget> situationalCheckBoxList = new ArrayList<>();
     private final List<CheckBoxWidget> infusionsCheckBoxList = new ArrayList<>();
-    private double currentHealthPercent;
+    private double currentHealthPercent = 100;
     private int scrollPixels = 0;
     private int statusY;
     private String statusText = "";
@@ -144,8 +144,12 @@ public class BuilderGui extends Screen {
                     else if (nameBar.getText().isBlank()) statusText = "Please put a name to your Build";
                     else {
                         controller.buildDictionaryGui.addBuild(nameBar.getText(), buildItems, charms,
-                                itemOnBuildButton, region.name(), className.name(), specialization.name());
-                        resetBuild();
+                                itemOnBuildButton, switch (region) {
+                                    case ARCHITECTS_RING -> "Ring";
+                                    case CELSIAN_ISLES -> "Isles";
+                                    case KINGS_VALLEY -> "Valley";
+                                    default -> "No Region";
+                                }, className.getText().getString(), specialization.getText().getString());
                         controller.setBuildDictionaryScreen();
                     }
                 },
@@ -447,35 +451,29 @@ public class BuilderGui extends Screen {
         return formattedStatName + formattedStatValue;
     }
     public void loadItems(DictionaryBuild build) {
-        for (int i = 0; i < build.allItems.size(); i++) {
-            buildItems.set(i, build.allItems.get(i));
-        }
+        resetBuild();
+        buildItems = build.allItems;
+        charms = build.charms;
 
-        regionButton.setValue(switch (build.region) {
-            case "kings_valley" -> Regions.KINGS_VALLEY;
-            case "celsian_isles" -> Regions.CELSIAN_ISLES;
-            case "architects_ring" -> Regions.ARCHITECTS_RING;
-            default -> Regions.NO_REGION;
-        });
+        regionButton.setValue(region.getRegion(build.region));
+        classButton.setValue(className.getClass(build.className));
+        specializationButton.setValue(specialization.getSpecialization(build.specialization));
 
         nameBar.setText(build.name);
 
-        charms.clear();
-        for (DictionaryCharm charm : build.charms) {
-            for (int i = 0; i < charm.power; i++) {
-                charms.add(charm);
-            }
-        }
-
         updateButtons();
+        updateCheckBoxes();
+        updateStats();
     }
     public void resetBuild() {
         buildItems = Arrays.asList(null, null, null, null, null, null);
-        charms = new ArrayList<>();
-        updateCheckBoxes();
+        nameBar.setText("");
+        classButton.setValue(ClassName.NO_CLASS);
+        regionButton.setValue(Regions.NO_REGION);
+        specializationButton.setValue(Specializations.NO_SPECIALIZATION);
+        itemOnBuildButton = null;
         buildStats = new Stats(buildItems, enabledSituationals, enabledInfusions, currentHealthPercent);
-        updateStats();
-        updateButtons();
+        scrollPixels = 0;
     }
     private void drawButtons(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         buildItemButtons.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
@@ -662,7 +660,7 @@ public class BuilderGui extends Screen {
     }
 
     private void updateScrollLimits () {
-        int maxScroll = max(4*(buttonSize + itemPadding) + labelMenuHeight + statsRow - height + 10, charmsButtonY + 50);
+        int maxScroll = max(4*(buttonSize + itemPadding) + labelMenuHeight + statsRow - height + 100, charmsButtonY + 200);
         if (scrollPixels > maxScroll) scrollPixels = maxScroll;
 
         if (scrollPixels < 0) scrollPixels = 0;
@@ -690,12 +688,21 @@ public class BuilderGui extends Screen {
         ARCHITECTS_RING(Text.literal("Architect's Ring"));
 
         private final Text text;
-        private Regions(Text text) {
+        Regions(Text text) {
             this.text = text;
         }
 
         public Text getText() {
             return this.text;
+        }
+
+        public Regions getRegion(String region) {
+            return switch (region) {
+                case "Valley" -> KINGS_VALLEY;
+                case "Isles" -> CELSIAN_ISLES;
+                case "Ring" -> ARCHITECTS_RING;
+                default -> NO_REGION;
+            };
         }
     }
     enum ClassName {
@@ -710,12 +717,18 @@ public class BuilderGui extends Screen {
         CLERIC(Text.literal("Cleric"));
 
         private final Text text;
-        private ClassName(Text text) {
+        ClassName(Text text) {
             this.text = text;
         }
 
         public Text getText() {
             return this.text;
+        }
+        public ClassName getClass(String className) {
+            for (ClassName classNames : ClassName.values()) {
+                if (classNames.text.getString().equals(className)) return classNames;
+            }
+            return NO_CLASS;
         }
     }
     enum Specializations {
@@ -738,12 +751,19 @@ public class BuilderGui extends Screen {
         HIEROPHANT(Text.literal("Hierophant"));
 
         private final Text text;
-        private Specializations(Text text) {
+        Specializations(Text text) {
             this.text = text;
         }
 
         public Text getText() {
             return this.text;
+        }
+
+        public Specializations getSpecialization(String specialization) {
+            for (Specializations specilaziations : Specializations.values()) {
+                if (specilaziations.text.getString().equals(specialization)) return specilaziations;
+            }
+            return NO_SPECIALIZATION;
         }
     }
 }

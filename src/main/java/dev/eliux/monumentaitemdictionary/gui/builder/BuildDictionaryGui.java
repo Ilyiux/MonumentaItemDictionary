@@ -29,6 +29,7 @@ public class BuildDictionaryGui extends Screen {
     public HashMap<DictionaryBuild, BuildButtonWidget> buildsButtons = new HashMap<>();
     private TextFieldWidget searchBar;
     private ItemIconButtonWidget filterButton;
+    public final List<String> itemTypesIndex = Arrays.asList("Mainhand", "Offhand", "Helmet", "Chestplate", "Leggings", "Boots");
 
     public BuildDictionaryGui(Text title, DictionaryController controller) {
         super(title);
@@ -78,7 +79,6 @@ public class BuildDictionaryGui extends Screen {
                 Text.literal("Filter"), "chest", "");
 
         buildBuildsList();
-
     }
     public void buildBuildsList()
     {
@@ -87,31 +87,41 @@ public class BuildDictionaryGui extends Screen {
 
         buildsButtons.clear();
         for (DictionaryBuild build : buildsList) {
-            int index = buildsList.indexOf(build);
-            int row = index / ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
-            int col = index % ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
-
-            int x = (col + 1) * itemPadding + col * itemSize;
-            int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
-
-            BuildButtonWidget button = new BuildButtonWidget(x, y, itemSize, Text.literal(build.name), (b) -> {
-                controller.setBuilderScreen();
-                controller.builderGui.loadItems(build);
-                controller.builderGui.updateStats();
-
-            }, build, this, () -> getBuildDescription(build));
-
+            BuildButtonWidget button = getBuildButtonWidget(build);
             buildsButtons.put(build, button);
         }
     }
-    private List<Text> getBuildDescription(DictionaryBuild build) {
-        List<Text> lines = new ArrayList<>();
 
-        for (DictionaryItem item : build.allItems) {
-            lines.add(Text.literal(item.name));
+    private BuildButtonWidget getBuildButtonWidget(DictionaryBuild build) {
+        int index = buildsList.indexOf(build);
+        int row = index / ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
+        int col = index % ((width - sideMenuWidth - 5) / (itemSize + itemPadding));
+
+        int x = (col + 1) * itemPadding + col * itemSize;
+        int y = labelMenuHeight + (row + 1) * itemPadding + row * itemSize;
+
+        return new BuildButtonWidget(x, y, itemSize, Text.literal(build.name), b -> buildButtonClicked(build), build,
+                this);
+    }
+
+    private void buildButtonClicked(DictionaryBuild build) {
+        if (hasShiftDown() && hasControlDown()) {
+            controller.deleteBuildFromJson(build.id);
+            buildsList.remove(build);
+        } else if (hasShiftDown()){
+            toggleFavorite(build);
+            buildsButtons.get(build).updateFavorite();
+            controller.refreshBuilds();
+        }else {
+            controller.setBuilderScreen();
+            controller.builderGui.loadItems(build);
         }
+    }
 
-        return lines;
+    private void toggleFavorite(DictionaryBuild build) {
+        build.favorite = !build.favorite;
+
+        controller.toggleJsonBuildFavorite(build.id);
     }
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
@@ -157,6 +167,7 @@ public class BuildDictionaryGui extends Screen {
         super.mouseClicked(mouseX, mouseY, button);
 
         buildsButtons.forEach((build, b) -> b.mouseClicked(mouseX, mouseY, button));
+        buildBuildsList();
 
         addBuildButton.mouseClicked(mouseX, mouseY, button);
         showCharmsButton.mouseClicked(mouseX, mouseY, button);
@@ -166,7 +177,9 @@ public class BuildDictionaryGui extends Screen {
 
         return true;
     }
-    public void updateGuiPositions() {
+    public void updateGuiPositions()
+    {
+        buildBuildsList();
         showItemsButton.setX(width - sideMenuWidth + 10);
         showItemsButton.setY(labelMenuHeight + 10);
 
@@ -178,27 +191,38 @@ public class BuildDictionaryGui extends Screen {
     }
     public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton, String region, String className, String specialization) {
         if (name.isEmpty()) name = "No Name";
-        DictionaryBuild build = new DictionaryBuild(name, items, charms, itemOnBuildButton, region, className, specialization);
+        Random rand = new Random();
+        int id = rand.nextInt(10000);
+
+        while (controller.idExists(id)) {
+            id = rand.nextInt(10000);
+        }
+
+        DictionaryBuild build = new DictionaryBuild(name, items, charms, itemOnBuildButton, region, className, specialization, false, id);
         JsonObject jsonBuild = getBuildAsJSON(build);
 
-        controller.writeJsonBuild(jsonBuild);
+        controller.writeJsonBuild(jsonBuild, build.id);
 
         controller.addBuild(build);
-        buildBuildsList();
-
     }
 
     private JsonObject getBuildAsJSON(DictionaryBuild build) {
         JsonObject jsonBuild = new JsonObject();
 
         JsonObject itemsJson = new JsonObject();
-        build.allItems.forEach(item -> {
-            JsonObject itemJson = new JsonObject();
-            itemJson.addProperty("name", item.name);
-            itemJson.addProperty("exalted", item.region.equals("Ring"));
+        int i = 0;
+        for (DictionaryItem item : build.allItems) {
+            if (item != null) {
+                JsonObject itemJson = new JsonObject();
+                itemJson.addProperty("name", item.name);
+                itemJson.addProperty("exalted", item.region.equals("Ring"));
 
-            itemsJson.add(item.type, itemJson);
-        });
+                itemsJson.add(item.type, itemJson);
+            } else {
+                itemsJson.add(itemTypesIndex.get(i), new JsonObject());
+            }
+            i++;
+        }
 
         ArrayList<DictionaryCharm> charmsWithoutDuplicates = new ArrayList<>(new HashSet<>(build.charms));
         JsonArray charmsArray = new JsonArray();
@@ -217,6 +241,7 @@ public class BuildDictionaryGui extends Screen {
         itemToShowJson.addProperty("name", build.itemOnButton.name);
         itemToShowJson.addProperty("exalted", build.itemOnButton.region.equals("Ring"));
         jsonBuild.add("item_to_show", itemToShowJson);
+        jsonBuild.addProperty("favorite", build.favorite);
 
         return jsonBuild;
     }

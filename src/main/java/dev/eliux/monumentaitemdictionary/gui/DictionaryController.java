@@ -262,13 +262,12 @@ public class DictionaryController {
         return null;
     }
 
-    public void writeJsonBuild(JsonObject jsonBuild) {
+    public void writeJsonBuild(JsonObject jsonBuild, int id) {
         try {
             File file = new File("config/mid/builds.json");
 
             JsonObject fileBuilds = JsonParser.parseString((readJsonBuild().isEmpty()) ? "{}" : readJsonBuild()).getAsJsonObject();
-            int index = fileBuilds.size();
-            fileBuilds.add(String.valueOf(index), jsonBuild);
+            fileBuilds.add(String.valueOf(id), jsonBuild);
 
             FileUtils.writeStringToFile(file, fileBuilds.toString(), Charset.defaultCharset());
         } catch (IOException e) {
@@ -301,26 +300,35 @@ public class DictionaryController {
         try {
             ArrayList<DictionaryBuild> buildsInFile = new ArrayList<>();
 
-            String jsonBuilds = String.valueOf(JsonParser.parseString(readJsonBuild()));
+            JsonElement jsonBuilds = JsonParser.parseString(readJsonBuild());
+            if (jsonBuilds instanceof JsonNull) return;
             JsonObject data = new Gson().fromJson(jsonBuilds, JsonObject.class);
-            for (JsonElement buildElement : data.asMap().values()) {
-                JsonObject buildData = (JsonObject) buildElement;
+            for (Map.Entry<String, JsonElement> buildElement : data.asMap().entrySet()) {
+                int id = Integer.parseInt(buildElement.getKey());
+                JsonObject buildData = (JsonObject) buildElement.getValue();
+
                 String buildName = buildData.get("name").getAsString();
                 String buildRegion = buildData.get("region").getAsString();
                 String buildClass = buildData.get("class").getAsString();
                 String buildSpecialization = buildData.get("specialization").getAsString();
+                boolean buildFavorite = buildData.get("favorite").getAsBoolean();
 
                 JsonObject itemToShow = buildData.get("item_to_show").getAsJsonObject();
                 String itemToShowName = itemToShow.get("name").getAsString();
-                boolean itemToShowIsExalted = itemToShow.get("exalted").getAsBoolean();;
+                boolean itemToShowIsExalted = itemToShow.get("exalted").getAsBoolean();
 
                 DictionaryItem buildItemToShow = getItemByName(itemToShowName, itemToShowIsExalted);
 
                 ArrayList<DictionaryItem> buildItems = new ArrayList<>();
                 JsonObject rawItems = buildData.get("items").getAsJsonObject();
                 for (String item : rawItems.asMap().keySet()) {
-                    boolean isExalted = rawItems.get(item).getAsJsonObject().get("exalted").getAsBoolean();
-                    String itemName = rawItems.get(item).getAsJsonObject().get("name").getAsString();
+                    JsonObject itemJsonObject = rawItems.get(item).getAsJsonObject();
+                    if (!itemJsonObject.has("name")) {
+                        buildItems.add(null);
+                        continue;
+                    }
+                    boolean isExalted = itemJsonObject.get("exalted").getAsBoolean();
+                    String itemName = itemJsonObject.get("name").getAsString();
 
                     buildItems.add(getItemByName(itemName, isExalted));
                 }
@@ -330,10 +338,8 @@ public class DictionaryController {
                 for (JsonElement charm : rawCharms.asList()) {
                     buildCharms.add(getCharmByName(charm.getAsString()));
                 }
-
-                buildsInFile.add(new DictionaryBuild(buildName, buildItems, buildCharms, buildItemToShow, buildRegion, buildClass, buildSpecialization));
+                 buildsInFile.add(new DictionaryBuild(buildName, buildItems, buildCharms, buildItemToShow, buildRegion, buildClass, buildSpecialization, buildFavorite, id));
             }
-
             builds = buildsInFile;
         } catch (Exception e) {
             e.printStackTrace();
@@ -919,6 +925,12 @@ public class DictionaryController {
 
         if (hasBuildNameFilter) filteredBuilds.removeIf(build -> !build.name.toLowerCase().contains(buildNameFilter.toLowerCase()));
 
+        filteredBuilds.sort((b1, b2) -> {
+            if (b1.favorite && b2.favorite) return 0;
+            else if (b1.favorite) return -1;
+            else return 1;
+        });
+
         validBuilds = filteredBuilds;
     }
 
@@ -1002,5 +1014,52 @@ public class DictionaryController {
     public void getCharmFromDictionary() {
         charmGui.isGettingBuildCharm = true;
         setCharmDictionaryScreen();
+    }
+
+    public void toggleJsonBuildFavorite(int id) {
+        try {
+            File file = new File("config/mid/builds.json");
+
+            JsonObject fileBuilds = JsonParser.parseString(readJsonBuild()).getAsJsonObject();
+
+            for (String buildIdString : fileBuilds.asMap().keySet()) {
+                int buildId = Integer.parseInt(buildIdString);
+                if (buildId == id) {
+                    JsonObject build = fileBuilds.get(String.valueOf(id)).getAsJsonObject();
+                    boolean favoriteStatus = build.get("favorite").getAsBoolean();
+                    build.addProperty("favorite", !favoriteStatus);
+
+                    fileBuilds.add(String.valueOf(id), build);
+                }
+            }
+
+            FileUtils.writeStringToFile(file, fileBuilds.toString(), Charset.defaultCharset());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean idExists(int id) {
+        JsonElement fileBuildsElement = JsonParser.parseString(readJsonBuild());
+        if (fileBuildsElement instanceof JsonNull) return false;
+        JsonObject fileBuilds = fileBuildsElement.getAsJsonObject();
+
+        for (String buildIdString : fileBuilds.asMap().keySet()) if (Integer.parseInt(buildIdString) == id) return true;
+        return false;
+    }
+
+    public void deleteBuildFromJson(int id) {
+        try {
+            File file = new File("config/mid/builds.json");
+
+            JsonObject fileBuilds = JsonParser.parseString(readJsonBuild()).getAsJsonObject();
+
+            fileBuilds.remove(String.valueOf(id));
+
+            FileUtils.writeStringToFile(file, fileBuilds.toString(), Charset.defaultCharset());
+            builds.removeIf(build -> build.id == id);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DictionaryBuild {
+    public final int id;
     public DictionaryItem itemOnButton;
     public String className;
     public String specialization;
@@ -20,7 +21,8 @@ public class DictionaryBuild {
     public DictionaryItem boots;
     public List<DictionaryCharm> charms;
     public List<DictionaryItem> allItems;
-    public DictionaryBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton, String region, String className, String specialization) {
+    public boolean favorite;
+    public DictionaryBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton, String region, String className, String specialization, boolean favorite, int id) {
         this.name = name;
         this.mainhand = items.get(0);
         this.offhand = items.get(1);
@@ -33,9 +35,9 @@ public class DictionaryBuild {
         this.region = region;
         this.className = className;
         this.specialization = specialization;
+        this.favorite = favorite;
+        this.id = id;
 
         allItems = Arrays.asList(mainhand, offhand, head, chestplate, leggings, boots);
     }
-
-
 }
