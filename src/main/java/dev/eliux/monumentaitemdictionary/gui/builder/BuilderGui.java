@@ -84,7 +84,7 @@ public class BuilderGui extends Screen {
 
     }
     public void postInit() {
-        this.charmsButtonY = (int) (charms.size()/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
+        this.charmsButtonY = (int) (getCharmsListWithPower().size()/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + itemPadding;
         this.halfWidth = width/2;
         this.scrollPixels = 0;
@@ -248,11 +248,7 @@ public class BuilderGui extends Screen {
         if (!rawCharms[0].equals("None")) {
             for (String charm : rawCharms) {
                 DictionaryCharm charmToAdd = controller.getCharmByWeirdName(charm);
-                if (charmToAdd != null) {
-                    for (int i = 0; i < charmToAdd.power; i++) {
-                        charms.add(charmToAdd);
-                    }
-                }
+                charms.add(charmToAdd);
             }
         }
 
@@ -277,10 +273,10 @@ public class BuilderGui extends Screen {
     private void charmButtonClicked(@Nullable DictionaryCharm charm, boolean shiftDown, boolean ctrlDown) {
         if (charm == null) controller.getCharmFromDictionary();
         else if (!shiftDown && !ctrlDown) {
-            charms.removeAll(Collections.singleton(charm));
+            charms.remove(charm);
             controller.getCharmFromDictionary();
         } else if (shiftDown) {
-            charms.removeAll(Collections.singleton(charm));
+            charms.remove(charm);
             updateStats();
         } else {
             String wikiFormatted = charm.name.replace(" ", "_").replace("'", "%27");
@@ -321,7 +317,7 @@ public class BuilderGui extends Screen {
         itemPadding = buttonSize/10;
 
         charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 2 + (checkBoxSise + itemPadding) * 5 + 85;
-        charmsButtonY = (int) ((charms.size())/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
+        charmsButtonY = (int) ((getCharmsListWithPower().size())/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + 2*itemPadding;
         statsY = Math.max(labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4, labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*6) + 20;
         statusY = statsY - 20;
@@ -385,16 +381,24 @@ public class BuilderGui extends Screen {
         if (charms.isEmpty()) {
             charmsButton = getCharmButtonWidget(0, null);
         } else {
-            for (int i = 0; i < charms.size(); i++) {
-                DictionaryCharm charm = charms.get(i);
-                charmsButton = getCharmButtonWidget(i, charm);
+            for (int i = 0; i < getCharmsListWithPower().size(); i++) {
+                charmsButton = getCharmButtonWidget(i, getCharmsListWithPower().get(i));
             }
-            if (charms.size() < 12) {
-                charmsButton = getCharmButtonWidget(charms.size(), null);
+            if (getCharmsListWithPower().size() < 12) {
+                charmsButton = getCharmButtonWidget(getCharmsListWithPower().size(), null);
             }
         }
 
         updateGuiPositions();
+    }
+    public List<DictionaryCharm> getCharmsListWithPower() {
+        List<DictionaryCharm> charmsListWithPower = new ArrayList<>();
+        for (DictionaryCharm charm : charms) {
+            for (int j = 0; j < charm.power; j++) {
+                charmsListWithPower.add(charm);
+            }
+        }
+        return charmsListWithPower;
     }
     public void updateUserOptions() {
     }
@@ -451,7 +455,6 @@ public class BuilderGui extends Screen {
         return formattedStatName + formattedStatValue;
     }
     public void loadItems(DictionaryBuild build) {
-        resetBuild();
         buildItems = build.allItems;
         charms = build.charms;
 
@@ -468,12 +471,16 @@ public class BuilderGui extends Screen {
     public void resetBuild() {
         buildItems = Arrays.asList(null, null, null, null, null, null);
         nameBar.setText("");
+        charms.clear();
         classButton.setValue(ClassName.NO_CLASS);
         regionButton.setValue(Regions.NO_REGION);
         specializationButton.setValue(Specializations.NO_SPECIALIZATION);
         itemOnBuildButton = null;
         buildStats = new Stats(buildItems, enabledSituationals, enabledInfusions, currentHealthPercent);
         scrollPixels = 0;
+        updateStats();
+        updateCheckBoxes();
+        updateButtons();
     }
     private void drawButtons(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         buildItemButtons.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
@@ -509,15 +516,15 @@ public class BuilderGui extends Screen {
                     0xFFFFFFFF);
         }
 
-        String stars = "★".repeat(charms.size()) + "☆".repeat(12 - charms.size()) + " " + charms.size() + "/12";
-        stars = (textRenderer.getWidth(stars) > width - sideMenuWidth - charmsX) ? charms.size() + "/12" : stars;
+        String stars = "★".repeat(getCharmsListWithPower().size()) + "☆".repeat(12 - getCharmsListWithPower().size()) + " " + getCharmsListWithPower().size() + "/12";
+        stars = (textRenderer.getWidth(stars) > width - sideMenuWidth - charmsX) ? getCharmsListWithPower().size() + "/12" : stars;
         drawTextWithShadow(matrices, textRenderer,
                 Text.literal("Charms"),
                 charmsX, charmsY-20 - scrollPixels, 0xFFFFFFFF);
         drawTextWithShadow(matrices, textRenderer,
                 Text.literal(stars),
                 charmsX, charmsY - 10 - scrollPixels, 0xFFFFFF00);
-        if (charms.size() == 12) {
+        if (getCharmsListWithPower().size() == 12) {
             drawTextWithShadow(matrices, textRenderer,
                     Text.literal(getSlidingText("Full Charms", charmsX, width - labelMenuHeight, true)).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
                     charmsX, charmsY-30 - scrollPixels, 0xFFFF0000);

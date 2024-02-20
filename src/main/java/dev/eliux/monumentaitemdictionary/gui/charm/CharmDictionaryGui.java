@@ -231,7 +231,7 @@ public class CharmDictionaryGui extends Screen {
     private void returnCharm(DictionaryCharm charm) {
         BuilderGui builderGui = controller.builderGui;
 
-        for (int i = 0; i < charm.power; i++) builderGui.charms.add(charm);
+        builderGui.charms.add(charm);
 
         controller.setBuilderScreen();
         controller.builderGui.updateButtons();

@@ -10,8 +10,12 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -20,28 +24,60 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 
 public class BuildCharmButtonWidget extends ButtonWidget {
-    private final Supplier<List<Text>> lore;
+    private final Supplier<List<Text>> loreSupplier;
     private final DictionaryCharm charm;
     private final BuilderGui gui;
     private final ItemStack builtItem;
     private final float scale;
 
-    public BuildCharmButtonWidget(int x, int y, int itemSize, Text message, PressAction onPress, DictionaryCharm charm, Supplier<List<Text>> lore, BuilderGui gui) {
+    public BuildCharmButtonWidget(int x, int y, int itemSize, Text message, PressAction onPress, @Nullable DictionaryCharm charm, Supplier<List<Text>> loreSupplier, BuilderGui gui) {
         super(x, y, itemSize, itemSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
-        this.lore = lore;
+        this.loreSupplier = loreSupplier;
         this.charm = charm;
         this.gui = gui;
         this.scale = (float) width/18;
 
-        builtItem = ItemFactory.fromEncoding(charm != null ? (charm.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_")) : "barrier");
+        builtItem = getItemStack(charm);
+    }
+
+    private ItemStack getItemStack(@Nullable DictionaryCharm charm) {
+        if (charm == null) {
+            ItemStack builtItem = ItemFactory.fromEncoding("barrier");
+            NbtCompound baseNbt = builtItem.getOrCreateNbt();
+            NbtCompound plain = new NbtCompound();
+            NbtCompound display = new NbtCompound();
+            display.putString("Name", "No Item");
+            plain.put("display", display);
+            baseNbt.put("plain", plain);
+            builtItem.setNbt(baseNbt);
+
+            return builtItem;
+        }
+        ItemStack builtItem = ItemFactory.fromEncoding(charm.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_"));
         NbtCompound baseNbt = builtItem.getOrCreateNbt();
+
+        NbtCompound monumenta = new NbtCompound();
+        monumenta.putInt("CharmPower", charm.power);
+        monumenta.putString("Tier", switch(charm.tier) {
+            case "Base": yield "charm";
+            case "Rare": yield "rarecharm";
+            case "Epic": yield "epiccharm";
+            default: yield "";
+        });
+        baseNbt.put("Monumenta", monumenta);
+
         NbtCompound plain = new NbtCompound();
         NbtCompound display = new NbtCompound();
-        display.putString("Name", charm != null ? (charm.name.split("\\(")[0].trim()) : "No Item");
+        NbtList lore = new NbtList();
+        lore.add(0, NbtString.of("Charm Power :  - " + charm.className));
+        display.putString("Name", charm.name.split("\\(")[0].trim());
+        display.put("Lore", lore);
         plain.put("display", display);
-        baseNbt.put("plain", plain);
-        builtItem.setNbt(baseNbt);
 
+        baseNbt.put("plain", plain);
+
+        builtItem.setNbt(baseNbt);
+        return builtItem;
     }
 
     @Override
@@ -79,7 +115,7 @@ public class BuildCharmButtonWidget extends ButtonWidget {
         if (hovered) {
             List<Text> lines = new ArrayList<>();
             lines.add(Text.literal("Click to add an item."));
-            gui.renderTooltip(matrices, (charm != null ? lore.get() : lines), mouseX, mouseY);
+            gui.renderTooltip(matrices, (charm != null ? loreSupplier.get() : lines), mouseX, mouseY);
         }
     }
 }
