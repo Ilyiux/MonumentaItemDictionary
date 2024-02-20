@@ -1,5 +1,6 @@
 package dev.eliux.monumentaitemdictionary.gui.builder;
 
+import dev.eliux.monumentaitemdictionary.Mid;
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
@@ -13,13 +14,13 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.util.Clipboard;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
+
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -119,13 +120,9 @@ public class BuilderGui extends Screen {
         };
 
         setBuildFromClipboardButton = new ItemIconButtonWidget(30, 5, 20, 20, Text.literal(""), (button) -> {
-            try {
-                String buildUrl = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-                if (verifyUrl(buildUrl)) {
-                    getBuildFromUrl(buildUrl);
-                }
-            } catch (UnsupportedFlavorException | IOException e) {
-                e.printStackTrace();
+            String buildUrl = new Clipboard().getClipboard(0, (e, d) -> Mid.LOGGER.info("Failed to get Clipboard"));
+            if (verifyUrl(buildUrl)) {
+                getBuildFromUrl(buildUrl);
             }
         }, Text.literal("Set Build From Clipboard"), "name_tag", "");
 
