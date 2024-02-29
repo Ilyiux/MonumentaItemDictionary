@@ -46,6 +46,7 @@ public class ItemColors {
     public static final int MAGE_COLOR = 0xa11ecc;
     public static final int SCOUT_COLOR = 0x2488c6;
     public static final int WARLOCK_COLOR = 0xc524b7;
+    public static final int SHAMAN_COLOR = 0x009700;
     public static final int GENERALIST_COLOR = 0x9d8d8f;
 
     public static final int WHITE_COLOR = 0xFCFCFC;
@@ -133,6 +134,8 @@ public class ItemColors {
     public static final int CHALLENGER_COLOR = 0xFBD910;
     public static final int TRUE_NORTH_COLOR = 0xFFD700;
     public static final int STARPOINT_COLOR = 0x342768;
+    public static final int ZENITH_COLOR = 0xFF9CF0;
+    public static final int SIRIUS_COLOR = 0x34CFBC;
 
     public static int getColorForTier(String itemTier) {
         return switch (itemTier) {
@@ -201,6 +204,8 @@ public class ItemColors {
                 yield SCOUT_COLOR;
             case "Warlock":
                 yield WARLOCK_COLOR;
+            case "Shaman":
+                yield SHAMAN_COLOR;
             case "Generalist":
                 yield GENERALIST_COLOR;
             default:
@@ -210,12 +215,13 @@ public class ItemColors {
 
     public static int getColorForCharmStat(CharmStat charmStat) {
         boolean positive = charmStat.statValue >= 0;
-        boolean inverted = (charmStat.statNameFull.contains("cooldown") && !charmStat.statNameFull.contains("cooldown_reduction"))
+        boolean inverted = (charmStat.statNameFull.contains("cooldown") && !(charmStat.statNameFull.contains("cooldown_reduction") || charmStat.statNameFull.contains("cooldown_cap")))
                 || charmStat.statNameFull.contains("self_damage")
                 || charmStat.statNameFull.contains("requirement")
                 || charmStat.statNameFull.contains("penalty")
                 || charmStat.statNameFull.contains("delay")
-                || charmStat.statNameFull.contains("price");
+                || charmStat.statNameFull.contains("price")
+                || charmStat.statNameFull.contains("received_damage");
         return (positive ^ inverted) ? TEXT_POSITIVE_CHARM_COLOR : TEXT_NEGATIVE_CHARM_COLOR;
     }
 
@@ -391,6 +397,10 @@ public class ItemColors {
                 yield TRUE_NORTH_COLOR;
             case "Starpoint":
                 yield STARPOINT_COLOR;
+            case "Zenith":
+                yield ZENITH_COLOR;
+            case "Sirius":
+                yield SIRIUS_COLOR;
             default:
                 yield DEFAULT_COLOR;
         };
