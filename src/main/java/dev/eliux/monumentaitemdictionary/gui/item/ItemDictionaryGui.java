@@ -5,7 +5,7 @@ import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
-import dev.eliux.monumentaitemdictionary.util.ItemColours;
+import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import dev.eliux.monumentaitemdictionary.util.ItemStat;
 import java.util.HashMap;
@@ -142,13 +142,13 @@ public class ItemDictionaryGui extends Screen {
                 Arrays.asList(
                     Text.literal("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
                     Text.literal(""),
-                    Text.literal("Ctrl + Scroll").setStyle(Style.EMPTY.withBold(true).withColor(ItemColours.TEXT_COLOR)).append(Text.literal(" to increase/decrease individual masterwork tiers").setStyle(Style.EMPTY.withBold(false).withColor(ItemColours.TEXT_COLOR))),
+                    Text.literal("Ctrl + Scroll").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to increase/decrease individual masterwork tiers").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     Text.literal(""),
-                    Text.literal("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColours.TEXT_COLOR)).append(Text.literal(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColours.TEXT_COLOR))),
+                    Text.literal("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     Text.literal(""),
-                    Text.literal("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColours.TEXT_COLOR)).append(Text.literal(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColours.TEXT_COLOR))),
+                    Text.literal("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     Text.literal(""),
-                    Text.literal("Ctrl Shift + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColours.TEXT_COLOR)).append(Text.literal(" to open an item in the wiki").setStyle(Style.EMPTY.withBold(false).withColor(ItemColours.TEXT_COLOR))),
+                    Text.literal("Ctrl Shift + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to open an item in the wiki").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     Text.literal(""),
                     Text.literal("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
             ), "oak_sign", "");
@@ -366,7 +366,7 @@ public class ItemDictionaryGui extends Screen {
         List<Text> lines = new ArrayList<>();
 
         lines.add(Text.literal(item.name).setStyle(Style.EMPTY
-                .withColor(0xFF000000 + ItemColours.getColorForLocation(item.location))
+                .withColor(0xFF000000 + ItemColors.getColorForLocation(item.location))
                 .withBold(!item.isFish ? ItemFormatter.shouldBold(itemTier) : ItemFormatter.shouldBoldFish(item.fishTier))
                 .withUnderline(!item.isFish ? ItemFormatter.shouldUnderline(itemTier) : ItemFormatter.shouldUnderlineFish(item.fishTier))));
 
@@ -387,7 +387,7 @@ public class ItemDictionaryGui extends Screen {
         if (showStats != null) {
             for (ItemStat stat : showStats) {
                 Text line = Text.literal(ItemFormatter.buildStatString(stat.statName, stat.statValue)).setStyle(Style.EMPTY
-                        .withColor(ItemColours.getColorForStat(stat.statName, stat.statValue)));
+                        .withColor(ItemColors.getColorForStat(stat.statName, stat.statValue)));
                 if (ItemFormatter.isStat(stat.statName)) {
                     if (ItemFormatter.isBaseStat(stat.statName)) {
                         baseStats.add(line);
@@ -406,33 +406,33 @@ public class ItemDictionaryGui extends Screen {
 
         if (item.hasRegion() || item.hasTier()) {
             MutableText regionText = Text.literal(item.hasRegion() ? ItemFormatter.formatRegion(item.region) + (item.hasTier() ? " : " : "") : "")
-                    .setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR));
+                    .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
             MutableText tierText = Text.literal(item.hasTier() ? itemTier : "").setStyle(Style.EMPTY
-                    .withColor(ItemColours.getColorForTier(itemTier))
+                    .withColor(ItemColors.getColorForTier(itemTier))
                     .withBold(ItemFormatter.shouldUnderline(itemTier)));
 
             lines.add(regionText.append(tierText));
         }
 
         if (item.hasMasterwork) {
-            MutableText baseText = Text.literal("Masterwork : ").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR));
+            MutableText baseText = Text.literal("Masterwork : ").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
             for (int i = 0; i < ItemFormatter.getMasterworkForRarity(itemTier); i ++) {
                 if (i < masterworkTier) {
-                    baseText.append(Text.literal("★").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_MASTERWORK_COLOR)));
+                    baseText.append(Text.literal("★").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_MASTERWORK_COLOR)));
                 } else {
-                    baseText.append(Text.literal("☆").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+                    baseText.append(Text.literal("☆").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
                 }
             }
             lines.add(baseText);
         }
 
         if (item.isFish) {
-            MutableText baseText = Text.literal("Fish Quality : ").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR));
+            MutableText baseText = Text.literal("Fish Quality : ").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR));
             for (int i = 0; i < ItemFormatter.getMaxFishTier(); i ++) {
                 if (i < item.fishTier) {
-                    baseText.append(Text.literal("★").setStyle(Style.EMPTY.withColor(ItemColours.FISH_COLOR)));
+                    baseText.append(Text.literal("★").setStyle(Style.EMPTY.withColor(ItemColors.FISH_COLOR)));
                 } else {
-                    baseText.append(Text.literal("☆").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+                    baseText.append(Text.literal("☆").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
                 }
             }
             lines.add(baseText);
@@ -440,16 +440,16 @@ public class ItemDictionaryGui extends Screen {
 
         if (item.hasLocation()) {
             lines.add(Text.literal(item.location).setStyle(Style.EMPTY
-                    .withColor(ItemColours.getColorForLocation(item.location))));
+                    .withColor(ItemColors.getColorForLocation(item.location))));
         }
 
         if (!item.lore.isEmpty()) {
             if (hasShiftDown()) {
                 for (String line : item.lore.split("\n")) {
-                    lines.add(Text.literal(line).setStyle(Style.EMPTY.withColor(ItemColours.mixHexes(ItemColours.TEXT_COLOR, ItemColours.getColorForLocation(item.location), 0.67))));
+                    lines.add(Text.literal(line).setStyle(Style.EMPTY.withColor(ItemColors.mixHexes(ItemColors.TEXT_COLOR, ItemColors.getColorForLocation(item.location), 0.67))));
                 }
             } else {
-                lines.add(Text.literal("Press [SHIFT] to show lore.").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+                lines.add(Text.literal("Press [SHIFT] to show lore.").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
             }
         }
 
@@ -466,18 +466,18 @@ public class ItemDictionaryGui extends Screen {
         lines.add(Text.literal(""));
 
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player != null && player.getAbilities().creativeMode) lines.add(Text.literal("[ALT] + Click to generate this item").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+        if (player != null && player.getAbilities().creativeMode) lines.add(Text.literal("[ALT] + Click to generate this item").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
 
         Screen currentScreen = MinecraftClient.getInstance().currentScreen;
         if (currentScreen instanceof ItemDictionaryGui || currentScreen instanceof CharmDictionaryGui || currentScreen instanceof BuilderGui) {
-            lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+            lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
             if (currentScreen instanceof BuilderGui) {
                 lines.add(Text.literal("[SHIFT] + Click to delete item")
-                        .setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
-                lines.add(Text.literal("[CTRL] + Click to set the item as Build Icon").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+                        .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+                lines.add(Text.literal("[CTRL] + Click to set the item as Build Icon").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
             }
             lines.add(Text.literal(item.type + " - " + item.baseItem).setStyle(Style.EMPTY
-                    .withColor(ItemColours.TEXT_COLOR)));
+                    .withColor(ItemColors.TEXT_COLOR)));
         }
         return lines;
     }

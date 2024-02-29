@@ -22,6 +22,7 @@ public class DictionaryBuild {
     public List<DictionaryCharm> charms;
     public List<DictionaryItem> allItems;
     public boolean favorite;
+
     public DictionaryBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton, String region, String className, String specialization, boolean favorite, int id) {
         this.name = name;
         this.mainhand = items.get(0);

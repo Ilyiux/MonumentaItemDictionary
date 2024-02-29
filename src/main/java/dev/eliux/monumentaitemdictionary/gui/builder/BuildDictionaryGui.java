@@ -35,6 +35,7 @@ public class BuildDictionaryGui extends Screen {
         super(title);
         this.controller = controller;
     }
+
     public void postInit() {
         searchBar = new TextFieldWidget(textRenderer, width / 2 + 90, 7, width / 2 - 100, 15, Text.literal("Search"));
         searchBar.setChangedListener(t -> {
@@ -66,7 +67,7 @@ public class BuildDictionaryGui extends Screen {
                 "iron_chestplate", "");
 
         showCharmsButton = new ItemIconButtonWidget(
-                width - sideMenuWidth + 10, labelMenuHeight + 35, 20, 20,
+                width - sideMenuWidth + 10, labelMenuHeight + 38, 20, 20,
                 Text.literal(""),
                 (button) -> controller.setCharmDictionaryScreen(),
                 Text.literal("Charm Data").setStyle(Style.EMPTY.withColor(0xFFFFFF00)),
@@ -80,6 +81,7 @@ public class BuildDictionaryGui extends Screen {
 
         buildBuildsList();
     }
+
     public void buildBuildsList()
     {
         controller.refreshBuilds();
@@ -123,6 +125,7 @@ public class BuildDictionaryGui extends Screen {
 
         controller.toggleJsonBuildFavorite(build.id);
     }
+
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
@@ -157,11 +160,13 @@ public class BuildDictionaryGui extends Screen {
             e.printStackTrace();
         }
     }
+
     @Override
     public void resize(MinecraftClient client, int width, int height) {
         super.resize(client, width, height);
         updateGuiPositions();
     }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         super.mouseClicked(mouseX, mouseY, button);
@@ -177,8 +182,8 @@ public class BuildDictionaryGui extends Screen {
 
         return true;
     }
-    public void updateGuiPositions()
-    {
+
+    public void updateGuiPositions() {
         buildBuildsList();
         showItemsButton.setX(width - sideMenuWidth + 10);
         showItemsButton.setY(labelMenuHeight + 10);
@@ -189,6 +194,7 @@ public class BuildDictionaryGui extends Screen {
         filterButton.setX(width - sideMenuWidth + 10);
         filterButton.setY(height - 30);
     }
+
     public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton, String region, String className, String specialization) {
         if (name.isEmpty()) name = "No Name";
         Random rand = new Random();

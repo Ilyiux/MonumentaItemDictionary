@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.eliux.monumentaitemdictionary.gui.builder.BuildDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
-import dev.eliux.monumentaitemdictionary.util.ItemColours;
+import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import net.minecraft.client.MinecraftClient;
@@ -67,7 +67,7 @@ public class BuildButtonWidget extends ButtonWidget {
         int outlineColor = hovered ? 0xFFC6C6C6 : 0xFFFFFFFF;
         int fillOpacity = hovered ? 0x6B000000 : 0x88000000;
 
-        fill(matrices, minX, minY, maxX, maxY, favorite ? 0x88FFFF00 : fillOpacity | (!Objects.equals(build.className, "No Class") ? ItemColours.getColorForClass(build.className) : 0x00000000));
+        fill(matrices, minX, minY, maxX, maxY, favorite ? 0x88FFFF00 : fillOpacity | (!Objects.equals(build.className, "No Class") ? ItemColors.getColorForClass(build.className) : 0x00000000));
         drawHorizontalLine(matrices, minX, maxX, minY, outlineColor);
         drawHorizontalLine(matrices, minX, maxX, maxY, outlineColor);
         drawVerticalLine(matrices, minX, minY, maxY, outlineColor);
@@ -83,13 +83,13 @@ public class BuildButtonWidget extends ButtonWidget {
                 if (item == null) continue;
                 String itemTier = item.hasMasterwork ? item.getTierFromMasterwork(item.getMaxMasterwork() - 1) : item.getTierNoMasterwork();
                 lines.add(Text.literal(item.name).setStyle(Style.EMPTY
-                        .withColor(0xFF000000 + ItemColours.getColorForLocation(item.location))
+                        .withColor(0xFF000000 + ItemColors.getColorForLocation(item.location))
                         .withBold(ItemFormatter.shouldBold(itemTier))
                         .withUnderline(ItemFormatter.shouldUnderline(itemTier))));
             }
 
-            lines.add(Text.literal("SHIFT + Click to toggle favorite on this build").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
-            lines.add(Text.literal("CTRL + SHIFT + Click to delete this build").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+            lines.add(Text.literal("SHIFT + Click to toggle favorite on this build").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+            lines.add(Text.literal("CTRL + SHIFT + Click to delete this build").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
             gui.renderTooltip(matrices, lines, mouseX, mouseY);
         }
     }

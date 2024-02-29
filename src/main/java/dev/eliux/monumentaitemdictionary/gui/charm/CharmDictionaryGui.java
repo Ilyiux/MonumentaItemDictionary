@@ -5,7 +5,7 @@ import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
 import dev.eliux.monumentaitemdictionary.gui.widgets.CharmButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.CharmStat;
-import dev.eliux.monumentaitemdictionary.util.ItemColours;
+import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -112,11 +112,11 @@ public class CharmDictionaryGui extends Screen {
                 Arrays.asList(
                     Text.literal("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
                     Text.literal(""),
-                    Text.literal("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColours.TEXT_COLOR)).append(Text.literal(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColours.TEXT_COLOR))),
+                    Text.literal("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     Text.literal(""),
-                    Text.literal("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColours.TEXT_COLOR)).append(Text.literal(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColours.TEXT_COLOR))),
+                    Text.literal("Double Tap Alt").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to quickly reset search and filters").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     Text.literal(""),
-                    Text.literal("Ctrl Shift + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColours.TEXT_COLOR)).append(Text.literal(" to open an item in the wiki").setStyle(Style.EMPTY.withBold(false).withColor(ItemColours.TEXT_COLOR))),
+                    Text.literal("Ctrl Shift + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to open an item in the wiki").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
                     Text.literal(""),
                     Text.literal("Click to go to the MID Github page!").setStyle(Style.EMPTY.withUnderline(true).withColor(0xFF5555FF))
             ), "oak_sign", "");
@@ -306,52 +306,52 @@ public class CharmDictionaryGui extends Screen {
         List<Text> lines = new ArrayList<>();
 
         lines.add(Text.literal(charm.name).setStyle(Style.EMPTY
-                .withColor(0xFF000000 + ItemColours.getColorForLocation(charm.location))
+                .withColor(0xFF000000 + ItemColors.getColorForLocation(charm.location))
                 .withBold(ItemFormatter.shouldBold(charm.tier))
                 .withUnderline(ItemFormatter.shouldUnderline(charm.tier))));
 
         MutableText region = Text.literal(charm.region + " : ").setStyle(Style.EMPTY
-                .withColor(ItemColours.TEXT_COLOR));
+                .withColor(ItemColors.TEXT_COLOR));
         MutableText tier = Text.literal(ItemFormatter.formatCharmTier(charm.tier)).setStyle(Style.EMPTY
-                .withColor(ItemColours.getColorForTier(charm.tier))
+                .withColor(ItemColors.getColorForTier(charm.tier))
                 .withBold(ItemFormatter.shouldUnderline(charm.tier)));
         lines.add(region.append(tier));
 
         MutableText charmPowerDesc = Text.literal("Charm Power : ").setStyle(Style.EMPTY
-                .withColor(ItemColours.TEXT_COLOR));
+                .withColor(ItemColors.TEXT_COLOR));
         MutableText charmPower = Text.literal("").setStyle(Style.EMPTY
-                .withColor(ItemColours.TEXT_CHARM_POWER_COLOR));
+                .withColor(ItemColors.TEXT_CHARM_POWER_COLOR));
         for (int i = 0; i < charm.power; i++) charmPower.append("★");
         MutableText divider = Text.literal(" - ").setStyle(Style.EMPTY
-                .withColor(ItemColours.TEXT_COLOR));
+                .withColor(ItemColors.TEXT_COLOR));
         MutableText classText = Text.literal(charm.className).setStyle(Style.EMPTY
-                        .withColor(ItemColours.getColorForClass(charm.className)));
+                        .withColor(ItemColors.getColorForClass(charm.className)));
         lines.add(charmPowerDesc.append(charmPower).append(divider).append(classText));
 
-        lines.add(Text.literal(charm.location).setStyle(Style.EMPTY.withColor(ItemColours.getColorForLocation(charm.location))));
+        lines.add(Text.literal(charm.location).setStyle(Style.EMPTY.withColor(ItemColors.getColorForLocation(charm.location))));
 
         lines.add(Text.literal(""));
 
         lines.add(Text.literal("When in Charm Slot:").setStyle(Style.EMPTY.withColor(0xAAAAAA)));
         for (CharmStat stat : charm.stats) {
             lines.add(Text.literal((stat.statValue >= 0 ? "+" : "") + stat.statValue + (stat.statNameFull.endsWith("percent") ? "" : " ") + ItemFormatter.formatCharmStat(stat.statNameFull)).setStyle(Style.EMPTY
-                    .withColor(ItemColours.getColorForCharmStat(stat))));
+                    .withColor(ItemColors.getColorForCharmStat(stat))));
         }
 
         lines.add(Text.literal(""));
 
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player != null && player.getAbilities().creativeMode) {
-            lines.add(Text.literal("[ALT] + Click to generate this item").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+            lines.add(Text.literal("[ALT] + Click to generate this item").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
         }
-        lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+        lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
         Screen currentScreen = MinecraftClient.getInstance().currentScreen;
         if (currentScreen instanceof BuilderGui) {
             lines.add(Text.literal("[SHIFT] + Click to delete item")
-                    .setStyle(Style.EMPTY.withColor(ItemColours.TEXT_COLOR)));
+                    .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
         }
         lines.add(Text.literal(charm.baseItem).setStyle(Style.EMPTY
-                .withColor(ItemColours.TEXT_COLOR)));
+                .withColor(ItemColors.TEXT_COLOR)));
 
         return lines;
     }

@@ -3,7 +3,7 @@ package dev.eliux.monumentaitemdictionary.gui.widgets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
-import dev.eliux.monumentaitemdictionary.util.ItemColours;
+import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -13,7 +13,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -21,7 +20,6 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
 
 public class BuildCharmButtonWidget extends ButtonWidget {
     private final Supplier<List<Text>> loreSupplier;
@@ -100,7 +98,7 @@ public class BuildCharmButtonWidget extends ButtonWidget {
         int outlineColor = hovered ? 0xFFC6C6C6 : 0xFFFFFFFF;
         int fillOpacity = hovered ? 0x6B000000 : 0x88000000;
 
-        fill(matrices, minX, minY, maxX, maxY, fillOpacity + (charm != null ? ItemColours.getColorForTier(charm.tier) : 0x00000000));
+        fill(matrices, minX, minY, maxX, maxY, fillOpacity + (charm != null ? ItemColors.getColorForTier(charm.tier) : 0x00000000));
         drawHorizontalLine(matrices, minX, maxX, minY, outlineColor);
         drawHorizontalLine(matrices, minX, maxX, maxY, outlineColor);
         drawVerticalLine(matrices, minX, minY, maxY, outlineColor);

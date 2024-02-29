@@ -21,8 +21,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -30,6 +28,7 @@ import java.util.List;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
+
 public class BuilderGui extends Screen {
     private final DictionaryController controller;
     public final List<String> itemTypesIndex = Arrays.asList("Mainhand", "Offhand", "Helmet", "Chestplate", "Leggings", "Boots");
@@ -84,6 +83,7 @@ public class BuilderGui extends Screen {
         this.controller = controller;
 
     }
+
     public void postInit() {
         this.charmsButtonY = (int) (getCharmsListWithPower().size()/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + itemPadding;
@@ -205,6 +205,7 @@ public class BuilderGui extends Screen {
         updateButtons();
         updateGuiPositions();
     }
+
     private void getBuildFromUrl(String buildUrl) {
         updateUserOptions();
         buildUrl = buildUrl.substring(buildUrl.indexOf("m="));
@@ -252,9 +253,11 @@ public class BuilderGui extends Screen {
         updateButtons();
         updateStats();
     }
+
     private boolean verifyUrl(String buildUrl) {
         return buildUrl.contains("ohthemisery.tk/builder") || buildUrl.contains("ohthemisery.vercel.app/builder") || buildUrl.contains("ohthemisery-psi.vercel.app/builder");
     }
+
     private BuildCharmButtonWidget getCharmButtonWidget(int i, @Nullable DictionaryCharm charm) {
         charmsButton = new BuildCharmButtonWidget(
                 charmsX + (int) (i % floor((double) (width - sideMenuWidth - charmsX) / (buttonSize + itemPadding))) * (buttonSize + itemPadding),
@@ -267,6 +270,7 @@ public class BuilderGui extends Screen {
 
         return charmsButton;
     }
+
     private void charmButtonClicked(@Nullable DictionaryCharm charm, boolean shiftDown, boolean ctrlDown) {
         if (charm == null) controller.getCharmFromDictionary();
         else if (!shiftDown && !ctrlDown) {
@@ -280,6 +284,7 @@ public class BuilderGui extends Screen {
             Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
         }
     }
+
     private BuildItemButtonWidget getBuildItemButtonWidget(int i) {
         DictionaryItem item = buildItems.get(i);
         String itemType = itemTypesIndex.get(i);
@@ -294,6 +299,7 @@ public class BuilderGui extends Screen {
                 this
         );
     }
+
     private void itemButtonClicked(@Nullable DictionaryItem item, String itemType, boolean shiftDown, boolean controlDown) {
         if (!shiftDown && !controlDown) controller.getItemFromDictionary(itemType);
         else if (shiftDown && !controlDown) {
@@ -307,6 +313,7 @@ public class BuilderGui extends Screen {
             Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
         }
     }
+
     public void updateGuiPositions() {
         halfWidth = width/2;
         halfWidthPadding = textRenderer.getWidth(situationalCheckBoxList.get(6).getMessage()) + 3*(checkBoxSise + itemPadding);
@@ -334,6 +341,7 @@ public class BuilderGui extends Screen {
         currentHealthSlider.setY(charmsY + charmsButtonY);
         currentHealthSlider.setWidth(width - sideMenuWidth - charmsX - 2*itemPadding);
     }
+
     public void updateButtons() {
         situationalCheckBoxList.clear();
         for (int i = 0; i < situationals.size(); i++) {
@@ -388,6 +396,7 @@ public class BuilderGui extends Screen {
 
         updateGuiPositions();
     }
+
     public List<DictionaryCharm> getCharmsListWithPower() {
         List<DictionaryCharm> charmsListWithPower = new ArrayList<>();
         for (DictionaryCharm charm : charms) {
@@ -397,8 +406,10 @@ public class BuilderGui extends Screen {
         }
         return charmsListWithPower;
     }
+
     public void updateUserOptions() {
     }
+
     public void updateCheckBoxes() {
         Iterator<CheckBoxWidget> checkBox = situationalCheckBoxList.iterator();
         Iterator<String> text = situationals.iterator();
@@ -412,6 +423,7 @@ public class BuilderGui extends Screen {
             enabledInfusions.put(text.next().toLowerCase(), checkBox.next().isChecked());
         }
     }
+
     public void updateStats() {
         updateCheckBoxes();
         buildStats = new Stats(buildItems, enabledSituationals, enabledInfusions, currentHealthPercent);
@@ -434,6 +446,7 @@ public class BuilderGui extends Screen {
             }
         }
     }
+
     private String getFormattedStat(Field field, String formattedStatName) throws IllegalAccessException {
         int intStatValue;
         double doubleStatValue;
@@ -451,6 +464,7 @@ public class BuilderGui extends Screen {
 
         return formattedStatName + formattedStatValue;
     }
+
     public void loadItems(DictionaryBuild build) {
         buildItems = build.allItems;
         charms = build.charms.isEmpty() ? new ArrayList<>() : build.charms;
@@ -465,6 +479,7 @@ public class BuilderGui extends Screen {
         updateCheckBoxes();
         updateStats();
     }
+
     public void resetBuild() {
         buildItems = Arrays.asList(null, null, null, null, null, null);
         nameBar.setText("");
@@ -479,12 +494,14 @@ public class BuilderGui extends Screen {
         updateCheckBoxes();
         updateButtons();
     }
+
     private void drawButtons(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         buildItemButtons.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
         buildCharmButtons.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
         situationalCheckBoxList.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
         infusionsCheckBoxList.forEach((b) -> b.renderButton(matrices, mouseX, mouseY, delta));
     }
+
     private void drawItemText(MatrixStack matrices) {
         for (int i = 0;i < buildItems.size(); i++) {
             DictionaryItem item = buildItems.get(i);
@@ -497,7 +514,7 @@ public class BuilderGui extends Screen {
                         Text.literal(itemText).setStyle(Style.EMPTY.withBold(true).withUnderline(true)),
                         x,
                         y,
-                        0xFF000000 + ItemColours.getColorForLocation(item.location));
+                        0xFF000000 + ItemColors.getColorForLocation(item.location));
             }
         }
 
@@ -531,6 +548,7 @@ public class BuilderGui extends Screen {
             drawTextWithShadow(matrices, textRenderer, Text.literal(statusText), itemPadding, statusY - scrollPixels, 0xFFFF0000);
         }
     }
+
     private String getSlidingText(String text, int xi, int xf, boolean bold) {
         int textWidth = xf - xi - 10;
         if (textWidth >= textRenderer.getWidth(Text.literal(text).setStyle(Style.EMPTY.withBold(bold))) + 20) return text;
@@ -542,6 +560,7 @@ public class BuilderGui extends Screen {
 
         return (text + " " + text + " " + text).substring(start, start + textLength);
     }
+
     private void drawStats(MatrixStack matrices) {
         if (statsToRender.isEmpty()) return;
         List<String> statsTypes = new ArrayList<>(Arrays.asList("Misc Stats", "Health Stats", "DR Stats", "HP Normalized DR Stats", "EHP Stats", "Melee Stats", "Projectile Stats", "Magic Stats"));
@@ -568,6 +587,7 @@ public class BuilderGui extends Screen {
             i++;
         }
     }
+
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         this.renderBackground(matrices);
@@ -605,7 +625,7 @@ public class BuilderGui extends Screen {
         drawVerticalLine(matrices, width - sideMenuWidth - 2, labelMenuHeight, height, 0x77AAAAAA);
 
         matrices.push();
-        matrices.translate(0, 0, 440);
+        matrices.translate(0, 0, 200);
         regionButton.render(matrices, mouseX, mouseY, delta);
         nameBar.render(matrices, mouseX, mouseY, delta);
         currentHealthSlider.render(matrices, mouseX, mouseY, delta);
@@ -620,12 +640,14 @@ public class BuilderGui extends Screen {
             e.printStackTrace();
         }
     }
+
     @Override
     public void resize(MinecraftClient client, int width, int height) {
         super.resize(client, width, height);
 
         updateGuiPositions();
     }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         super.mouseClicked(mouseX, mouseY, button);
@@ -646,6 +668,7 @@ public class BuilderGui extends Screen {
 
         return true;
     }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         if (mouseX >= 0 && mouseX < width - sideMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
@@ -669,6 +692,7 @@ public class BuilderGui extends Screen {
 
         if (scrollPixels < 0) scrollPixels = 0;
     }
+
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         super.keyPressed(keyCode, scanCode, modifiers);
@@ -677,6 +701,7 @@ public class BuilderGui extends Screen {
 
         return true;
     }
+
     @Override
     public boolean charTyped(char chr, int modifiers) {
         super.charTyped(chr, modifiers);
@@ -685,6 +710,7 @@ public class BuilderGui extends Screen {
 
         return true;
     }
+
     enum Regions {
         NO_REGION(Text.literal("No Region")),
         KINGS_VALLEY(Text.literal("King's Valley")),
@@ -709,6 +735,7 @@ public class BuilderGui extends Screen {
             };
         }
     }
+
     enum ClassName {
         NO_CLASS(Text.literal("No Class")),
         MAGE(Text.literal("Mage")),
@@ -735,6 +762,7 @@ public class BuilderGui extends Screen {
             return NO_CLASS;
         }
     }
+
     enum Specializations {
         NO_SPECIALIZATION(Text.literal("No Specialization")),
         ARCANIST(Text.literal("Arcanist")),

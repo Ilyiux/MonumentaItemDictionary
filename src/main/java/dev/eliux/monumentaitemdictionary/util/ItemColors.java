@@ -1,6 +1,6 @@
 package dev.eliux.monumentaitemdictionary.util;
 
-public class ItemColours {
+public class ItemColors {
     public static final int DEFAULT_COLOR = 0xFFFFFF;
 
     public static final int TEXT_COLOR = 0x555555;

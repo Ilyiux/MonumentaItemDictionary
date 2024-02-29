@@ -12,6 +12,7 @@ public class Percentage {
             this.val = value;
         }
     }
+
     public Percentage addP(Percentage percentage) {
         this.perc += percentage.perc;
         this.val += percentage.val;
