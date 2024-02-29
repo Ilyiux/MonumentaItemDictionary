@@ -29,6 +29,7 @@ public class Mid implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		System.setProperty("java.awt.headless", "false");
 		openMenuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.monumentaitemdictionary.openitemdictionary", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_H, "category.monumentaitemdictionary"));
 
 		loadData();

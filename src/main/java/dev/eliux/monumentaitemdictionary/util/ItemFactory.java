@@ -15,9 +15,8 @@ public class ItemFactory {
     public static ItemStack fromEncoding(String encoding) {
         try {
             Item item = Registries.ITEM.get(new Identifier(encoding));
-            ItemStack stack = new ItemStack(item, 1);
 
-            return stack;
+            return new ItemStack(item, 1);
         } catch (Exception e) {
             e.printStackTrace();
         }

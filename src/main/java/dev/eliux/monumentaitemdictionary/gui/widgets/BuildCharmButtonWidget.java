@@ -1,12 +1,10 @@
 package dev.eliux.monumentaitemdictionary.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
 import dev.eliux.monumentaitemdictionary.util.ItemColors;
 import dev.eliux.monumentaitemdictionary.util.ItemFactory;
-import java.util.List;
-import java.util.function.Supplier;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
@@ -16,24 +14,44 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
 
-public class CharmButtonWidget extends ButtonWidget {
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+import static java.lang.Math.ceil;
+
+public class BuildCharmButtonWidget extends ButtonWidget {
+    private final Supplier<List<Text>> loreSupplier;
     private final DictionaryCharm charm;
+    private final BuilderGui gui;
     private final ItemStack builtItem;
-    public final int index;
-    private final Supplier<List<Text>> tooltipTextSupplier;
+    private final float scale;
 
-    private final CharmDictionaryGui gui;
-
-    public CharmButtonWidget(int x, int y, int charmSize, int index, Text message, PressAction onPress, DictionaryCharm charm, Supplier<List<Text>> tooltipTextSupplier, CharmDictionaryGui gui) {
-        super(x, y, charmSize, charmSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
-        this.tooltipTextSupplier = tooltipTextSupplier;
+    public BuildCharmButtonWidget(int x, int y, int itemSize, Text message, PressAction onPress, @Nullable DictionaryCharm charm, Supplier<List<Text>> loreSupplier, BuilderGui gui) {
+        super(x, y, itemSize, itemSize, message, onPress, DEFAULT_NARRATION_SUPPLIER);
+        this.loreSupplier = loreSupplier;
         this.charm = charm;
-        this.index = index;
-
         this.gui = gui;
+        this.scale = (float) width/18;
 
-        // dummy itemstack for rendering item icon
-        builtItem = ItemFactory.fromEncoding(charm.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_"));
+        builtItem = getItemStack(charm);
+    }
+
+    private ItemStack getItemStack(@Nullable DictionaryCharm charm) {
+        if (charm == null) {
+            ItemStack builtItem = ItemFactory.fromEncoding("barrier");
+            NbtCompound baseNbt = builtItem.getOrCreateNbt();
+            NbtCompound plain = new NbtCompound();
+            NbtCompound display = new NbtCompound();
+            display.putString("Name", "No Item");
+            plain.put("display", display);
+            baseNbt.put("plain", plain);
+            builtItem.setNbt(baseNbt);
+
+            return builtItem;
+        }
+        ItemStack builtItem = ItemFactory.fromEncoding(charm.baseItem.split("/")[0].trim().toLowerCase().replace(" ", "_"));
         NbtCompound baseNbt = builtItem.getOrCreateNbt();
 
         NbtCompound monumenta = new NbtCompound();
@@ -57,43 +75,45 @@ public class CharmButtonWidget extends ButtonWidget {
         baseNbt.put("plain", plain);
 
         builtItem.setNbt(baseNbt);
+        return builtItem;
     }
 
     @Override
     public void onClick(double mouseX, double mouseY) {
         super.onClick(mouseX, mouseY);
-
-
     }
-     public void scrolled (double mouseX, double mouseY, double amount) {
-     }
+
     @Override
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        int yPixelOffset = -gui.getScrollPixels();
+        RenderSystem.enableDepthTest();
 
         int minX = getX();
-        int minY = getY() + yPixelOffset;
+        int minY = getY();
         int maxX = minX + width;
         int maxY = minY + height;
-
-        // rendering breaks if I do not use this, what is this, why do I have to use this, I don't know
-        RenderSystem.enableDepthTest();
+        int itemSize = (int) (16*scale);
 
         boolean hovered = (mouseX >= minX) && (mouseX <= maxX) && (mouseY >= minY) && (mouseY <= maxY) && (mouseY > gui.labelMenuHeight);
 
         int outlineColor = hovered ? 0xFFC6C6C6 : 0xFFFFFFFF;
         int fillOpacity = hovered ? 0x6B000000 : 0x88000000;
 
-        fill(matrices, minX, minY, maxX, maxY, fillOpacity + ItemColors.getColorForTier(charm.tier));
+        fill(matrices, minX, minY, maxX, maxY, fillOpacity + (charm != null ? ItemColors.getColorForTier(charm.tier) : 0x00000000));
         drawHorizontalLine(matrices, minX, maxX, minY, outlineColor);
         drawHorizontalLine(matrices, minX, maxX, maxY, outlineColor);
         drawVerticalLine(matrices, minX, minY, maxY, outlineColor);
         drawVerticalLine(matrices, maxX, minY, maxY, outlineColor);
 
-        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, minX + (width / 2) - 7, minY + (height / 2) - 7);
+        matrices.push();
+        matrices.scale(scale, scale, scale);
+        MinecraftClient.getInstance().getItemRenderer().renderGuiItemIcon(matrices, builtItem, (int) ceil((minX + (double) width/2 - ceil(
+                (double) itemSize/2))/scale), (int) ceil((minY + (double) height/2 - ceil((double) itemSize/2))/scale));
+        matrices.pop();
 
         if (hovered) {
-            gui.renderTooltip(matrices, tooltipTextSupplier.get(), mouseX, mouseY);
+            List<Text> lines = new ArrayList<>();
+            lines.add(Text.literal("Click to add an item."));
+            gui.renderTooltip(matrices, (charm != null ? loreSupplier.get() : lines), mouseX, mouseY);
         }
     }
 }

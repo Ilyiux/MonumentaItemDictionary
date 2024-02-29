@@ -51,8 +51,6 @@ public class ItemButtonWidget extends ButtonWidget {
     @Override
     public void onClick(double mouseX, double mouseY) {
         super.onClick(mouseX, mouseY);
-
-
     }
 
     public boolean isItem(DictionaryItem item) {

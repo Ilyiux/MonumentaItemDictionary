@@ -1,6 +1,7 @@
 package dev.eliux.monumentaitemdictionary.gui.charm;
 
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
 import dev.eliux.monumentaitemdictionary.gui.widgets.CharmButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
 import dev.eliux.monumentaitemdictionary.util.CharmStat;
@@ -32,7 +33,7 @@ public class CharmDictionaryGui extends Screen {
 
     private final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
-    private ArrayList<CharmButtonWidget> charmButtons = new ArrayList<>();
+    private final ArrayList<CharmButtonWidget> charmButtons = new ArrayList<>();
 
     private TextFieldWidget searchBar;
     private ItemIconButtonWidget reloadCharmsButton;
@@ -42,6 +43,9 @@ public class CharmDictionaryGui extends Screen {
     private ItemIconButtonWidget tipsMasterworkButton;
 
     public final DictionaryController controller;
+    private ItemIconButtonWidget buildDictionaryButton;
+    public boolean isGettingBuildCharm;
+    private ItemIconButtonWidget builderButton;
 
     public CharmDictionaryGui(Text title, DictionaryController controller) {
         super(title);
@@ -54,7 +58,7 @@ public class CharmDictionaryGui extends Screen {
         searchBar = new TextFieldWidget(textRenderer, width / 2 + 90, 7, width / 2 - 100, 15, Text.literal("Search"));
         searchBar.setChangedListener(t -> {
             controller.setCharmNameFilter(searchBar.getText());
-            if (searchBar.getText().equals(""))
+            if (searchBar.getText().isEmpty())
                 controller.clearCharmNameFilter();
 
             buildCharmList();
@@ -62,17 +66,38 @@ public class CharmDictionaryGui extends Screen {
         });
         searchBar.setFocused(true);
 
-        reloadCharmsButton = new ItemIconButtonWidget(5, 5, 20, 20, Text.literal(""), (button) -> {
-            controller.requestAndUpdate();
-        }, Text.literal("Reload All Data"), "globe_banner_pattern", "");
+        reloadCharmsButton = new ItemIconButtonWidget(
+                5, 5, 20, 20,
+                Text.literal(""),
+                (button) -> controller.requestAndUpdate(),
+                Text.literal("Reload All Data"), "globe_banner_pattern", "");
 
-        showItemsButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20, Text.literal(""), (button) -> {
-            controller.setItemDictionaryScreen();
-        }, Text.literal("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), "iron_chestplate", "");
+        showItemsButton = new ItemIconButtonWidget(
+                width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20,
+                Text.literal(""),
+                (button) -> controller.setItemDictionaryScreen(),
+                Text.literal("Item Data").setStyle(Style.EMPTY.withColor(0xFF00FFFF)), "iron_chestplate", "");
 
-        filterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 30, 20, 20, Text.literal(""), (button) -> {
-            controller.setCharmFilterScreen();
-        }, Text.literal("Filter"), "chest", "");
+        buildDictionaryButton = new ItemIconButtonWidget(
+                55, 5, 20, 20,
+                Text.literal(""),
+                (button) -> controller.setBuildDictionaryScreen(),
+                Text.literal("Open Builder GUI"), "iron_chestplate", "");
+
+        builderButton = new ItemIconButtonWidget(
+                55, 5, 20, 20,
+                Text.literal(""),
+                (button) -> {
+                    isGettingBuildCharm = false;
+                    controller.setBuilderScreen();
+                    },
+                Text.literal("Go Back To Builder"), "arrow", "");
+        
+        filterButton = new ItemIconButtonWidget(
+                width - sideMenuWidth + 10, height - 30, 20, 20,
+                Text.literal(""),
+                (button) -> controller.setCharmFilterScreen(),
+                Text.literal("Filter"), "chest", "");
 
         resetFilterButton = new ItemIconButtonWidget(width - sideMenuWidth + 10, height - 60, 20, 20, Text.literal(""), (button) -> {
             controller.charmFilterGui.clearFilters();
@@ -80,9 +105,11 @@ public class CharmDictionaryGui extends Screen {
             buildCharmList();
         }, Text.literal("Reset Filters").setStyle(Style.EMPTY.withColor(0xFFFF0000)), "barrier", "");
 
-        tipsMasterworkButton = new ItemIconButtonWidget(30, 5, 20, 20, Text.literal(""), (button) -> {
-            Util.getOperatingSystem().open("https://github.com/Ilyiux/MonumentaItemDictionary");
-        }, Arrays.asList(
+        tipsMasterworkButton = new ItemIconButtonWidget(
+                30, 5, 20, 20,
+                Text.literal(""),
+                (button) -> Util.getOperatingSystem().open("https://github.com/Ilyiux/MonumentaItemDictionary"),
+                Arrays.asList(
                     Text.literal("Tips").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
                     Text.literal(""),
                     Text.literal("Shift").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to show an item's lore").setStyle(Style.EMPTY.withBold(false).withColor(ItemColors.TEXT_COLOR))),
@@ -120,7 +147,7 @@ public class CharmDictionaryGui extends Screen {
                 }
             });
 
-            if (charmButtons.size() == 0) {
+            if (charmButtons.isEmpty()) {
                 drawCenteredTextWithShadow(matrices, textRenderer, "Found No Charms", width / 2, labelMenuHeight + 10, 0xFF2222);
 
                 if (controller.anyCharms()) {
@@ -147,10 +174,17 @@ public class CharmDictionaryGui extends Screen {
         matrices.translate(0, 0, 110);
         searchBar.render(matrices, mouseX, mouseY, delta);
         reloadCharmsButton.render(matrices, mouseX, mouseY, delta);
-        showItemsButton.render(matrices, mouseX, mouseY, delta);
         filterButton.render(matrices, mouseX, mouseY, delta);
         resetFilterButton.render(matrices, mouseX, mouseY, delta);
         tipsMasterworkButton.render(matrices, mouseX, mouseY, delta);
+
+        if (!isGettingBuildCharm) {
+            showItemsButton.render(matrices, mouseX, mouseY, delta);
+            buildDictionaryButton.render(matrices, mouseX, mouseY, delta);
+        } else {
+            builderButton.render(matrices, mouseX, mouseY, delta);
+        }
+
         matrices.pop();
 
         try {
@@ -177,6 +211,10 @@ public class CharmDictionaryGui extends Screen {
                 if (hasShiftDown() && hasControlDown()) {
                     String wikiFormatted = charm.name.replace(" ", "_").replace("'", "%27");
                     Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
+                } else if (isGettingBuildCharm) {
+                    if (!(charm.power + controller.builderGui.charms.size() >= 13)) {
+                        returnCharm(charm);
+                    }
                 }
 
                 ClientPlayerEntity player = MinecraftClient.getInstance().player;
@@ -188,6 +226,17 @@ public class CharmDictionaryGui extends Screen {
 
             charmButtons.add(button);
         }
+    }
+
+    private void returnCharm(DictionaryCharm charm) {
+        BuilderGui builderGui = controller.builderGui;
+
+        builderGui.charms.add(charm);
+
+        controller.setBuilderScreen();
+        controller.builderGui.updateButtons();
+
+        isGettingBuildCharm = false;
     }
 
     @Override
@@ -239,15 +288,21 @@ public class CharmDictionaryGui extends Screen {
 
         searchBar.mouseClicked(mouseX, mouseY, button);
         reloadCharmsButton.mouseClicked(mouseX, mouseY, button);
-        showItemsButton.mouseClicked(mouseX, mouseY, button);
         filterButton.mouseClicked(mouseX, mouseY, button);
         resetFilterButton.mouseClicked(mouseX, mouseY, button);
         tipsMasterworkButton.mouseClicked(mouseX, mouseY, button);
 
+        if (!isGettingBuildCharm) {
+            showItemsButton.mouseClicked(mouseX, mouseY, button);
+            buildDictionaryButton.mouseClicked(mouseX, mouseY, button);
+        } else {
+            builderButton.mouseClicked(mouseX, mouseY, button);
+        }
+
         return true;
     }
 
-    private List<Text> generateCharmLoreText(DictionaryCharm charm) {
+    public List<Text> generateCharmLoreText(DictionaryCharm charm) {
         List<Text> lines = new ArrayList<>();
 
         lines.add(Text.literal(charm.name).setStyle(Style.EMPTY
@@ -290,6 +345,11 @@ public class CharmDictionaryGui extends Screen {
             lines.add(Text.literal("[ALT] + Click to generate this item").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
         }
         lines.add(Text.literal("[CTRL] [SHIFT] + Click to open in the wiki").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+        Screen currentScreen = MinecraftClient.getInstance().currentScreen;
+        if (currentScreen instanceof BuilderGui) {
+            lines.add(Text.literal("[SHIFT] + Click to delete item")
+                    .setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)));
+        }
         lines.add(Text.literal(charm.baseItem).setStyle(Style.EMPTY
                 .withColor(ItemColors.TEXT_COLOR)));
 
@@ -327,7 +387,7 @@ public class CharmDictionaryGui extends Screen {
             charmButtons.forEach((b) -> b.scrolled(mouseX, mouseY, amount));
         } else {
             if (mouseX >= 0 && mouseX < width - sideMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
-                scrollPixels += -amount * 22; // scaled
+                scrollPixels += (int) (-amount * 22); // scaled
 
                 updateScrollLimits();
             }

@@ -2,6 +2,10 @@ package dev.eliux.monumentaitemdictionary.gui;
 
 import com.google.gson.*;
 import dev.eliux.monumentaitemdictionary.Mid;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuildDictionaryGui;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuildFilterGui;
+import dev.eliux.monumentaitemdictionary.gui.builder.BuilderGui;
+import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.CharmFilterGui;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
@@ -9,12 +13,11 @@ import dev.eliux.monumentaitemdictionary.gui.generator.GeneratorGui;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
 import dev.eliux.monumentaitemdictionary.gui.item.ItemDictionaryGui;
 import dev.eliux.monumentaitemdictionary.gui.item.ItemFilterGui;
-import dev.eliux.monumentaitemdictionary.util.CharmStat;
-import dev.eliux.monumentaitemdictionary.util.Filter;
-import dev.eliux.monumentaitemdictionary.util.ItemFormatter;
-import dev.eliux.monumentaitemdictionary.util.ItemStat;
+import dev.eliux.monumentaitemdictionary.util.*;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
-import java.util.Map;
+
+import java.util.*;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -24,17 +27,18 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
+@SuppressWarnings("CallToPrintStackTrace")
 public class DictionaryController {
     private String itemNameFilter;
     private boolean hasItemNameFilter = false;
     private String charmNameFilter;
     private boolean hasCharmNameFilter = false;
+    private String buildNameFilter;
+    private boolean hasBuildNameFilter = false;
     private ArrayList<Filter> itemFilters = new ArrayList<>();
     private ArrayList<Filter> charmFilters = new ArrayList<>();
+    private ArrayList<Filter> buildFilters = new ArrayList<>();
 
     private ArrayList<String> allItemTypes;
     private ArrayList<String> allItemRegions;
@@ -55,6 +59,8 @@ public class DictionaryController {
     private ArrayList<DictionaryItem> validItems;
     private final ArrayList<DictionaryCharm> charms;
     private ArrayList<DictionaryCharm> validCharms;
+    private ArrayList<DictionaryBuild> builds;
+    private ArrayList<DictionaryBuild> validBuilds;
 
     // private @Nullable CompletableFuture<ItemApiResponse> itemResponseFuture = null;
 
@@ -71,6 +77,12 @@ public class DictionaryController {
     public boolean charmGuiPreviouslyOpened = false;
     public CharmFilterGui charmFilterGui;
     public boolean charmFilterGuiPreviouslyOpened = false;
+    public BuildDictionaryGui buildDictionaryGui;
+    public boolean buildFilterGuiPreviouslyOpened = false;
+    public BuildFilterGui buildFilterGui;
+    public boolean buildDictionaryGuiPreviouslyOpened = false;
+    public BuilderGui builderGui;
+    public boolean builderGuiPreviouslyOpened = false;
 
     public Screen lastOpenedScreen = null;
 
@@ -81,14 +93,20 @@ public class DictionaryController {
         validItems = new ArrayList<>();
         charms = new ArrayList<>();
         validCharms = new ArrayList<>();
+        builds = new ArrayList<>();
+        validBuilds = new ArrayList<>();
 
         loadItems();
         loadCharms();
+        loadBuilds();
 
         itemGui = new ItemDictionaryGui(Text.literal("Monumenta Item Dictionary"), this);
         itemFilterGui = new ItemFilterGui(Text.literal("Item Filter Menu"), this);
         charmGui = new CharmDictionaryGui(Text.literal("Monumenta Charm Dictionary"), this);
         charmFilterGui = new CharmFilterGui(Text.literal("Charm Filter Menu"), this);
+        buildDictionaryGui = new BuildDictionaryGui(Text.literal("Build Dictionary Menu"), this);
+        builderGui = new BuilderGui(Text.literal("Builder Menu"), this);
+        buildFilterGui = new BuildFilterGui(Text.literal("Build Filter Menu"), this);
 
         generatorGui = new GeneratorGui(Text.literal("Item Generator Options"), this);
     }
@@ -112,10 +130,13 @@ public class DictionaryController {
 
     public void open() {
         if (lastOpenedScreen == null || lastOpenedScreen instanceof ItemDictionaryGui) {
+            itemGui.isGettingBuildItem = false;
             setItemDictionaryScreen();
         } else if (lastOpenedScreen instanceof CharmDictionaryGui) {
+            itemGui.isGettingBuildItem = false;
             setCharmDictionaryScreen();
         } else {
+            itemGui.isGettingBuildItem = false;
             setItemDictionaryScreen();
         }
     }
@@ -139,8 +160,6 @@ public class DictionaryController {
         if (!itemFilterGuiPreviouslyOpened) {
             itemFilterGui.postInit();
             itemFilterGuiPreviouslyOpened = true;
-        } else {
-            //filterGui.updateGuiPositions();
         }
     }
 
@@ -163,8 +182,6 @@ public class DictionaryController {
         if (!charmFilterGuiPreviouslyOpened) {
             charmFilterGui.postInit();
             charmFilterGuiPreviouslyOpened = true;
-        } else {
-            //charmFilterGui.updateGuiPositions();
         }
     }
 
@@ -174,6 +191,40 @@ public class DictionaryController {
         MinecraftClient.getInstance().setScreen(generatorGui);
         generatorGui.postInit();
         return generatorGui;
+    }
+
+    public void setBuildDictionaryScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
+        MinecraftClient.getInstance().setScreen(buildDictionaryGui);
+        if (!buildDictionaryGuiPreviouslyOpened) {
+            buildDictionaryGui.postInit();
+            buildDictionaryGuiPreviouslyOpened = true;
+        } else {
+            buildDictionaryGui.updateGuiPositions();
+        }
+    }
+
+    public void setBuildFilterScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
+        MinecraftClient.getInstance().setScreen(buildFilterGui);
+        if (!buildFilterGuiPreviouslyOpened) {
+            buildFilterGui.postInit();
+            buildFilterGuiPreviouslyOpened = true;
+        }
+    }
+
+    public void setBuilderScreen() {
+        lastOpenedScreen = MinecraftClient.getInstance().currentScreen;
+
+        MinecraftClient.getInstance().setScreen(builderGui);
+        if (!builderGuiPreviouslyOpened) {
+            builderGui.postInit();
+            builderGuiPreviouslyOpened = true;
+        } else {
+            builderGui.updateGuiPositions();
+        }
     }
 
     private String readItemData() {
@@ -199,6 +250,31 @@ public class DictionaryController {
         }
     }
 
+    public String readJsonBuild() {
+        try {
+            File buildsFile = new File("config/mid/builds.json");
+            buildsFile.createNewFile();
+            return Files.readString(buildsFile.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public void writeJsonBuild(JsonObject jsonBuild, int id) {
+        try {
+            File file = new File("config/mid/builds.json");
+
+            JsonObject fileBuilds = JsonParser.parseString((readJsonBuild().isEmpty()) ? "{}" : readJsonBuild()).getAsJsonObject();
+            fileBuilds.add(String.valueOf(id), jsonBuild);
+
+            FileUtils.writeStringToFile(file, fileBuilds.toString(), Charset.defaultCharset());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void requestAndUpdate() {
         Mid.LOGGER.info("Started Data Request");
 
@@ -218,6 +294,56 @@ public class DictionaryController {
 
             Mid.LOGGER.info("Finished Data Request - Failure");
         });
+    }
+
+    private void loadBuilds() {
+        try {
+            ArrayList<DictionaryBuild> buildsInFile = new ArrayList<>();
+
+            JsonElement jsonBuilds = JsonParser.parseString(readJsonBuild());
+            if (jsonBuilds instanceof JsonNull) return;
+            JsonObject data = new Gson().fromJson(jsonBuilds, JsonObject.class);
+            for (Map.Entry<String, JsonElement> buildElement : data.asMap().entrySet()) {
+                int id = Integer.parseInt(buildElement.getKey());
+                JsonObject buildData = (JsonObject) buildElement.getValue();
+
+                String buildName = buildData.get("name").getAsString();
+                String buildRegion = buildData.get("region").getAsString();
+                String buildClass = buildData.get("class").getAsString();
+                String buildSpecialization = buildData.get("specialization").getAsString();
+                boolean buildFavorite = buildData.get("favorite").getAsBoolean();
+
+                JsonObject itemToShow = buildData.get("item_to_show").getAsJsonObject();
+                String itemToShowName = itemToShow.get("name").getAsString();
+                boolean itemToShowIsExalted = itemToShow.get("exalted").getAsBoolean();
+
+                DictionaryItem buildItemToShow = getItemByName(itemToShowName, itemToShowIsExalted);
+
+                ArrayList<DictionaryItem> buildItems = new ArrayList<>();
+                JsonObject rawItems = buildData.get("items").getAsJsonObject();
+                for (String item : rawItems.asMap().keySet()) {
+                    JsonObject itemJsonObject = rawItems.get(item).getAsJsonObject();
+                    if (!itemJsonObject.has("name")) {
+                        buildItems.add(null);
+                        continue;
+                    }
+                    boolean isExalted = itemJsonObject.get("exalted").getAsBoolean();
+                    String itemName = itemJsonObject.get("name").getAsString();
+
+                    buildItems.add(getItemByName(itemName, isExalted));
+                }
+
+                ArrayList<DictionaryCharm> buildCharms = new ArrayList<>();
+                JsonArray rawCharms = buildData.get("charms").getAsJsonArray();
+                for (JsonElement charm : rawCharms.asList()) {
+                    buildCharms.add(getCharmByName(charm.getAsString()));
+                }
+                 buildsInFile.add(new DictionaryBuild(buildName, buildItems, buildCharms, buildItemToShow, buildRegion, buildClass, buildSpecialization, buildFavorite, id));
+            }
+            builds = buildsInFile;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void loadItems() {
@@ -265,7 +391,7 @@ public class DictionaryController {
                     List<String> plainSplit = Arrays.asList(tierPrimitive.getAsString().replace("_", " ").split(" ")); // janky code to patch Event Currency appearing as Event_currency and other future similar events
                     StringBuilder formattedSplit = new StringBuilder();
                     for (String s : plainSplit) {
-                        if (s.length() > 0)
+                        if (!s.isEmpty())
                             formattedSplit.append(s.substring(0, 1).toUpperCase()).append(s.substring(1).toLowerCase());
                         if (plainSplit.indexOf(s) != plainSplit.size() - 1)
                             formattedSplit.append(" ");
@@ -488,6 +614,13 @@ public class DictionaryController {
         hasItemNameFilter = true;
     }
 
+    public void setBuildNameFilter(String nameFilter) {
+        this.buildNameFilter = nameFilter;
+        hasBuildNameFilter = true;
+    }
+
+    public void clearBuildNameFilter() { hasBuildNameFilter = false; }
+
     public void clearItemNameFilter() {
         hasItemNameFilter = false;
     }
@@ -495,13 +628,8 @@ public class DictionaryController {
     public void updateItemFilters(ArrayList<Filter> filters) {
         itemFilters = new ArrayList<>(filters);
     }
-
-    public void resetItemFilters() {
-        itemFilters = new ArrayList<>();
-    }
-
-    public ArrayList<String> getAllCharmRegions() {
-        return allCharmRegions;
+    public void updateBuildFilters(ArrayList<Filter> filters){
+        buildFilters = new ArrayList<>(filters);
     }
 
     public ArrayList<String> getAllCharmTiers() {
@@ -518,6 +646,27 @@ public class DictionaryController {
 
     public ArrayList<String> getAllCharmClasses() {
         return allCharmClasses;
+    }
+
+    public ArrayList<String> getAllSpecializations() {
+        return new ArrayList<>(Arrays.asList(
+                "Arcanist",
+                "Elementalist",
+                "Berskerker",
+                "Guardian",
+                "Hierophant",
+                "Paladin",
+                "Assassin",
+                "Swordsage",
+                "Apothecary",
+                "Harbinger",
+                "Hunter",
+                "Ranger",
+                "Reaper",
+                "Tenebrist",
+                "Hexbreaker",
+                "Soothslayer"
+        ));
     }
 
     public ArrayList<String> getAllCharmStats() {
@@ -540,61 +689,70 @@ public class DictionaryController {
     public void updateCharmFilters(ArrayList<Filter> filters) {
         charmFilters = new ArrayList<>(filters);
     }
-
-    public void resetCharmFilters() {
-        charmFilters = new ArrayList<>();
-    }
-
     public void refreshItems() {
         ArrayList<DictionaryItem> filteredItems = new ArrayList<>(items);
 
         for (Filter filter : itemFilters) {
             if (filter != null) {
-                if (filter.getOption().equals("Stat")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasStat(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasStat(filter.value));
-                            case 2 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
-                            case 3 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
-                            case 4 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
-                            case 5 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
-                            case 6 -> filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                switch (filter.getOption()) {
+                    case "Stat" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.hasStat(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.hasStat(filter.value));
+                                case 2 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
+                                case 3 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
+                                case 4 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
+                                case 5 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
+                                case 6 ->
+                                        filteredItems.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Tier")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasTier() || !i.tier.contains(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasTier() && i.tier.contains(filter.value));
+                    case "Tier" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.hasTier() || !i.tier.contains(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.hasTier() && i.tier.contains(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Region")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasRegion() || !i.region.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasRegion() && i.region.equals(filter.value));
+                    case "Region" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.hasRegion() || !i.region.equals(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.hasRegion() && i.region.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Type")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.type.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.type.equals(filter.value));
+                    case "Type" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.type.equals(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.type.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Location")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.hasLocation() || !i.location.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.hasLocation() && i.location.equals(filter.value));
+                    case "Location" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 ->
+                                        filteredItems.removeIf(i -> !i.hasLocation() || !i.location.equals(filter.value));
+                                case 1 ->
+                                        filteredItems.removeIf(i -> i.hasLocation() && i.location.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Base Item")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredItems.removeIf(i -> !i.baseItem.equals(filter.value));
-                            case 1 -> filteredItems.removeIf(i -> i.baseItem.equals(filter.value));
+                    case "Base Item" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredItems.removeIf(i -> !i.baseItem.equals(filter.value));
+                                case 1 -> filteredItems.removeIf(i -> i.baseItem.equals(filter.value));
+                            }
                         }
                     }
                 }
@@ -603,6 +761,17 @@ public class DictionaryController {
 
         if (hasItemNameFilter)
             filteredItems.removeIf(i -> !i.name.toLowerCase().contains(itemNameFilter.toLowerCase()));
+
+
+        if (itemGui.isGettingBuildItem) {
+            if (itemGui.itemTypeLookingFor.equals("Mainhand")) {
+                filteredItems.removeIf(i -> !i.type.equals("Mainhand") && !i.type.equals("Mainhand Sword") && !i.type.equals("Mainhand Shield") && !i.type.equals("Wand") && !i.type.equals("Axe") && !i.type.equals("Pickaxe") && !i.type.equals("Trident") && !i.type.equals("Snowball") && !i.type.equals("Shovel") && !i.type.equals("Scythe") && !i.type.equals("Bow") && !i.type.equals("Crossbow"));
+            } else if (itemGui.itemTypeLookingFor.equals("Offhand")) {
+                filteredItems.removeIf(i -> !i.type.equals("Offhand") && !i.type.equals("Offhand Sword") && !i.type.equals("Offhand Shield"));
+            } else {
+                filteredItems.removeIf(i -> !i.type.equals(itemGui.itemTypeLookingFor));
+            }
+        }
 
         filteredItems.sort((o1, o2) -> {
             for (Filter f : itemFilters) {
@@ -627,59 +796,72 @@ public class DictionaryController {
 
         for (Filter filter : charmFilters) {
             if (filter != null) {
-                if (filter.getOption().equals("Stat")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.hasStat(filter.value));
-                            case 2 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
-                            case 3 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
-                            case 4 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
-                            case 5 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
-                            case 6 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                switch (filter.getOption()) {
+                    case "Stat" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.hasStat(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.hasStat(filter.value));
+                                case 2 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) >= filter.constant));
+                                case 3 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) > filter.constant));
+                                case 4 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) == filter.constant));
+                                case 5 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) <= filter.constant));
+                                case 6 ->
+                                        filteredCharms.removeIf(i -> !i.hasStat(filter.value) || !(i.getStat(filter.value) < filter.constant));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Tier")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.tier.equals(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.tier.equals(filter.value));
+                    case "Tier" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.tier.equals(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.tier.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Class")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.className.equals(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.className.equals(filter.value));
+                    case "Class" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.className.equals(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.className.equals(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Skill Modifier")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.hasStatModifier(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.hasStatModifier(filter.value));
+                    case "Skill Modifier" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.hasStatModifier(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.hasStatModifier(filter.value));
+                            }
                         }
                     }
-                } else if (filter.getOption().equals("Charm Power")) {
-                    switch (filter.comparator) {
-                        case 2 -> filteredCharms.removeIf(i -> !(i.power >= filter.constant));
-                        case 3 -> filteredCharms.removeIf(i -> !(i.power > filter.constant));
-                        case 4 -> filteredCharms.removeIf(i -> !(i.power == filter.constant));
-                        case 5 -> filteredCharms.removeIf(i -> !(i.power < filter.constant));
-                        case 6 -> filteredCharms.removeIf(i -> !(i.power <= filter.constant));
-                    }
-                } else if (filter.getOption().equals("Location")) {
-                    if (!filter.value.equals("")) {
+                    case "Charm Power" -> {
                         switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.location.equals(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.location.equals(filter.value));
+                            case 2 -> filteredCharms.removeIf(i -> !(i.power >= filter.constant));
+                            case 3 -> filteredCharms.removeIf(i -> !(i.power > filter.constant));
+                            case 4 -> filteredCharms.removeIf(i -> !(i.power == filter.constant));
+                            case 5 -> filteredCharms.removeIf(i -> !(i.power < filter.constant));
+                            case 6 -> filteredCharms.removeIf(i -> !(i.power <= filter.constant));
                         }
                     }
-                } else if (filter.getOption().equals("Base Item")) {
-                    if (!filter.value.equals("")) {
-                        switch (filter.comparator) {
-                            case 0 -> filteredCharms.removeIf(i -> !i.baseItem.equals(filter.value));
-                            case 1 -> filteredCharms.removeIf(i -> i.baseItem.equals(filter.value));
+                    case "Location" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.location.equals(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.location.equals(filter.value));
+                            }
+                        }
+                    }
+                    case "Base Item" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredCharms.removeIf(i -> !i.baseItem.equals(filter.value));
+                                case 1 -> filteredCharms.removeIf(i -> i.baseItem.equals(filter.value));
+                            }
                         }
                     }
                 }
@@ -707,6 +889,51 @@ public class DictionaryController {
         validCharms = filteredCharms;
     }
 
+    public void refreshBuilds() {
+        ArrayList<DictionaryBuild> filteredBuilds = new ArrayList<>(builds);
+
+        for (Filter filter : buildFilters) {
+            if (filter != null) {
+                switch (filter.getOption()) {
+                    case "Region" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredBuilds.removeIf(build -> !build.region.equals(filter.value));
+                                case 1 -> filteredBuilds.removeIf(build -> build.region.equals(filter.value));
+                            }
+                        }
+                    }
+                    case "Class" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredBuilds.removeIf(build -> !build.className.equals(filter.value));
+                                case 1 -> filteredBuilds.removeIf(build -> build.className.equals(filter.value));
+                            }
+                        }
+                    }
+                    case "Specialization" -> {
+                        if (!filter.value.isEmpty()) {
+                            switch (filter.comparator) {
+                                case 0 -> filteredBuilds.removeIf(build -> !build.specialization.equals(filter.value));
+                                case 1 -> filteredBuilds.removeIf(build -> build.specialization.equals(filter.value));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (hasBuildNameFilter) filteredBuilds.removeIf(build -> !build.name.toLowerCase().contains(buildNameFilter.toLowerCase()));
+
+        filteredBuilds.sort((b1, b2) -> {
+            if (b1.favorite && b2.favorite) return 0;
+            else if (b1.favorite) return -1;
+            else return 1;
+        });
+
+        validBuilds = filteredBuilds;
+    }
+
     public ArrayList<DictionaryItem> getItems() {
         return validItems;
     }
@@ -715,11 +942,124 @@ public class DictionaryController {
         return validCharms;
     }
 
+    public ArrayList<DictionaryBuild> getBuilds() {
+        return validBuilds;
+    }
+    public void addBuild(DictionaryBuild build) {
+        builds.add(build);
+    }
+
     public boolean anyItems() {
-        return items.size() == 0;
+        return items.isEmpty();
     }
 
     public boolean anyCharms() {
-        return charms.size() == 0;
+        return charms.isEmpty();
+    }
+
+    public DictionaryItem getItemByName(String itemName, boolean isExalted) {
+        List<DictionaryItem> possibleItems = new ArrayList<>();
+        for (DictionaryItem item : items) {
+            if (item.name.equals(itemName)) {
+                possibleItems.add(item);
+            }
+        }
+
+        if (possibleItems.size() == 1) {
+            return possibleItems.get(0);
+        } else if (possibleItems.size() > 1) {
+            for (DictionaryItem item : possibleItems) {
+                if (isExalted && item.region.equals("Ring")) {
+                    return item;
+                } else if (!isExalted && !item.region.equals("Ring")) {
+                    return item;
+                }
+            }
+        }
+        return null;
+    }
+    public DictionaryCharm getCharmByWeirdName(String rawCharm) {
+        String[] rawCharmParts = rawCharm.split("-");
+
+        String preffix = rawCharmParts[0].replaceAll("_", " ");
+        String suffix = rawCharmParts[1].replaceAll("_", " ");
+        int power = Integer.parseInt(rawCharmParts[2]);
+        String classLetter = rawCharmParts[3];
+
+        for (DictionaryCharm charm : charms) {
+            String name = charm.name;
+            if (name.substring(0, 3).equals(preffix) && name.contains(suffix) && charm.power == power && charm.className.startsWith(classLetter)) {
+                return charm;
+            }
+        }
+        return null;
+    }
+
+    public DictionaryCharm getCharmByName(String charmName) {
+        for (DictionaryCharm charm : charms) {
+            String name = charm.name;
+            if (name.equals(charmName)) {
+                return charm;
+            }
+        }
+        return null;
+    }
+
+    public void getItemFromDictionary(String itemType) {
+        itemGui.isGettingBuildItem = true;
+        itemGui.itemTypeLookingFor = itemType;
+        setItemDictionaryScreen();
+    }
+
+    public void getCharmFromDictionary() {
+        charmGui.isGettingBuildCharm = true;
+        setCharmDictionaryScreen();
+    }
+
+    public void toggleJsonBuildFavorite(int id) {
+        try {
+            File file = new File("config/mid/builds.json");
+
+            JsonObject fileBuilds = JsonParser.parseString(readJsonBuild()).getAsJsonObject();
+
+            for (String buildIdString : fileBuilds.asMap().keySet()) {
+                int buildId = Integer.parseInt(buildIdString);
+                if (buildId == id) {
+                    JsonObject build = fileBuilds.get(String.valueOf(id)).getAsJsonObject();
+                    boolean favoriteStatus = build.get("favorite").getAsBoolean();
+                    build.addProperty("favorite", !favoriteStatus);
+
+                    fileBuilds.add(String.valueOf(id), build);
+                }
+            }
+
+            FileUtils.writeStringToFile(file, fileBuilds.toString(), Charset.defaultCharset());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean idExists(int id) {
+        JsonElement fileBuildsElement = JsonParser.parseString(readJsonBuild());
+        if (fileBuildsElement instanceof JsonNull) return false;
+        JsonObject fileBuilds = fileBuildsElement.getAsJsonObject();
+
+        for (String buildIdString : fileBuilds.asMap().keySet()) if (Integer.parseInt(buildIdString) == id) return true;
+        return false;
+    }
+
+    public void deleteBuildFromJson(int id) {
+        try {
+            File file = new File("config/mid/builds.json");
+
+            JsonObject fileBuilds = JsonParser.parseString(readJsonBuild()).getAsJsonObject();
+
+            fileBuilds.remove(String.valueOf(id));
+
+            FileUtils.writeStringToFile(file, fileBuilds.toString(), Charset.defaultCharset());
+            builds.removeIf(build -> build.id == id);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

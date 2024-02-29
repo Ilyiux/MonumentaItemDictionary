@@ -62,7 +62,6 @@ public class DictionaryItem implements Comparable<DictionaryItem> {
     public ArrayList<ItemStat> getStatsFromMasterwork(int level) {
         return stats.get(level);
     }
-
     public String getNbtNoMasterwork() {
         return nbt.get(0);
     }
