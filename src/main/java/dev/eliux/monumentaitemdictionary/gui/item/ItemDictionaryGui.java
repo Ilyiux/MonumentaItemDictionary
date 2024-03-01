@@ -543,4 +543,8 @@ public class ItemDictionaryGui extends Screen {
     public int getScrollPixels() {
         return scrollPixels;
     }
+
+    public void clearSearchBar() {
+        searchBar.setText("");
+    }
 }

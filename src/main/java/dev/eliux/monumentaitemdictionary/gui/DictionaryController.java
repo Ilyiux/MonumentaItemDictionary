@@ -1008,11 +1008,19 @@ public class DictionaryController {
     public void getItemFromDictionary(String itemType) {
         itemGui.isGettingBuildItem = true;
         itemGui.itemTypeLookingFor = itemType;
+        clearItemNameFilter();
+        itemGui.clearSearchBar();
+        itemFilterGui.clearFilters();
         setItemDictionaryScreen();
     }
 
     public void getCharmFromDictionary() {
         charmGui.isGettingBuildCharm = true;
+        if (charmGuiPreviouslyOpened) {
+            clearCharmNameFilter();
+            charmGui.clearSearchBar();
+            charmFilterGui.clearFilters();
+        }
         setCharmDictionaryScreen();
     }
 
