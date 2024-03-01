@@ -157,7 +157,6 @@ public class BuilderGui extends Screen {
                 .initially(Regions.NO_REGION)
                 .build(55, 5, 125, 20, Text.literal("Region"),
                         (button, region) -> this.region = region);
-        regionButton.setValue(Regions.NO_REGION);
 
         classButton = CyclingButtonWidget.builder(ClassName::getText)
                 .values(ClassName.values())
@@ -166,18 +165,12 @@ public class BuilderGui extends Screen {
                         labelMenuHeight + itemPadding + (itemPadding+buttonSize)*2,
                         width - sideMenuWidth - halfWidth - halfWidthPadding, 20,
                         Text.literal("Class"),
-                        (button, className) -> this.className = className);
-        classButton.setValue(ClassName.NO_CLASS);
+                        (button, className) -> {
+                            this.className = className;
+                            updateSpecializations();
+                        });
 
-        specializationButton = CyclingButtonWidget.builder(Specializations::getText)
-                .values(Specializations.values())
-                .initially(Specializations.NO_SPECIALIZATION)
-                .build(halfWidth + halfWidthPadding,
-                        labelMenuHeight + itemPadding + (itemPadding+buttonSize)*2 + 25,
-                        width - sideMenuWidth - halfWidth - halfWidthPadding, 20,
-                        Text.literal("Spec"),
-                        (button, specialization) -> this.specialization = specialization);
-        specializationButton.setValue(Specializations.NO_SPECIALIZATION);
+        updateSpecializations();
         enabledSituationals = new HashMap<>() {{
             put("shielding", false);
             put("poise", false);
@@ -204,6 +197,27 @@ public class BuilderGui extends Screen {
         this.buildStats = new Stats(buildItems, enabledSituationals, enabledInfusions, currentHealthPercent);
         updateButtons();
         updateGuiPositions();
+    }
+
+    private void updateSpecializations() {
+        specializationButton = CyclingButtonWidget.builder(Specializations::getText)
+                .values(switch (className) {
+                    case NO_CLASS -> List.of(Specializations.NO_SPECIALIZATION);
+                    case MAGE -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.ARCANIST, Specializations.ELEMENTALIST);
+                    case SCOUT -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.HUNTER, Specializations.RANGER);
+                    case ROGUE -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.SWORDSAGE, Specializations.ASSASSIN);
+                    case WARRIOR -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.BERSERKER, Specializations.GUARDIAN);
+                    case ALCHEMIST -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.HARBINGER, Specializations.APOTHECARY);
+                    case WARLOCK -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.TENEBRIST, Specializations.REAPER);
+                    case SHAMAN -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.HEXBREAKER, Specializations.SOOTHSLAYER);
+                    case CLERIC -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.PALADIN, Specializations.HIEROPHANT);
+                })
+                .initially(Specializations.NO_SPECIALIZATION)
+                .build(halfWidth + halfWidthPadding,
+                        labelMenuHeight + itemPadding + (itemPadding+buttonSize)*2 + 25,
+                        width - sideMenuWidth - halfWidth - halfWidthPadding, 20,
+                        Text.literal("Spec"),
+                        (button, specialization) -> this.specialization = specialization);
     }
 
     private void getBuildFromUrl(String buildUrl) {
@@ -323,7 +337,7 @@ public class BuilderGui extends Screen {
         charmsY = labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 2 + (checkBoxSise + itemPadding) * 5 + 85;
         charmsButtonY = (int) ((getCharmsListWithPower().size())/floor((double) (width - sideMenuWidth - charmsX)/(buttonSize + itemPadding)))*
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + 2*itemPadding;
-        statsY = Math.max(labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4, labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*6) + 20;
+        statsY = max(labelMenuHeight + itemPadding + (buttonSize + itemPadding) * 4, labelMenuHeight + itemPadding + (checkBoxSise + itemPadding)*6) + 20;
         statusY = statsY - 20;
 
         showBuildDictionaryButton.setX(width - sideMenuWidth + 10);
