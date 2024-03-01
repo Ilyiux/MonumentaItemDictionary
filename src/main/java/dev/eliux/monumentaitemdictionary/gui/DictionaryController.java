@@ -844,8 +844,8 @@ public class DictionaryController {
                             case 2 -> filteredCharms.removeIf(i -> !(i.power >= filter.constant));
                             case 3 -> filteredCharms.removeIf(i -> !(i.power > filter.constant));
                             case 4 -> filteredCharms.removeIf(i -> !(i.power == filter.constant));
-                            case 5 -> filteredCharms.removeIf(i -> !(i.power < filter.constant));
-                            case 6 -> filteredCharms.removeIf(i -> !(i.power <= filter.constant));
+                            case 5 -> filteredCharms.removeIf(i -> !(i.power <= filter.constant));
+                            case 6 -> filteredCharms.removeIf(i -> !(i.power < filter.constant));
                         }
                     }
                     case "Location" -> {
