@@ -211,6 +211,7 @@ public class BuilderGui extends Screen {
                     case WARLOCK -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.TENEBRIST, Specializations.REAPER);
                     case SHAMAN -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.HEXBREAKER, Specializations.SOOTHSLAYER);
                     case CLERIC -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.PALADIN, Specializations.HIEROPHANT);
+                    case DD_ZENITH -> Specializations.getDDZenithClasses();
                 })
                 .initially(Specializations.NO_SPECIALIZATION)
                 .build(halfWidth + halfWidthPadding,
@@ -685,11 +686,13 @@ public class BuilderGui extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        if (mouseX >= 0 && mouseX < width - sideMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
+        if(classButton.isHovered()) classButton.mouseScrolled(mouseX, mouseY, amount);
+        else if (specializationButton.isHovered()) specializationButton.mouseScrolled(mouseX, mouseY, amount);
+        else if (mouseX >= 0 && mouseX < width - sideMenuWidth && mouseY >= labelMenuHeight && mouseY < height) {
             scrollPixels += (int) (-amount * 22); // scaled
 
             updateScrollLimits();
-            }
+        }
         return true;
     }
 
@@ -759,7 +762,8 @@ public class BuilderGui extends Screen {
         ALCHEMIST(Text.literal("Alchemist")),
         WARLOCK(Text.literal("Warlock")),
         SHAMAN(Text.literal("Shaman")),
-        CLERIC(Text.literal("Cleric"));
+        CLERIC(Text.literal("Cleric")),
+        DD_ZENITH(Text.literal("DD/Zenith"));
 
         private final Text text;
         ClassName(Text text) {
@@ -794,7 +798,16 @@ public class BuilderGui extends Screen {
         SOOTHSLAYER(Text.literal("Soothslayer")),
         HEXBREAKER(Text.literal("Hexbreaker")),
         PALADIN(Text.literal("Paladin")),
-        HIEROPHANT(Text.literal("Hierophant"));
+        HIEROPHANT(Text.literal("Hierophant")),
+
+        NO_CLASS(Text.literal("No class")),
+        DAWNBRINGER(Text.literal("Dawnbringer")),
+        EARTHBOUND(Text.literal("Earthbound")),
+        FLAMECALLER(Text.literal("Flamecaller")),
+        FROSTBORN(Text.literal("Frostborn")),
+        SHADOWDANCER(Text.literal("Shadowdancer")),
+        STEELSAGE(Text.literal("Steelsage")),
+        WINDWALKER(Text.literal("Windwalker"));
 
         private final Text text;
         Specializations(Text text) {
@@ -810,6 +823,10 @@ public class BuilderGui extends Screen {
                 if (specilaziations.text.getString().equals(specialization)) return specilaziations;
             }
             return NO_SPECIALIZATION;
+        }
+
+        public static List<Specializations> getDDZenithClasses() {
+            return Arrays.asList(NO_CLASS, DAWNBRINGER, EARTHBOUND, FLAMECALLER, FROSTBORN, SHADOWDANCER, STEELSAGE, WINDWALKER);
         }
     }
 }
