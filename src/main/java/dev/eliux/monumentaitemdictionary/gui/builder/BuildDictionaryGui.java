@@ -24,6 +24,7 @@ public class BuildDictionaryGui extends Screen {
     public final int labelMenuHeight = 30;
     public final int itemPadding = 10;
     public final int itemSize = 50;
+    private long lastAltPressed = 0;
     public final DictionaryController controller;
     public ArrayList<DictionaryBuild> buildsList;
     public HashMap<DictionaryBuild, BuildButtonWidget> buildsButtons = new HashMap<>();
@@ -273,6 +274,19 @@ public class BuildDictionaryGui extends Screen {
 
         return true;
     }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        super.keyReleased(keyCode, scanCode, modifiers);
+
+        if (keyCode == 342 || keyCode == 346) { // left or right alt pressed
+            lastAltPressed = System.currentTimeMillis();
+        }
+
+        return true;
+    }
+
+
 
     @Override
     public boolean charTyped(char chr, int modifiers) {

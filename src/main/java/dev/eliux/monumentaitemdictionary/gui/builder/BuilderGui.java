@@ -64,7 +64,7 @@ public class BuilderGui extends Screen {
     private TextFieldWidget nameBar;
     private SliderWidget currentHealthSlider;
     private ItemIconButtonWidget showBuildDictionaryButton;
-    private ItemIconButtonWidget setBuildFromClipboardButton;
+    private ItemIconButtonWidget buildClipboard;
     private ItemIconButtonWidget addBuildButton;
     private CyclingButtonWidget<Regions> regionButton;
     private Map<String, Boolean> enabledSituationals;
@@ -74,7 +74,7 @@ public class BuilderGui extends Screen {
     private double currentHealthPercent = 100;
     private int scrollPixels = 0;
     private int statusY;
-    private String statusText = "";
+    private Text statusText = Text.literal("");
     private CyclingButtonWidget<ClassName> classButton;
     private CyclingButtonWidget<Specializations> specializationButton;
 
@@ -89,7 +89,7 @@ public class BuilderGui extends Screen {
                 (buttonSize + itemPadding) - scrollPixels + buttonSize + itemPadding;
         this.halfWidth = width/2;
         this.scrollPixels = 0;
-        this.statusText = "";
+        this.statusText = Text.literal("");
 
         nameBar = new TextFieldWidget(textRenderer,
                 190 + textRenderer.getWidth(Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true))),
@@ -97,7 +97,7 @@ public class BuilderGui extends Screen {
                 width - itemPadding - (185 + textRenderer.getWidth(Text.literal("Monumenta Builder").setStyle(Style.EMPTY.withBold(true)))),
                 20, Text.literal("Build Name"));
         nameBar.setPlaceholder(Text.literal("Build Name: "));
-        nameBar.setChangedListener(text -> statusText = "");
+        nameBar.setChangedListener(text -> statusText = Text.literal(""));
         nameBar.setText("");
 
         currentHealthSlider = new SliderWidget(
@@ -119,13 +119,12 @@ public class BuilderGui extends Screen {
             }
         };
 
-        setBuildFromClipboardButton = new ItemIconButtonWidget(30, 5, 20, 20, Text.literal(""), (button) -> {
-            String buildUrl = new Clipboard().getClipboard(0, (e, d) -> Mid.LOGGER.info("Failed to get Clipboard"));
-            if (verifyUrl(buildUrl)) {
-                getBuildFromUrl(buildUrl);
-            }
-        }, Text.literal("Set Build From Clipboard"), "name_tag", "");
-
+        buildClipboard = new ItemIconButtonWidget(30, 5, 20, 20, Text.literal(""), (button) -> buildClipboardButtonClicked(),
+                Arrays.asList(Text.literal("Build Clipboard").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
+                        Text.literal("Click").setStyle(Style.EMPTY.withBold(true)).append("to set a build from your clipboard").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)),
+                        Text.literal(""),
+                        Text.literal("SHIFT + Click").setStyle(Style.EMPTY.withBold(true)).append("to copy the build url of the current build").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR))),
+                "name_tag", "");
         showBuildDictionaryButton = new ItemIconButtonWidget(
                 width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20,
                 Text.literal(""),
@@ -137,8 +136,8 @@ public class BuilderGui extends Screen {
                 5, 5, 20, 20,
                 Text.literal(""),
                 (button) -> {
-                    if (itemOnBuildButton == null) statusText = "Please select an item to appear on your Build Icon";
-                    else if (nameBar.getText().isBlank()) statusText = "Please put a name to your Build";
+                    if (itemOnBuildButton == null) statusText = Text.literal("Please select an item to appear on your Build Icon").setStyle(Style.EMPTY.withColor(0xFFFF0000));
+                    else if (nameBar.getText().isBlank()) statusText = Text.literal("Please put a name to your Build").setStyle(Style.EMPTY.withColor(0xFFFF0000));
                     else {
                         controller.buildDictionaryGui.addBuild(nameBar.getText(), buildItems, charms,
                                 itemOnBuildButton, switch (region) {
@@ -199,6 +198,61 @@ public class BuilderGui extends Screen {
         updateGuiPositions();
     }
 
+    private void buildClipboardButtonClicked() {
+        if (hasShiftDown()) {
+            getBuildUrl();
+        } else {
+            String buildUrl = new Clipboard().getClipboard(0, (e, d) -> Mid.LOGGER.info("Failed to get Clipboard"));
+            if (verifyUrl(buildUrl)) {
+                getBuildFromUrl(buildUrl);
+            }
+        }
+    }
+
+    private void getBuildUrl() {
+        StringBuilder baseUrl = new StringBuilder("https://ohthemisery-psi.vercel.app/builder/");
+        for (int i = 0; i < itemTypesIndex.size(); i++) {
+            DictionaryItem item  = buildItems.get(i);
+            baseUrl.append(itemTypesIndex.get(i).substring(0, 1).toLowerCase()).append("=");
+            if (item != null) {
+                if (!item.region.equals("Ring")) baseUrl.append(item.name.replace(" ", "%20")).append("&");
+                else {
+                    if (isItemExalted(item)) baseUrl.append("EX ");
+                    baseUrl.append(item.name.replace(" ", "%20")).append(String.format("-%d", item.getMaxMasterwork()-1)).append("&");
+                }
+            } else baseUrl.append("None&");
+        }
+
+        baseUrl.append("charm=");
+        if (!charms.isEmpty()) {
+            baseUrl.append(charms.stream().map(this::getWeirdCharmName).collect(Collectors.joining(",")));
+        } else baseUrl.append("None");
+
+        Clipboard clipboard = new Clipboard();
+        clipboard.setClipboard(0, baseUrl.toString());
+        statusText = Text.literal("Build Url copied to your clipboard!").setStyle(Style.EMPTY.withColor(0xFF00FF00));
+    }
+
+    private boolean isItemExalted(DictionaryItem itemToCheck) {
+        List<DictionaryItem> itemsWithSameName = controller.getItems().stream().filter(item -> item.name.equals(itemToCheck.name)).toList();
+        return itemsWithSameName.size() > 1;
+    }
+
+    private ArrayList<String> extractRelevantLetters(String charmName, int n) {
+        ArrayList<String> parts = new ArrayList<>();
+        parts.add(charmName.substring(0, 3).replace(" ", "_"));
+        parts.add((charmName.length() - 3 < n) ? charmName.substring(3).replace(" ", "_") : charmName.substring(charmName.length() - n).replace(" ", "_"));
+
+        return parts;
+    }
+
+    private String getWeirdCharmName(DictionaryCharm charm) {
+        ArrayList<String> relevantLetters = extractRelevantLetters(charm.name.replace(" Charm", ""), 6);
+        return String.format("%s-%s-%d-%s", relevantLetters.get(0), relevantLetters.get(1), charm.power, charm.className.charAt(0));
+    }
+
+
+
     private void updateSpecializations() {
         specializationButton = CyclingButtonWidget.builder(Specializations::getText)
                 .values(switch (className) {
@@ -235,7 +289,7 @@ public class BuilderGui extends Screen {
             }
 
             if (itemName.contains("EX")) {
-                itemName = itemName.replaceAll("EX ", "");
+                itemName = itemName.replace("EX ", "");
                 isExalted = true;
             }
 
@@ -322,7 +376,7 @@ public class BuilderGui extends Screen {
             updateStats();
         } else if (!shiftDown && item != null) {
             itemOnBuildButton = item;
-            statusText = "";
+            statusText = Text.literal("");
         } else if (item != null) {
             String wikiFormatted = item.name.replace(" ", "_").replace("'", "%27");
             Util.getOperatingSystem().open("https://monumenta.wiki.gg/wiki/" + wikiFormatted);
@@ -559,8 +613,8 @@ public class BuilderGui extends Screen {
                     charmsX, charmsY-30 - scrollPixels, 0xFFFF0000);
         }
 
-        if (!statusText.isEmpty()) {
-            drawTextWithShadow(matrices, textRenderer, Text.literal(statusText), itemPadding, statusY - scrollPixels, 0xFFFF0000);
+        if (!statusText.getString().isEmpty()) {
+            drawTextWithShadow(matrices, textRenderer, statusText, itemPadding, statusY - scrollPixels, 0xFFFF0000);
         }
     }
 
@@ -645,7 +699,7 @@ public class BuilderGui extends Screen {
         nameBar.render(matrices, mouseX, mouseY, delta);
         currentHealthSlider.render(matrices, mouseX, mouseY, delta);
         addBuildButton.render(matrices, mouseX, mouseY, delta);
-        setBuildFromClipboardButton.render(matrices, mouseX, mouseY, delta);
+        buildClipboard.render(matrices, mouseX, mouseY, delta);
         showBuildDictionaryButton.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
 

@@ -16,6 +16,7 @@ import dev.eliux.monumentaitemdictionary.gui.item.ItemFilterGui;
 import dev.eliux.monumentaitemdictionary.util.*;
 import dev.eliux.monumentaitemdictionary.web.WebManager;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import net.minecraft.client.MinecraftClient;
@@ -254,7 +255,7 @@ public class DictionaryController {
         try {
             File buildsFile = new File("config/mid/builds.json");
             buildsFile.createNewFile();
-            return Files.readString(buildsFile.toPath());
+            return Files.readString(buildsFile.toPath(), StandardCharsets.ISO_8859_1);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -981,8 +982,8 @@ public class DictionaryController {
     public DictionaryCharm getCharmByWeirdName(String rawCharm) {
         String[] rawCharmParts = rawCharm.split("-");
 
-        String preffix = rawCharmParts[0].replaceAll("_", " ");
-        String suffix = rawCharmParts[1].replaceAll("_", " ");
+        String preffix = rawCharmParts[0].replace("_", " ");
+        String suffix = rawCharmParts[1].replace("_", " ");
         int power = Integer.parseInt(rawCharmParts[2]);
         String classLetter = rawCharmParts[3];
 
