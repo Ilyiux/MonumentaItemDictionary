@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
@@ -727,7 +728,7 @@ public class BuilderGui extends Screen {
         specializationButton.mouseClicked(mouseX, mouseY, button);
         currentHealthSlider.mouseClicked(mouseX, mouseY, button);
         addBuildButton.mouseClicked(mouseX, mouseY, button);
-        setBuildFromClipboardButton.mouseClicked(mouseX, mouseY, button);
+        buildClipboard.mouseClicked(mouseX, mouseY, button);
         showBuildDictionaryButton.mouseClicked(mouseX, mouseY, button);
 
         situationalCheckBoxList.forEach((b) -> b.mouseClicked(mouseX, mouseY, button));
