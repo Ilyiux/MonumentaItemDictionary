@@ -206,6 +206,86 @@ public class BuilderGui extends Screen {
         updateGuiPositions();
     }
 
+<<<<<<< HEAD
+=======
+    private void buildClipboardButtonClicked() {
+        if (hasShiftDown()) {
+            getBuildUrl();
+        } else {
+            String buildUrl = new Clipboard().getClipboard(0, (e, d) -> Mid.LOGGER.info("Failed to get Clipboard"));
+            if (verifyUrl(buildUrl)) {
+                getBuildFromUrl(buildUrl);
+            }
+        }
+    }
+
+    private void getBuildUrl() {
+        StringBuilder baseUrl = new StringBuilder("https://ohthemisery-psi.vercel.app/builder/");
+        for (int i = 0; i < itemTypesIndex.size(); i++) {
+            DictionaryItem item  = buildItems.get(i);
+            baseUrl.append(itemTypesIndex.get(i).substring(0, 1).toLowerCase()).append("=");
+            if (item != null) {
+                if (!item.region.equals("Ring")) baseUrl.append(item.name.replace(" ", "%20")).append("&");
+                else {
+                    if (isItemExalted(item.name)) baseUrl.append("EX ");
+                    baseUrl.append(item.name.replace(" ", "%20")).append(String.format("-%d", item.getMaxMasterwork()-1)).append("&");
+                }
+            } else baseUrl.append("None&");
+        }
+
+        baseUrl.append("charm=");
+        if (!charms.isEmpty()) {
+            baseUrl.append(charms.stream().map(this::getWeirdCharmName).collect(Collectors.joining(",")));
+        } else baseUrl.append("None");
+
+        Clipboard clipboard = new Clipboard();
+        clipboard.setClipboard(0, baseUrl.toString());
+        statusText = Text.literal("Build Url copied to your clipboard!").setStyle(Style.EMPTY.withColor(0xFF00FF00));
+    }
+
+    public boolean isItemExalted(String itemToCheck) {
+        List<DictionaryItem> itemsWithSameName = controller.getItems().stream().filter(item -> item.name.equals(itemToCheck)).toList();
+        return itemsWithSameName.size() > 1;
+    }
+
+    private ArrayList<String> extractRelevantLetters(String charmName, int n) {
+        ArrayList<String> parts = new ArrayList<>();
+        parts.add(charmName.substring(0, 3).replace(" ", "_"));
+        parts.add((charmName.length() - 3 < n) ? charmName.substring(3).replace(" ", "_") : charmName.substring(charmName.length() - n).replace(" ", "_"));
+
+        return parts;
+    }
+
+    private String getWeirdCharmName(DictionaryCharm charm) {
+        ArrayList<String> relevantLetters = extractRelevantLetters(charm.name.replace(" Charm", ""), 6);
+        return String.format("%s-%s-%d-%s", relevantLetters.get(0), relevantLetters.get(1), charm.power, charm.className.charAt(0));
+    }
+
+
+
+    private void updateSpecializations() {
+        specializationButton = CyclingButtonWidget.builder(Specializations::getText)
+                .values(switch (className) {
+                    case NO_CLASS -> List.of(Specializations.NO_SPECIALIZATION);
+                    case MAGE -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.ARCANIST, Specializations.ELEMENTALIST);
+                    case SCOUT -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.HUNTER, Specializations.RANGER);
+                    case ROGUE -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.SWORDSAGE, Specializations.ASSASSIN);
+                    case WARRIOR -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.BERSERKER, Specializations.GUARDIAN);
+                    case ALCHEMIST -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.HARBINGER, Specializations.APOTHECARY);
+                    case WARLOCK -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.TENEBRIST, Specializations.REAPER);
+                    case SHAMAN -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.HEXBREAKER, Specializations.SOOTHSLAYER);
+                    case CLERIC -> Arrays.asList(Specializations.NO_SPECIALIZATION, Specializations.PALADIN, Specializations.HIEROPHANT);
+                    case DD_ZENITH -> Specializations.getDDZenithClasses();
+                })
+                .initially(Specializations.NO_SPECIALIZATION)
+                .build(halfWidth + halfWidthPadding,
+                        labelMenuHeight + itemPadding + (itemPadding+buttonSize)*2 + 25,
+                        width - sideMenuWidth - halfWidth - halfWidthPadding, 20,
+                        Text.literal("Spec"),
+                        (button, specialization) -> this.specialization = specialization);
+    }
+
+>>>>>>> 19671f3 (Added a button to open BuilderGui with the items on the /ps command)
     private void getBuildFromUrl(String buildUrl) {
         updateUserOptions();
         buildUrl = buildUrl.substring(buildUrl.indexOf("m="));

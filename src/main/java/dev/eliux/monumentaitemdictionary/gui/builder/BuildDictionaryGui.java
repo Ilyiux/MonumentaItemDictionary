@@ -197,12 +197,7 @@ public class BuildDictionaryGui extends Screen {
 
     public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton, String region, String className, String specialization) {
         if (name.isEmpty()) name = "No Name";
-        Random rand = new Random();
-        int id = rand.nextInt(10000);
-
-        while (controller.idExists(id)) {
-            id = rand.nextInt(10000);
-        }
+        int id = controller.generateNewId();
 
         DictionaryBuild build = new DictionaryBuild(name, items, charms, itemOnBuildButton, region, className, specialization, false, id);
         JsonObject jsonBuild = getBuildAsJSON(build);

@@ -1062,4 +1062,14 @@ public class DictionaryController {
             e.printStackTrace();
         }
     }
+
+    public int generateNewId() {
+        Random rand = new Random();
+        int id = rand.nextInt(10000);
+
+        while (idExists(id)) {
+            id = rand.nextInt(10000);
+        }
+        return id;
+    }
 }
