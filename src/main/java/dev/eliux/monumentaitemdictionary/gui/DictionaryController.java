@@ -254,7 +254,7 @@ public class DictionaryController {
         try {
             File buildsFile = new File("config/mid/builds.json");
             buildsFile.createNewFile();
-            return Files.readString(buildsFile.toPath());
+            return Files.readString(buildsFile.toPath(), Charset.defaultCharset());
         } catch (IOException e) {
             e.printStackTrace();
         }
