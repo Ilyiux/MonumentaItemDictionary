@@ -3,11 +3,11 @@ package dev.eliux.monumentaitemdictionary.mixin;
 import dev.eliux.monumentaitemdictionary.Mid;
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
 import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
+import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
-import dev.eliux.monumentaitemdictionary.gui.widgets.BuildButtonWidget;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
+import net.minecraft.block.Material;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.AbstractParentElement;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -16,11 +16,10 @@ import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.screen.ScreenHandler;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -34,10 +33,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Mixin(Screen.class)
-public abstract class ScreenHandlerMixin  extends AbstractParentElement {
-    @Shadow @Final private List<Selectable> selectables;
-    @Shadow @Final private List<Element> children;
-
+public abstract class ScreenHandlerMixin {
     @Shadow protected abstract <T extends Element & Selectable> T addSelectableChild(T child);
 
     @Shadow protected abstract <T extends Element & Drawable & Selectable> T addDrawableChild(T drawableElement);
@@ -54,36 +50,73 @@ public abstract class ScreenHandlerMixin  extends AbstractParentElement {
 
     @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
     private void init(MinecraftClient client, int width, int height, CallbackInfo ci) {
-        if (client.currentScreen instanceof GenericContainerScreen && Objects.requireNonNull(client.currentScreen).getTitle().getString().equals("Player Stats Calculator")) {
+        String inventoryTitle = Objects.requireNonNull(client.currentScreen).getTitle().getString();
+        if (client.currentScreen instanceof GenericContainerScreen && (inventoryTitle.equals("Player Stats Calculator") || inventoryTitle.equals("Mechanical Armory"))) {
             int x = ((HandledScreenAccessor) client.currentScreen).getX() + ((HandledScreenAccessor) client.currentScreen).getBackGroundWidth() - 20;
             int y = ((HandledScreenAccessor) client.currentScreen).getY() - 20;
             buildFromInventoryButton =
                     new ItemIconButtonWidget(x, y, 20, 20, Text.literal(""), button -> {
                         DictionaryController controller = new DictionaryController();
                         DefaultedList<Slot> slots = ((HandledScreenAccessor) client.currentScreen).getHandler().slots;
-                        List<Integer> slotsInOrderOfBuild = Arrays.asList(52, 25, 26, 35, 44, 53);
-                        List<DictionaryItem> itemsFromBuild = new ArrayList<>();
-                        String region = slots.get(4).getStack().getName().getString();
-                        if (region.contains("Ring")) region = "Ring";
-                        else if (region.contains("Isles")) region = "Isles";
-                        else if (region.contains("Valley")) region = "Valley";
 
-                        for (int slot : slotsInOrderOfBuild) {
-                            String itemName = slots.get(slot).getStack().getName().getString();
-                            boolean isExalted =
-                                    slots.get(slot).getStack().getTooltip(client.player, TooltipContext.BASIC).stream()
-                                            .anyMatch(text -> text.getString().contains("Ring"));
-                            itemsFromBuild.add(controller.getItemByName(itemName, isExalted));
-                        }
+                        DictionaryBuild buildFromInventory = (inventoryTitle.equals("Mechanical Armory")) ? getBuildFromMechanicalArmory(client, slots, controller) : getBuildFromPlayerStats(client, slots, controller);
 
                         this.close();
-                        int id = controller.generateNewId();
                         controller.setBuilderScreen();
-                        controller.builderGui.loadItems(new DictionaryBuild("", itemsFromBuild, List.of(), null, region, "", "", false, id));
+                        controller.builderGui.loadItems(buildFromInventory);
                     }, Text.literal("Add build from current inventory"), "name_tag", "");
             addSelectableChild(buildFromInventoryButton);
             addDrawableChild(buildFromInventoryButton);
         }
+    }
+    @Unique
+    private DictionaryBuild getBuildFromMechanicalArmory(MinecraftClient client, DefaultedList<Slot> slots, DictionaryController controller) {
+        List<String> slotItemNames = slots.stream().map(slot -> slot.getStack().getName().getString()).toList();
+        List<DictionaryItem> itemsFromBuild = new ArrayList<>();
+        List<Integer> itemsInOrderOfBuild = Arrays.asList(18, 15, 11, 12, 13, 14);
+        List<DictionaryCharm> charms = new ArrayList<>();
+
+        String name = slotItemNames.get(4);
+
+        for (int slot : itemsInOrderOfBuild) {
+            String itemName = slotItemNames.get(slot);
+            boolean isExalted =
+                    slots.get(slot).getStack().getTooltip(client.player, TooltipContext.BASIC).stream()
+                            .anyMatch(text -> text.getString().contains("Exalted version"));
+            itemsFromBuild.add(controller.getItemByName(itemName, isExalted));
+        }
+
+        if (!slotItemNames.get(36).equals("Charms Excluded")) {
+            List<Integer> charmSlots = Arrays.asList(38, 39, 40, 41, 42, 43, 44);
+            for (int slot : charmSlots) {
+                String charmName = slotItemNames.get(slot);
+                if (charmName.isEmpty()) break;
+                charms.add(controller.getCharmByName(slotItemNames.get(slot)));
+            }
+        }
+
+        int id = controller.generateNewId();
+        return new DictionaryBuild(name, itemsFromBuild, charms, null, "", "", "", false, id);
+    }
+
+    @Unique
+    private static DictionaryBuild getBuildFromPlayerStats(MinecraftClient client, DefaultedList<Slot> slots, DictionaryController controller) {
+        List<DictionaryItem> itemsFromBuild = new ArrayList<>();
+        List<Integer> slotsInOrderOfBuild = Arrays.asList(52, 25, 26, 35, 44, 53);
+        String region = slots.get(4).getStack().getName().getString();
+        if (region.contains("Ring")) region = "Ring";
+        else if (region.contains("Isles")) region = "Isles";
+        else if (region.contains("Valley")) region = "Valley";
+
+        for (int slot : slotsInOrderOfBuild) {
+            String itemName = slots.get(slot).getStack().getName().getString();
+            boolean isExalted =
+                    slots.get(slot).getStack().getTooltip(client.player, TooltipContext.BASIC).stream()
+                            .anyMatch(text -> text.getString().contains("Ring"));
+            itemsFromBuild.add(controller.getItemByName(itemName, isExalted));
+        }
+        int id = controller.generateNewId();
+        return new DictionaryBuild("", itemsFromBuild, List.of(), null, region, "", "", false, id);
     }
 
     @Inject(method = "close", at = @At("HEAD"))
