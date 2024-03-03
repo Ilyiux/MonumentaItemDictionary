@@ -1,22 +1,21 @@
 package dev.eliux.monumentaitemdictionary.mixin;
 
-import dev.eliux.monumentaitemdictionary.Mid;
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
 import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
 import dev.eliux.monumentaitemdictionary.gui.item.DictionaryItem;
 import dev.eliux.monumentaitemdictionary.gui.widgets.ItemIconButtonWidget;
-import net.minecraft.block.Material;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
@@ -43,7 +42,12 @@ public abstract class ScreenHandlerMixin {
     @Unique private ButtonWidget buildFromInventoryButton = null;
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (buildFromInventoryButton != null) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        Screen currentScreen = client.currentScreen;
+        if (currentScreen instanceof GenericContainerScreen && buildFromInventoryButton != null) {
+            buildFromInventoryButton.active = !isOnArmoryMainscreen(
+                    currentScreen.getTitle().getString(),
+                    ((HandledScreenAccessor) currentScreen).getHandler().slots);
             buildFromInventoryButton.renderButton(matrices, mouseX, mouseY, delta);
         }
     }
@@ -54,21 +58,30 @@ public abstract class ScreenHandlerMixin {
         if (client.currentScreen instanceof GenericContainerScreen && (inventoryTitle.equals("Player Stats Calculator") || inventoryTitle.equals("Mechanical Armory"))) {
             int x = ((HandledScreenAccessor) client.currentScreen).getX() + ((HandledScreenAccessor) client.currentScreen).getBackGroundWidth() - 20;
             int y = ((HandledScreenAccessor) client.currentScreen).getY() - 20;
+
             buildFromInventoryButton =
                     new ItemIconButtonWidget(x, y, 20, 20, Text.literal(""), button -> {
-                        DictionaryController controller = new DictionaryController();
                         DefaultedList<Slot> slots = ((HandledScreenAccessor) client.currentScreen).getHandler().slots;
+                        DictionaryController controller = new DictionaryController();
 
-                        DictionaryBuild buildFromInventory = (inventoryTitle.equals("Mechanical Armory")) ? getBuildFromMechanicalArmory(client, slots, controller) : getBuildFromPlayerStats(client, slots, controller);
-
+                        DictionaryBuild buildFromInventory =
+                                (inventoryTitle.equals("Mechanical Armory")) ? getBuildFromMechanicalArmory(client,
+                                        slots, controller) : getBuildFromPlayerStats(client, slots, controller);
                         this.close();
                         controller.setBuilderScreen();
                         controller.builderGui.loadItems(buildFromInventory);
                     }, Text.literal("Add build from current inventory"), "name_tag", "");
+
             addSelectableChild(buildFromInventoryButton);
             addDrawableChild(buildFromInventoryButton);
         }
     }
+
+    @Unique
+    private boolean isOnArmoryMainscreen(String inventoryTitle, DefaultedList<Slot> slots) {
+        return inventoryTitle.equals("Mechanical Armory") && slots.get(4).getStack().getName().getString().equals("Mechanical Armory Info");
+    }
+
     @Unique
     private DictionaryBuild getBuildFromMechanicalArmory(MinecraftClient client, DefaultedList<Slot> slots, DictionaryController controller) {
         List<String> slotItemNames = slots.stream().map(slot -> slot.getStack().getName().getString()).toList();
@@ -101,12 +114,24 @@ public abstract class ScreenHandlerMixin {
 
     @Unique
     private static DictionaryBuild getBuildFromPlayerStats(MinecraftClient client, DefaultedList<Slot> slots, DictionaryController controller) {
-        List<DictionaryItem> itemsFromBuild = new ArrayList<>();
-        List<Integer> slotsInOrderOfBuild = Arrays.asList(52, 25, 26, 35, 44, 53);
+        List<DictionaryItem> itemsFromBuild;
         String region = slots.get(4).getStack().getName().getString();
         if (region.contains("Ring")) region = "Ring";
         else if (region.contains("Isles")) region = "Isles";
         else if (region.contains("Valley")) region = "Valley";
+
+        List<Integer> slotsInOrderOfBuildRightSide = Arrays.asList(52, 25, 26, 35, 44, 53);
+        List<Integer> slotsInOrderOfBuildLeftSide = Arrays.asList(46, 19, 18, 27, 36, 45);
+        itemsFromBuild = getItemsFromOneSide(client, slots, controller, slotsInOrderOfBuildRightSide);
+        if (itemsFromBuild.stream().allMatch(Objects::isNull)) itemsFromBuild = getItemsFromOneSide(client, slots, controller, slotsInOrderOfBuildLeftSide);
+
+        int id = controller.generateNewId();
+        return new DictionaryBuild("", itemsFromBuild, List.of(), null, region, "", "", false, id);
+    }
+
+    @Unique
+    private static List<DictionaryItem> getItemsFromOneSide(MinecraftClient client, DefaultedList<Slot> slots, DictionaryController controller, List<Integer> slotsInOrderOfBuild) {
+        List<DictionaryItem> itemsFromBuild = new ArrayList<>();
 
         for (int slot : slotsInOrderOfBuild) {
             String itemName = slots.get(slot).getStack().getName().getString();
@@ -115,8 +140,8 @@ public abstract class ScreenHandlerMixin {
                             .anyMatch(text -> text.getString().contains("Ring"));
             itemsFromBuild.add(controller.getItemByName(itemName, isExalted));
         }
-        int id = controller.generateNewId();
-        return new DictionaryBuild("", itemsFromBuild, List.of(), null, region, "", "", false, id);
+
+        return itemsFromBuild;
     }
 
     @Inject(method = "close", at = @At("HEAD"))
