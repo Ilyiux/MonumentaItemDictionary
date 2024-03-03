@@ -122,9 +122,9 @@ public class BuilderGui extends Screen {
 
         buildClipboard = new ItemIconButtonWidget(30, 5, 20, 20, Text.literal(""), (button) -> buildClipboardButtonClicked(),
                 Arrays.asList(Text.literal("Build Clipboard").setStyle(Style.EMPTY.withColor(0xFFFFFFFF)),
-                        Text.literal("Click").setStyle(Style.EMPTY.withBold(true)).append("to set a build from your clipboard").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR)),
+                        Text.literal("Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to set a build from your clipboard").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR).withBold(false))),
                         Text.literal(""),
-                        Text.literal("SHIFT + Click").setStyle(Style.EMPTY.withBold(true)).append("to copy the build url of the current build").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR))),
+                        Text.literal("SHIFT + Click").setStyle(Style.EMPTY.withBold(true).withColor(ItemColors.TEXT_COLOR)).append(Text.literal(" to copy the build url of the current build").setStyle(Style.EMPTY.withColor(ItemColors.TEXT_COLOR).withBold(false)))),
                 "name_tag", "");
         showBuildDictionaryButton = new ItemIconButtonWidget(
                 width - sideMenuWidth + 10, labelMenuHeight + 10, 20, 20,
