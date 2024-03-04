@@ -190,7 +190,7 @@ public class BuildDictionaryGui extends Screen {
         showItemsButton.setY(labelMenuHeight + 10);
 
         showCharmsButton.setX(width - sideMenuWidth + 10);
-        showCharmsButton.setY(labelMenuHeight + 30);
+        showCharmsButton.setY(labelMenuHeight + 38);
 
         filterButton.setX(width - sideMenuWidth + 10);
         filterButton.setY(height - 30);

@@ -69,6 +69,7 @@ public abstract class ScreenHandlerMixin {
                                         slots, controller) : getBuildFromPlayerStats(client, slots, controller);
                         this.close();
                         controller.setBuilderScreen();
+                        controller.builderGui.postInit();
                         controller.builderGui.loadItems(buildFromInventory);
                     }, Text.literal("Add build from current inventory"), "name_tag", "");
 
