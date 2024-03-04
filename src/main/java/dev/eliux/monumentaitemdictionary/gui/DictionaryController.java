@@ -1007,6 +1007,7 @@ public class DictionaryController {
     }
 
     public void getItemFromDictionary(String itemType) {
+        itemGui.postInit();
         itemGui.isGettingBuildItem = true;
         itemGui.itemTypeLookingFor = itemType;
         clearItemNameFilter();
@@ -1016,6 +1017,7 @@ public class DictionaryController {
     }
 
     public void getCharmFromDictionary() {
+        charmGui.postInit();
         charmGui.isGettingBuildCharm = true;
         if (charmGuiPreviouslyOpened) {
             clearCharmNameFilter();
