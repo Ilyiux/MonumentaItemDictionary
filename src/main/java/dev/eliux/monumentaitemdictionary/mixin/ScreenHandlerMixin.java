@@ -113,7 +113,6 @@ public abstract class ScreenHandlerMixin {
             String classInfo = slotItemNames.get(47);
             className = classInfo.substring(0, classInfo.indexOf(" "));
             specializationName = classInfo.substring(classInfo.indexOf("(")+1, classInfo.indexOf(")"));
-            Mid.LOGGER.info(specializationName);
         }
 
         int id = controller.generateNewId();
