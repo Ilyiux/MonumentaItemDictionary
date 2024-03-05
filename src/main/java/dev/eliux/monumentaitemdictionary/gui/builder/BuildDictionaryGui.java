@@ -24,6 +24,7 @@ public class BuildDictionaryGui extends Screen {
     public final int labelMenuHeight = 30;
     public final int itemPadding = 10;
     public final int itemSize = 50;
+    private long lastAltPressed = 0;
     public final DictionaryController controller;
     public ArrayList<DictionaryBuild> buildsList;
     public HashMap<DictionaryBuild, BuildButtonWidget> buildsButtons = new HashMap<>();
@@ -84,6 +85,7 @@ public class BuildDictionaryGui extends Screen {
 
     public void buildBuildsList()
     {
+        controller.loadBuilds();
         controller.refreshBuilds();
         buildsList = controller.getBuilds();
 
@@ -189,7 +191,7 @@ public class BuildDictionaryGui extends Screen {
         showItemsButton.setY(labelMenuHeight + 10);
 
         showCharmsButton.setX(width - sideMenuWidth + 10);
-        showCharmsButton.setY(labelMenuHeight + 30);
+        showCharmsButton.setY(labelMenuHeight + 38);
 
         filterButton.setX(width - sideMenuWidth + 10);
         filterButton.setY(height - 30);
@@ -197,12 +199,7 @@ public class BuildDictionaryGui extends Screen {
 
     public void addBuild(String name, List<DictionaryItem> items, List<DictionaryCharm> charms, DictionaryItem itemOnBuildButton, String region, String className, String specialization) {
         if (name.isEmpty()) name = "No Name";
-        Random rand = new Random();
-        int id = rand.nextInt(10000);
-
-        while (controller.idExists(id)) {
-            id = rand.nextInt(10000);
-        }
+        int id = controller.generateNewId();
 
         DictionaryBuild build = new DictionaryBuild(name, items, charms, itemOnBuildButton, region, className, specialization, false, id);
         JsonObject jsonBuild = getBuildAsJSON(build);
@@ -273,6 +270,19 @@ public class BuildDictionaryGui extends Screen {
 
         return true;
     }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        super.keyReleased(keyCode, scanCode, modifiers);
+
+        if (keyCode == 342 || keyCode == 346) { // left or right alt pressed
+            lastAltPressed = System.currentTimeMillis();
+        }
+
+        return true;
+    }
+
+
 
     @Override
     public boolean charTyped(char chr, int modifiers) {
