@@ -85,6 +85,7 @@ public class BuildDictionaryGui extends Screen {
 
     public void buildBuildsList()
     {
+        controller.loadBuilds();
         controller.refreshBuilds();
         buildsList = controller.getBuilds();
 

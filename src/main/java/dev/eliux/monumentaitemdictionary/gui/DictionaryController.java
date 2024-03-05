@@ -297,7 +297,7 @@ public class DictionaryController {
         });
     }
 
-    private void loadBuilds() {
+    public void loadBuilds() {
         try {
             ArrayList<DictionaryBuild> buildsInFile = new ArrayList<>();
 
