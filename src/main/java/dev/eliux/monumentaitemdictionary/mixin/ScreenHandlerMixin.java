@@ -1,5 +1,6 @@
 package dev.eliux.monumentaitemdictionary.mixin;
 
+import dev.eliux.monumentaitemdictionary.Mid;
 import dev.eliux.monumentaitemdictionary.gui.DictionaryController;
 import dev.eliux.monumentaitemdictionary.gui.builder.DictionaryBuild;
 import dev.eliux.monumentaitemdictionary.gui.charm.DictionaryCharm;
@@ -86,6 +87,8 @@ public abstract class ScreenHandlerMixin {
         List<DictionaryItem> itemsFromBuild = new ArrayList<>();
         List<Integer> itemsInOrderOfBuild = Arrays.asList(18, 15, 11, 12, 13, 14);
         List<DictionaryCharm> charms = new ArrayList<>();
+        String className = "";
+        String specializationName = "";
 
         String name = slotItemNames.get(4);
 
@@ -106,8 +109,15 @@ public abstract class ScreenHandlerMixin {
             }
         }
 
+        if(!slotItemNames.get(45).equals("Class Excluded")) {
+            String classInfo = slotItemNames.get(47);
+            className = classInfo.substring(0, classInfo.indexOf(" "));
+            specializationName = classInfo.substring(classInfo.indexOf("(")+1, classInfo.indexOf(")"));
+            Mid.LOGGER.info(specializationName);
+        }
+
         int id = controller.generateNewId();
-        return new DictionaryBuild(name, itemsFromBuild, charms, null, "", "", "", false, id);
+        return new DictionaryBuild(name, itemsFromBuild, charms, null, "", className, specializationName, false, id);
     }
 
     @Unique
